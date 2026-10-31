@@ -7,29 +7,30 @@ Läxhjälp,Workshops & kurser,verkstan,8,103,95,llm,Läxhjälp | Läxhjälp på 
 THE PARTY,Konsert & musikframträdande,show,8,85,75,llm,MAMMA MIA! THE PARTY | FAMILJEFEST - MAMMA MIA! THE PARTY | FAMILY SHOW - MAMMA MIA! THE PARTY
 Biohack me,Bad & välbefinnande,hälsa,2,73,73,llm,Biohack me | Biohack Me
 Sagostund,Barn & familj,"barn, läsning, övrigt, sagostund, språk",35,72,59,llm+rules,Sagostund | Sagostund! | Sagostund arabiska
-Teater,Scen & föreställning,teater,64,66,61,llm+rules,Lady L — Teater Reinberg | Nanny Palmqvist med Strindbergs intima teater | Anders Ekborg - En Stilla Jul – Hudiksvalls teater
+Teater,Scen & föreställning,"teater, Teater",64,66,61,llm+rules,Lady L — Teater Reinberg | Nanny Palmqvist med Strindbergs intima teater | Anders Ekborg - En Stilla Jul – Hudiksvalls teater
 Spela Scrabble,Spel & social tävling,spel,1,66,65,llm,Spela Scrabble i Rum för språk!
-bokcirkel,Språk & läsning,bokcirkel,30,63,51,llm,"Lättläst bokcirkel | Persisk bokcirkel | Bokcirkel - ""Bladvändarna"""
+Bokcirkel,Språk & läsning,bokcirkel,30,63,51,llm,"Lättläst bokcirkel | Persisk bokcirkel | Bokcirkel - ""Bladvändarna"""
 Julkonsert,Konsert & musikframträdande,konsert,25,60,60,llm,Julkonsert | Julkonsert 2026 | Julkonsert med Karl-Magnus Fredriksson
 COMEDY SUPERWEEKEND,Konsert & musikframträdande,"show, standup",11,57,56,llm,MAFFIA COMEDY SUPERWEEKEND | MAFFIA COMEDY SUPERWEEKEND med Elin Almén m.fl | MAFFIA COMEDY SUPERWEEKEND med Elina Du Rietz m.fl
 Konstverkstan,Workshops & kurser,verkstan,1,57,20,llm,Konstverkstan
-concert,Konsert & musikframträdande,"concert, konsert",24,54,50,rules+llm,"Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se | The Witcher in Concert 2026 | André Rieu's 2026 Christmas Concert: Let It Snow"
+Concert,Konsert & musikframträdande,"Concert, konsert, CONCERT",24,54,50,rules+llm,"Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se | The Witcher in Concert 2026 | André Rieu's 2026 Christmas Concert: Let It Snow"
 Julbord,Mat & dryck,mat,8,53,53,llm,Julbord - eftermiddag 2026 | Julbord - kväll 2026 | Julbord i Vinterträdgården 2026
 Slutspel,Sport & tävling,sport,1,43,39,llm,Slutspel
-jazz,Konsert & musikframträdande,"jazz, konsert",12,42,42,rules+llm,"Yttling Jazz | 18/12 Jazz i Kärrtorp – Holényi, Lorinius, Ullén //REIGN | 27/11 - Jazz i Kärrtorp - Lina Nyberg"
+Jazz,Konsert & musikframträdande,"Jazz, konsert, JAZZ",12,42,42,rules+llm,"Yttling Jazz | 18/12 Jazz i Kärrtorp – Holényi, Lorinius, Ullén //REIGN | 27/11 - Jazz i Kärrtorp - Lina Nyberg"
+Stickcafé,Språk & läsning,"Stickcafé, verkstan, övrigt",5,42,38,rules+llm,Stickcafé | Stickcafé på Hässelby villastads bibliotek | Stickcafé för nybörjare
 Live,Konsert & musikframträdande,"konsert, show",24,41,33,llm,Hassan Phills: Live in Stockholm - Early Show | Critical Role Live 2027 | Sven Ingvars Draken Live 2026-10-24 19:30
 Julmässan,Mässa & marknad,mässa,10,39,32,llm,Julmässan på Taxinge slott | Julmässan på Mårbacka | Julmässan på Ekenäs slott
 Julmarknad,Mässa & marknad,marknad,8,39,39,llm,Julmarknad Sägnernas hus | Fruängens Julmarknad 2026 | Järlåsa Julmarknad
 Motorbaletten,Attraktion med oklassad typ,övrigt,1,39,39,llm,Motorbaletten
-Konsert,Konsert & musikframträdande,konsert,25,31,24,llm+rules,Konsert med Orkesterakademin | Kentkören Stockholm – konsert i Sofia kyrka 20.00 | Sven Ingvars Uppsala Konsert & Kongress 2026-11-06 19:00
+Konsert,Konsert & musikframträdande,"konsert, Konsert",25,31,24,llm+rules,Konsert med Orkesterakademin | Kentkören Stockholm – konsert i Sofia kyrka 20.00 | Sven Ingvars Uppsala Konsert & Kongress 2026-11-06 19:00
 Live in Concert,Konsert & musikframträdande,konsert,14,30,30,llm,Star Wars: A New Hope Live in Concert | Omid & Jamshid – Live in Concert | Love Actually Live in Concert
 Standup,Scen & föreställning,standup,7,30,28,llm,Standup med Schyffert & Sundin | Södermalms Svenska Standup Komedi- Onsdag | A Standup Xmas
 samtal,Föreläsning & samtal,samtal,10,29,16,llm,(O)möjliga samtal | Samtal: Döden och konsten | Ida Linde i samtal om Eyvind Johnsons författarskap
 Pub Crawl,Fest & nattliv,nattliv,4,29,15,llm,The Original Stockholm Pub Crawl | Pub Crawl + Games + Clubbing (Meet New People!) | Pub Crawl in Stockolm
-workshop,Workshops & kurser,"workshop, verkstan",18,28,18,llm,Macaron workshop | Laserskärare workshop | Författarbesök: Workshop med Alexandra Dahlberg
+Workshop,Workshops & kurser,"workshop, verkstan",18,28,18,llm,Macaron workshop | Laserskärare workshop | Författarbesök: Workshop med Alexandra Dahlberg
 Bokklubb,Språk & läsning,"läsning, bokcirkel",14,27,25,llm,Bokklubb 13-15 år | Bokklubb för 7-9-åringar | Bokklubb 9-12 år
 SKOLKONSERT,Konsert & musikframträdande,konsert,4,27,27,llm,SKOLKONSERT  - Majas Alfabetssånger | SKOLKONSERT  - LasseMaja och Konsertmysteriet | SKOLKONSERT - MINI - BEETHOVEN  - Konsert för förskolan 3-5 år
-Högläsning,Språk & läsning,läsning,9,26,18,llm,Högläsning | Högläsning för vuxna | Mysryslig högläsning!
+högläsning,Språk & läsning,läsning,9,26,18,llm,Högläsning | Högläsning för vuxna | Mysryslig högläsning!
 KONSTVISNING,Utställning & konst,utställning,1,26,26,llm,KONSERTHUSETS KONSTVISNING
 IndustriMässa,Mässa & marknad,mässa,16,25,25,llm,"EURO EXPO IndustriMässa Fredrikstad, Norge 2026 | EURO EXPO IndustriMässa Gällivare 2027 | EURO EXPO IndustriMässa Kiruna 2026"
 Guidad visning,Utställning & konst,utställning,2,25,21,llm,"Guidad visning | Guidad visning av KTH:s konst, arkitektur och historia"
@@ -39,46 +40,44 @@ Hockey,Sport & tävling,"sport, match",7,23,10,llm,AIK Hockey | Djurgården Hock
 Boktips,Spel & social tävling,tips,5,23,21,llm,Boktips med bibliotekarierna | Boktips till kaffet | Boktips för föräldralediga
 Häng på Bibblan,Barn & familj,barn,2,23,21,llm,Häng på Bibblan | Häng på bibblan
 Advokatjour,Attraktion med oklassad typ,övrigt,1,23,22,llm,Advokatjour
-Stickcafé,Workshops & kurser,"verkstan, övrigt",4,22,20,llm,Stickcafé på Hässelby villastads bibliotek | Stickcafé för nybörjare | Stickcafé på Björkhagens bibliotek
 Konstruktion och bild,Utställning & konst,utställning,1,22,15,llm,"""Konstruktion och bild"" på Nacka konsthall"
 Mat & Musik,Mat & dryck,mat,1,22,18,llm,Svartklubben - Mat & Musik i Mörker
-teatern,Scen & föreställning,"teatern, teater",20,21,18,rules+llm,"Anders F Rönnblom @ Södra Teatern | Amanda Bergman, Gamla Teatern Östersund – Gamla Teatern | Amanda Ginsburg @ Södra Teatern"
+Teatern,Scen & föreställning,"Teatern, teater, TEATERN",20,21,18,rules+llm,"Anders F Rönnblom @ Södra Teatern | Amanda Bergman, Gamla Teatern Östersund – Gamla Teatern | Amanda Ginsburg @ Södra Teatern"
+kväll,Konsert & musikframträdande,"konsert, kväll, KVÄLL, Kväll",18,21,16,llm+rules,EN KVÄLL ATT MINNAS MED - STEN & STANLEY | Leopoldstadt- en kväll tillägnad Tom Stoppard | EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Flygeln
 Luciakonsert,Konsert & musikframträdande,konsert,11,21,21,llm,Luciakonsert | Luciakonsert med Hedvig Eleonora Ungdomskör | Luciakonsert med Lunae kammarkörkopia
-orkester,Konsert & musikframträdande,orkester,9,21,19,rules,Bo Kaspers Orkester - Il magnifico | Bo Kaspers Orkester - Il magnifico – Stage 1 | 261205b Livets orkester
+Orkester,Konsert & musikframträdande,"Orkester, orkester",9,21,19,rules,Bo Kaspers Orkester - Il magnifico | Bo Kaspers Orkester - Il magnifico – Stage 1 | 261205b Livets orkester
 Julfrossa,Scen & föreställning,dans,2,20,20,llm,Julfrossa (från 5 år) Helg | Julfrossa (från 5 år) Vardag
 aktiviteter,Barn & familj,barn,2,20,18,llm,Måndaghäng- aktiviteter för dig mellan 7-9 år | Tween-klubben! Aktiviteter för dig mellan 10-12 år
 Guidad visning för barn,Barn & familj,barn,1,20,14,llm,BLAND CELLOFODRAL & PARTITUR  - Guidad visning för barn
 Från Broadway till Duvemåla,Scen & föreställning,musikal,1,20,10,llm,Från Broadway till Duvemåla
 Skapandeverkstaden,Workshops & kurser,verkstan,1,20,10,llm,Skapandeverkstaden
 StandUpSverige,Scen & föreställning,standup,1,20,18,llm,StandUpSverige - Din Guide Till Gratis Skratt (Biljettreservation krävs)
-stickcafe,Språk & läsning,stickcafe,1,20,18,rules,Stickcafé
 Knattebio,Film & bio,bio,14,19,15,llm,Knattebio: Bus och mysterier med Alfons Åberg | Knattebio: Lilla Spöket Laban - spökdags | Knattebio: Lilla spöket Laban spökar igen
 Olympiaden,Sport & tävling,sport,1,19,19,llm,Olympiaden
 A Live Action Musical,Scen & föreställning,musikal,1,19,17,llm,VIKING – A Live Action Musical
-kvall,Fest & nattliv,kvall,17,18,15,rules,Leopoldstadt- en kväll tillägnad Tom Stoppard | EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Flygeln | EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Glada Hudik
 Familjeshowen,Konsert & musikframträdande,show,15,18,18,llm,Dolly Style - Familjeshowen | Dolly Style - Familjeshowen jullovet 2026 | DOLLY STYLE - FAMILJESHOWEN
 Visning,Utställning & konst,utställning,11,18,15,llm,Visning av Konstakademiens hus | Allmänhetens visning | Visning av konsten p&#xE5; Stadsmuseet
-hostlov,Barn & familj,hostlov,4,17,0,rules,Höstlov: Bland cellofodral och partitur | Höstlov för skollovslediga barn och medföljande vuxna | Höstlov på Gripsholm
+Höstlov,Barn & familj,Höstlov,4,17,0,rules,Höstlov: Bland cellofodral och partitur | Höstlov för skollovslediga barn och medföljande vuxna | Höstlov på Gripsholm
 barnen,Barn & familj,barnen,2,17,17,rules,Tomten är far till alla barnen | Charken är far till alla barnen | Stockholm
-in Concert,Konsert & musikframträdande,konsert,11,16,15,llm,The Legend of Korra in Concert | Harry Potter och Dödsrelikerna™ – Del 1 In Concert | Pink Floyd’s The Wall &amp; Dark Side of the Moon – in concert
-opera,Scen & föreställning,opera,8,16,13,llm+rules,Vem fan gillar opera? | Vem fan gillar opera? (dagföreställning) | Holiday fun at the Opera
+In Concert,Konsert & musikframträdande,konsert,11,16,15,llm,The Legend of Korra in Concert | Harry Potter och Dödsrelikerna™ – Del 1 In Concert | Pink Floyd’s The Wall &amp; Dark Side of the Moon – in concert
+Opera,Scen & föreställning,"opera, Opera",8,16,13,llm+rules,Vem fan gillar opera? | Vem fan gillar opera? (dagföreställning) | Holiday fun at the Opera
 Live!,Konsert & musikframträdande,"show, konsert",2,16,16,llm,HippHipp Live! | Grönan Live!
 Familjehelg,Barn & familj,familj,1,16,15,llm,Familjehelg
 Familjesöndag,Barn & familj,familj,1,16,14,llm,Familjesöndag
 Läs mer,Språk & läsning,läsning,1,16,14,llm,Läs mer på Thatsup
 Improvisationsteater,Scen & föreställning,teater,15,15,15,llm,Improvisationsteater Back to Basics torsdagar start 12 november | Improvisationsteater för seniorer Fördjupning förlängning med Johanna måndagar kl 14 start 9 november | Improvisationsteater för seniorer fördjupning förlängning med Palle måndagar kl 14 start 9 november
-symfoni,Konsert & musikframträdande,"symfoni, konsert",14,15,13,rules+llm,"BRUCKNER SYMFONI NR 8  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent | BEETHOVEN SYMFONI NR 1  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Jörg Widman, klarinett | BEETHOVEN SYMFONI NR 2  - Gävle Symfoniorkester, Christian Reif, dirigent"
-JULMÄSSA,Mässa & marknad,mässa,11,15,11,llm,JULMÄSSA på Hellekis Säteri | Julmässa på Mårbacka 2026 | Julmässa på Wrams Gunnarstorp 2026
+SYMFONI,Konsert & musikframträdande,"SYMFONI, symfoni, konsert",14,15,13,rules+llm,"BRUCKNER SYMFONI NR 8  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent | BEETHOVEN SYMFONI NR 1  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Jörg Widman, klarinett | BEETHOVEN SYMFONI NR 2  - Gävle Symfoniorkester, Christian Reif, dirigent"
+Julmässa,Mässa & marknad,mässa,11,15,11,llm,JULMÄSSA på Hellekis Säteri | Julmässa på Mårbacka 2026 | Julmässa på Wrams Gunnarstorp 2026
 Halloween Party,Fest & nattliv,fest,9,15,7,llm,Moxy Annual Halloween Party | EL COLMADON — HALLOWEEN PARTY | Golden Nights Halloween Party
 Meetup,Samhälle & möte,"möte, samhälle",8,15,12,llm,Stockholm Culture Exchange & Friend Making Meetup | Architecture and Interior Design Fika Meetup (Tuesday) | Omarchy Stockholm Meetup - 001
-Monster Jam,Konsert & musikframträdande,"show, konsert",6,15,15,llm,Monster Jam | MONSTER JAM 2027 - 13 februari | MONSTER JAM 2027 - 13 februari | Premium Experience
-blues,Konsert & musikframträdande,blues,5,15,15,rules,"Graveyard & Blues Pills | ""HAPPY ROCKIN' BLUES n' SKA"" – Orangeriet | Blues At Sea - ONE MORE TIME!"
+MONSTER JAM,Konsert & musikframträdande,"show, konsert",6,15,15,llm,Monster Jam | MONSTER JAM 2027 - 13 februari | MONSTER JAM 2027 - 13 februari | Premium Experience
+Blues,Konsert & musikframträdande,"Blues, BLUES",5,15,15,rules,"Graveyard & Blues Pills | ""HAPPY ROCKIN' BLUES n' SKA"" – Orangeriet | Blues At Sea - ONE MORE TIME!"
 Dance,Scen & föreställning,dans,4,15,14,llm,Andersson Dance - ORE | Andersson Dance [SWE] | ORE | Moving with Time: Stories of Dance Makers [oct]
 Handarbetscafé,Workshops & kurser,"verkstan, övrigt",3,15,11,llm,Handarbetscafé | Handarbetscafé på Berga bibliotek | Handarbetscafé på SödergårdenGRATIS
-operan,Scen & föreställning,"operan, musikal",3,15,9,rules+llm,Tosca på Kungliga Operan | Lov på Operan | Così fan tutte på Kungliga Operan
+Operan,Scen & föreställning,"Operan, musikal",3,15,9,rules+llm,Tosca på Kungliga Operan | Lov på Operan | Così fan tutte på Kungliga Operan
 Familjelördag,Barn & familj,"familj, övrigt",2,15,15,llm,Familjelördag | Familjelördag på Huset på höjden
 Skolbesök,Attraktion med oklassad typ,övrigt,2,15,15,llm,Skolbesök i Omfamnad | Skolbesök i Elisabeth Ohlson – Retrospektiv
-Helgpyssel,Barn & familj,pyssel,1,15,14,rules,Helgpyssel
+Helgpyssel,Barn & familj,Helgpyssel,1,15,14,rules,Helgpyssel
 RITSCH RATSCH,Konsert & musikframträdande,show,1,15,15,llm,RITSCH RATSCH på Vasan
 Föreläsning,Föreläsning & samtal,föreläsning,13,14,12,llm,Föreläsning om Lilla Björknäs | Folktroväsen som ger kalla kårar – Föreläsning med Tommy Kuusela | Föreläsning om  ödehus av Tomas Molin
 Spökvandring,Promenad & friluftsliv,vandring,4,14,0,llm,Spökvandring | Spökvandring i Medborgarhuset | Spökvandring på Hemsökt Museum
@@ -94,30 +93,30 @@ Matteläxhjälp,Workshops & kurser,verkstan,1,13,13,llm,Matteläxhjälp
 Lunchkonsert,Konsert & musikframträdande,konsert,12,12,11,llm,"Lunchkonsert - Duo Alan och Sophia Berg-Böhm – Scenkonst Sörmland, konsertsalen onumrerat | Lunchkonsert - Melodier ur Bellmans och Taubes rika visskatt | Lunchkonsert - Tilde Edlund – Scenkonst Sörmland, konsertsalen onumrerat"
 Föredrag,Föreläsning & samtal,föreläsning,11,12,12,llm,Föredrag: Göteborgskoloristerna och psykiatrin | Föredrag Badin och livet vid Lovisa Ulrikas hov | Föredrag Drottning Kristinas hovfester
 Comedy Club,Scen & föreställning,standup,10,12,8,llm,Göta Lejon Comedy Club | Telefonplan Comedy Club | Best of Stockholm comedy club at Gamestreet 1
-utställning,Utställning & konst,utställning,8,12,6,llm,"Naturens vindfång, en utställning med Bertil Arlert | Utställning på Blackebergs bibliotek | Utställning: Helena Heiman"
-show,Konsert & musikframträdande,"show, standup",6,12,11,llm,Hassan Phills: Live in Stockholm - Late Show | Julbord & Show 2026 – Västerås Kongress | No place like Show!
-familjekonsert,Konsert & musikframträdande,konsert,6,12,12,llm,Lucia - familjekonsert | FAMILJEKONSERT  - Jul-Sing-Along | FAMILJEKONSERT  - LasseMaja och Konserthusmysteriet
+Utställning,Utställning & konst,utställning,8,12,6,llm,"Naturens vindfång, en utställning med Bertil Arlert | Utställning på Blackebergs bibliotek | Utställning: Helena Heiman"
+Show,Konsert & musikframträdande,"show, standup",6,12,11,llm,Hassan Phills: Live in Stockholm - Late Show | Julbord & Show 2026 – Västerås Kongress | No place like Show!
+FAMILJEKONSERT,Konsert & musikframträdande,konsert,6,12,12,llm,Lucia - familjekonsert | FAMILJEKONSERT  - Jul-Sing-Along | FAMILJEKONSERT  - LasseMaja och Konserthusmysteriet
 Tour,Konsert & musikframträdande,konsert,4,12,12,llm,"Morgan Jay: La Dolce Vita Tour | Good Charlotte - Motel Du Cap EU/UK Tour, Platinumbiljetter | Artemas - LOVERCORE / GETTING UP TO NO GOOD Tour"
 violinkonsert,Konsert & musikframträdande,konsert,4,12,12,llm,Hindemiths violinkonsert och Schuberts stora symfoni - med Honeck & Zimmermann | Roms fontäner och Tjajkovskijs polska - Kavakos i Szymanowskis violinkonsert | Hindemiths violinkonsert och Schuberts stora symfoni  - med Honeck & Zimmermann
 Skapa din egen japanska spöklykta!,Workshops & kurser,verkstan,2,12,0,llm,kl. 11:30 Skapa din egen japanska spöklykta! | kl. 14:00 Skapa din egen japanska spöklykta!
 affär,Spel & social tävling,spel,1,12,8,llm,Claes och Andreas leker affär
 DJ-workshop,Workshops & kurser,workshop,1,12,12,llm,DJ-workshop
 Kärlek över Tanger,Konsert & musikframträdande,konsert,1,12,4,llm,Kärlek över Tanger
-blue,Konsert & musikframträdande,blue,10,11,6,rules,Knock-Out Greg och The Blue Flames framför X-mas Special | John Németh & Knock-Out Greg & Blue Flames – Söderport | John Németh with Knock-Out Greg & the Blue Flames
+Blue,Konsert & musikframträdande,"Blue, BLUE",10,11,6,rules,Knock-Out Greg och The Blue Flames framför X-mas Special | John Németh & Knock-Out Greg & Blue Flames – Söderport | John Németh with Knock-Out Greg & the Blue Flames
 Tribute,Konsert & musikframträdande,konsert,10,11,9,llm,"Tribute Creedence & John Fogerty | “Dancin’ in the Dark” Springsteen Tribute (BOSStria) – Grand Hall, Steam Hotel | Angus – The Ultimate AC/DC Tribute på Lumber &#038; Karle"
-violin,Konsert & musikframträdande,violin,7,11,11,rules,"Emil Holmström (piano) & Emma Nyman (violin) | BEETHOVEN OCH NIELSEN  - Kungliga Filharmonikerna, Sakari Oramo, dirigent - Janine Jansen, violin | BERWALD OCH BRAHMS  - Kungliga Filharmonikerna, Alan Gilbert, dirigent - Lisa Batiashvili, violin"
+violin,Konsert & musikframträdande,"violin, VIOLIN",7,11,11,rules,"Emil Holmström (piano) & Emma Nyman (violin) | BEETHOVEN OCH NIELSEN  - Kungliga Filharmonikerna, Sakari Oramo, dirigent - Janine Jansen, violin | BERWALD OCH BRAHMS  - Kungliga Filharmonikerna, Alan Gilbert, dirigent - Lisa Batiashvili, violin"
 vandring,Promenad & friluftsliv,vandring,5,11,11,llm,En vandring till Sibelius - Britta Byström 50 år | En vandring till Sibelius | En vandring till Sibelius  - Britta Byström 50 år
 Pyssel,Barn & familj,"övrigt, verkstan",4,11,5,llm,Pyssel i aktivitetsrummet | Pyssel med drop-in: läskiga varglappar | PYSSEL
 Country Festival,Mässa & marknad,festival,3,11,11,llm,Winther Country Festival | WINTHER COUNTRY FESTIVAL | Winther Country Festival 2026
 Bokfika,Språk & läsning,"bokcirkel, läsning",3,11,9,llm,Bokfika! | Bokfika - vi läser tillsammans! | Bokfika
 Poesicirkel,Språk & läsning,"läsning, bokcirkel",3,11,10,llm,Poesicirkel på persiska کلوپ شعر | Poesicirkel för dig 15-35 år | Poesicirkel på Enskede bibliotek
 VINDAGEN,Mässa & marknad,"festival, övrigt",2,11,11,llm,FRANSKA VINDAGEN 2026 | Italienska vindagen 2026
-magic,Scen & föreställning,magic,9,10,8,rules,Friday Night Magic | Daniel Kane - Impossible Magic – Dramalogen | Daniel Kane – Impossible MAGIC • 14/11 • Hallstavik
-festival,Mässa & marknad,festival,9,10,10,llm+rules,Jazz är Farligt-festival | IBEX band l Selam Festival Stockholm | MINU Festival: Songs About Everything
+Magic,Scen & föreställning,"Magic, MAGIC",9,10,8,rules,Friday Night Magic | Daniel Kane - Impossible Magic – Dramalogen | Daniel Kane – Impossible MAGIC • 14/11 • Hallstavik
+Festival,Mässa & marknad,"festival, Festival",9,10,10,llm+rules,Jazz är Farligt-festival | IBEX band l Selam Festival Stockholm | MINU Festival: Songs About Everything
 musikalisk livsberättelse,Konsert & musikframträdande,"konsert, musikal",8,10,10,llm,Carola | Jag är Carola – en musikalisk livsberättelse | Stockholm | Jag är Carola – En musikalisk livsberättelse | Jag är Carola - En musikalisk livsberättelse
 Nyårskonsert,Konsert & musikframträdande,konsert,7,10,10,llm,Nyårskonsert Beethovens symfoni nr 9 | Nyårskonsert med Stockholms Strauss-Orkester 2026 | Nyårskonsert
 Tonsättarfestival,Mässa & marknad,festival,7,10,10,llm,"Tonsättarfestival med Betsy Jolas – Invigning | Tonsättarfestival med Betsy Jolas – Sanna berättelser | TONSÄTTARFESTIVAL-TALES OF A SUMMER SEA  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Håkan Hardenberger, trumpet - Roger Muraro, piano"
-Språkkafé,Språk & läsning,språk,4,10,6,llm,Språkkafé på engelska | Café português-sueco | Portugisisk-svenskt språkkafé | Conversazione italiano-svedese | Italiensk-svenskt språkkafé
+språkkafé,Språk & läsning,språk,4,10,6,llm,Språkkafé på engelska | Café português-sueco | Portugisisk-svenskt språkkafé | Conversazione italiano-svedese | Italiensk-svenskt språkkafé
 Öppen ateljé,Workshops & kurser,verkstan,4,10,7,llm,Öppen ateljé för 6-106-åringar | Öppen ateljé för barn i alla åldrar | Öppen ateljé på kulturskolan Hässlehuset
 The Show,Konsert & musikframträdande,show,4,10,0,llm,PIAF! - The Show | Piaf! - The Show | PIAF! - The show
 UK Pink Floyd Experience,Konsert & musikframträdande,konsert,2,10,0,llm,UK Pink Floyd Experience | INSTÄLLT &#8211; UK Pink Floyd Experience
@@ -135,7 +134,7 @@ Missa Solemnis,Scen & föreställning,musikal,2,9,9,llm,Beethovens Missa Solemni
 On Ice,Konsert & musikframträdande,show,2,9,9,llm,Disney On Ice Discover the Magic | Disney On Ice - Discover the Magic
 Djuphav,Konsert & musikframträdande,"show, musikal",2,9,8,llm,Ingrid Olterman | Djuphav | Ingrid Olterman Djuphav 31 oktober – 4 november 2026 Program
 Stadsvandring,Promenad & friluftsliv,vandring,2,9,9,llm,Stadsvandring med Christopher O'Regan - Grändernas hemligheter | STADSVANDRING I GAMLA STAN – FalbygdsTurism
-Tisdagspyssel,Barn & familj,"övrigt, pyssel",2,9,7,llm+rules,Tisdagspyssel | Tisdagspyssel: Läslovsspecial
+Tisdagspyssel,Barn & familj,"övrigt, Tisdagspyssel",2,9,7,llm+rules,Tisdagspyssel | Tisdagspyssel: Läslovsspecial
 Hantverkscafé,Workshops & kurser,verkstan,1,9,7,llm,Hantverkscafé
 Onsdagsklubben,Barn & familj,barn,1,9,8,llm,Onsdagsklubben på Högdalens bibliotek
 OnsdagsNöjet,Fest & nattliv,fest,1,9,8,llm,OnsdagsNöjet
@@ -147,7 +146,7 @@ Formex,Mässa & marknad,mässa,8,8,8,llm,Formex | Formex 19–21 januari 2027 | 
 Stickbio,Film & bio,"film, bio",6,8,8,llm,Stickbio: Klara och solen | Stickbio: Wicker | Stickbio: Kärlek och andra diagnoser
 Mässan,Mässa & marknad,mässa,5,8,8,llm,Mässan öppnar | Hem&#038;Bo Mässan i Halmstad 2027 | Hem&#038;Bo Mässan i Strömstad 2027
 Höstkonsert,Konsert & musikframträdande,konsert,5,8,5,llm,Höstkonsert | JANNE SCHAFFER med band möter JÄRFÄLLA MUSIKKÅR i svängig höstkonsert! | Höstkonsert för Barndiabetesfonden 2026
-ensemble,Konsert & musikframträdande,ensemble,4,8,8,rules,Ensemble Anaracho feat. Andreas Hourdakis & Fredrik Nordström | MINI  - Ensemble Beethoven! | Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström
+Ensemble,Konsert & musikframträdande,Ensemble,4,8,8,rules,Ensemble Anaracho feat. Andreas Hourdakis & Fredrik Nordström | MINI  - Ensemble Beethoven! | Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström
 Öppen förskola,Barn & familj,"barn, övrigt",4,8,4,llm,Öppen förskola måndag | Öppen förskola tisdag | Öppen förskola Baby 0-8 månader
 rollspel,Spel & social tävling,spel,4,8,6,llm,Prova på rollspel | Drottningdömet – rollspel för tjejer & ickebinära | Rollspel på höstlovet
 läser,Språk & läsning,läsning,4,8,7,llm,Vi läser Balladen om Marie Krøyer | Järfälla läser: | Vi läser tillsammans!
@@ -174,13 +173,13 @@ Tisdagshäng,Attraktion med oklassad typ,övrigt,1,8,7,llm,Tisdagshäng på PUNK
 Torsdagsklubben,Attraktion med oklassad typ,övrigt,1,8,7,llm,Torsdagsklubben
 Board Game Evening,Spel & social tävling,spel,1,8,7,llm,Weekly Open Board Game Evening (every Wednesday)
 Arkivens dag,Attraktion med oklassad typ,övrigt,7,7,7,llm,Arkivens dag 2026 | Arkivens dag i Dieselverkstaden | Arkivens dag i Härnösand
-cirkus,Scen & föreställning,cirkus,7,7,7,rules+llm,"Elvis, Elvis, Elvis! - 2026 @ Nya Cirkus | Hermanos Gutiérrez | Cirkus, Stockholm | Jamshid @ Cirkus"
+Cirkus,Scen & föreställning,"Cirkus, cirkus",7,7,7,rules+llm,"Elvis, Elvis, Elvis! - 2026 @ Nya Cirkus | Hermanos Gutiérrez | Cirkus, Stockholm | Jamshid @ Cirkus"
 Skivmässa,Mässa & marknad,mässa,7,7,6,llm,Hot Records Skivmässa | Landskrona Skivmässa 2026 | Malmö Skivmässa Mitt Möllan 2026
 Acoustic Session,Scen & föreställning,"musikal, konsert",7,7,4,llm,"Thank you for the music - Acoustic Session – Folkets hus | Thank you for the music - Acoustic Session – Hebeteatern, Folkets Hus Kulturhuset | Thank You For The Music - Acoustic Session – Kulturhuset"
-symposium,Föreläsning & samtal,seminarium,6,7,6,llm,"Diaspora- A Jewish Way of Life, an international symposium | Futures Present – Symposium on Artistic Research 2026 | Global Startup Symposium - Life Sciences & Technology Startups - Virtual"
+Symposium,Föreläsning & samtal,seminarium,6,7,6,llm,"Diaspora- A Jewish Way of Life, an international symposium | Futures Present – Symposium on Artistic Research 2026 | Global Startup Symposium - Life Sciences & Technology Startups - Virtual"
 Requiem,Konsert & musikframträdande,"konsert, musikal",6,7,6,llm,"Mozart: Requiem | Gabriel Fauré – Requiem, version för orgel och kör | Ian Venables: Requiem, OP. 48"
 Yttling Jazz,Konsert & musikframträdande,konsert,6,7,7,llm,Yttling Jazz @ Fasching | Yttling Jazz – Peter Stormaresalen | YTTLING JAZZ @ RIO – Rio
-museet,Utställning & konst,museet,5,7,5,rules,Moderna Museet | Fri fredag på Moderna Museet | Fri Fredag på Moderna Museet
+Museet,Utställning & konst,"Museet, museet",5,7,5,rules,Moderna Museet | Fri fredag på Moderna Museet | Fri Fredag på Moderna Museet
 Barnvagnsbio,Film & bio,bio,5,7,7,llm,Barnvagnsbio | Barnvagnsbio: Sense and Sensibility | Barnvagnsbio: Jävla karlar
 Night of Famous Musicals,Scen & föreställning,musikal,4,7,7,llm,Night of Famous Musicals | Night of Famous Musicals - The greatest musical hits of our time | Night of Famous Musicals – Kalmarsalen
 Läslov,Barn & familj,"övrigt, läsning",4,7,0,llm,Läslov: Spooky doodle på Östberga bibliotek | Läslov på Enskede bibliotek | Höstlov = Läslov på Waldemarsudde
@@ -204,23 +203,23 @@ Lyssna och pyssla,Barn & familj,barn,1,7,3,llm,Lyssna och pyssla!
 barn,Barn & familj,barn,1,7,7,rules,Mysiga måndagar för barn och deras vuxna
 Spela & Skåla,Fest & nattliv,nattliv,1,7,6,llm,Spela & Skåla – Games & Drinks Night
 Tisdagsklubben för barn 8-12 år,Barn & familj,barn,1,7,7,llm,Tisdagsklubben för barn 8-12 år
-Author talk,Föreläsning & samtal,samtal,6,6,4,llm,Author talk: Arne Lygre (Norway) | Author Talk: Carl-Johan Vallgren (Sweden) | Author Talk: Hemley Boum (Cameroon)
+Author Talk,Föreläsning & samtal,samtal,6,6,4,llm,Author talk: Arne Lygre (Norway) | Author Talk: Carl-Johan Vallgren (Sweden) | Author Talk: Hemley Boum (Cameroon)
 Barnteater,Scen & föreställning,teater,6,6,4,llm,Barnteater med teater Sagohuset | Barnteater med teater Sagouhset | Barnteater: En häxas dagbok
-författarbesök,Attraktion med oklassad typ,övrigt,6,6,6,llm,Digitalt författarbesök med Mian Lodalen | Författarbesök: Ali Jonasson om Finnkampen | Författarbesök: Ingrid Hedström
+Författarbesök,Attraktion med oklassad typ,övrigt,6,6,6,llm,Digitalt författarbesök med Mian Lodalen | Författarbesök: Ali Jonasson om Finnkampen | Författarbesök: Ingrid Hedström
 meets,Konsert & musikframträdande,konsert,6,6,3,llm,Elton John meets Freddie Mercury – Auditoriet | Elton John meets Freddie Mercury – Falkenbergs Stadsteater | Elton John meets Freddie Mercury – Folkets hus
 Filmvisning,Film & bio,film,6,6,2,llm,Filmvisning - fredagsmys! | Filmvisning: Garden in SeaGRATIS | Filmvisning: Grey Earth (2026) av Dana Kavelina
 Familjematch,Sport & tävling,"match, familj",6,6,6,llm,Frölunda HC - Linköping HC | Familjematch/Höstlov | Frölunda HC - Linköping HC | Familjematch/Sportlov | Frölunda HC - Luleå HF | Familjematch
 En Fridfull Jul,Scen & föreställning,"musikal, teater, konsert",6,6,6,llm,Göteborg Lorensberg | Emmi Christensson & Rickard Söderberg - En Fridfull Jul | Halmstad Teater | Emmi Christensson & Rickard Söderberg - En Fridfull Jul | Malmö Palladium | Emmi Christensson & Rickard Söderberg - En Fridfull Jul
-LIVEKONSERT,Konsert & musikframträdande,konsert,6,6,6,llm,MUSIKEN FRÅN LEJONKUNGEN - LIVEKONSERT | Musiken från Lejonkungen – Livekonsert – Lokomotivet | PINK FLOYD’S DARK SIDE OF THE MOON – livekonsert – PB-Hallen
+Livekonsert,Konsert & musikframträdande,konsert,6,6,6,llm,MUSIKEN FRÅN LEJONKUNGEN - LIVEKONSERT | Musiken från Lejonkungen – Livekonsert – Lokomotivet | PINK FLOYD’S DARK SIDE OF THE MOON – livekonsert – PB-Hallen
 Masterclass,Workshops & kurser,kurs,5,6,3,llm,Konsten att påverka genom kommunikation – Masterclass | Masterclass | Masterclass – Teaterns verktyg
-DANS,Scen & föreställning,dans,5,6,3,llm,STHLM DANS | Att tala om dans | Diriger dans l’incertitude : réconcilier performance ET humanité
+dans,Scen & föreställning,dans,5,6,3,llm,STHLM DANS | Att tala om dans | Diriger dans l’incertitude : réconcilier performance ET humanité
 Fuzz Festival,Mässa & marknad,festival,4,6,6,llm,Fuzz Festival 2026 | 13-14/11-2026 FUZZ FESTIVAL | DEBASER STRAND | Fuzz Festival #7 | Debaser Strand + Nova
 Julshow,Konsert & musikframträdande,show,4,6,6,llm,Kulturamas Julshow 2026 | Årets Julbord - med Alingsås största julshow – Estrad i Alingsås | HITS & WONDERS - JULSHOW
 Riichi,Spel & social tävling,spel,4,6,4,llm,Extra Sunday Riichi in Stockholm @ TigerMahjong | Regular Tuesday Riichi in Stockholm @ TigerMahjong | Extra Wednesday Riichi in Stockholm @ TigerMahjong
 Folkoperan,Scen & föreställning,opera,4,6,4,llm,Folkoperan Foajé: Alejo Falces & Stockholm Tango Five | Folkoperan Foajé: Carmen med jazztrio och berättare | Folkoperan Foajé: Dockor efter läggdags
 Höstlovskurs,Workshops & kurser,kurs,4,6,0,llm,Keramik 10-11år - Höstlovskurs | Keramik 12-13 år - Höstlovskurs | Turboteater 10-11 år - Höstlovskurs
-livepodd,Digitalt & teknik,"teknik, panel, övrigt",3,6,6,llm,Hör här! (Försöker göra livepodd) | Inte ska väl vi ha en Livepodd? | Livepodd! NYA INSIKTER - HÄLSOREVOLUTIONEN MED VÄNNER
-Släktforskning,Attraktion med oklassad typ,övrigt,3,6,6,llm,Släktforskning | Komma igång med släktforskning - en introduktion | Nyfiken på släktforskning? Vi hjälper dig igång!
+Livepodd,Digitalt & teknik,"teknik, panel, övrigt",3,6,6,llm,Hör här! (Försöker göra livepodd) | Inte ska väl vi ha en Livepodd? | Livepodd! NYA INSIKTER - HÄLSOREVOLUTIONEN MED VÄNNER
+släktforskning,Attraktion med oklassad typ,övrigt,3,6,6,llm,Släktforskning | Komma igång med släktforskning - en introduktion | Nyfiken på släktforskning? Vi hjälper dig igång!
 Kungliga Filharmonikerna,Konsert & musikframträdande,konsert,3,6,6,llm,"BRITTEN, BARBER OCH ELGAR  - Kungliga Filharmonikerna, Stephanie Childress, dirigent - James Ehnes, violin | MENDELSSOHN-BARTHOLDY  - Kungliga Filharmonikerna, Jörg Widmann, dirigent & klarinettsolist - Sarah Maria Sun, sopran | SIBELIUS, RAVEL OCH BARTÓK  - Kungliga Filharmonikerna, Jukka-Pekka Saraste, dirigent - Fazil Say, piano - Storkyrkans Kammarkör"
 DAM | Djurgården Hockey,Sport & tävling,match,3,6,6,llm,DAM | Djurgården Hockey - Färjestad BK | DAM | Djurgården Hockey - Frölunda HC | DAM | Djurgården Hockey - Linköping HC
 Arab filmfestival,Mässa & marknad,festival,2,6,6,llm,Arab filmfestival - nära dig | Arab filmfestival-nära dig
@@ -257,7 +256,7 @@ Internationell författarscen,Attraktion med oklassad typ,övrigt,5,5,5,llm,Inte
 Musikcafé,Konsert & musikframträdande,"konsert, musikal",5,5,5,llm,Musikcafé: Fröken Elvis – Auditoriet | Musikcafé: Jönköpings Sinfonietta – Auditoriet | Musikcafé: Malena Ernman & Mats Bergström – Auditoriet
 AIK,Sport & tävling,match,5,5,5,llm,Oskarshamn &#8211; AIK (Omgång 38) | Södertälje &#8211; AIK (Omgång 41) | Västerås &#8211; AIK (Omgång 24)
 Spelmansmusik,Konsert & musikframträdande,konsert,5,5,3,llm,Säsong sju: Spelmansmusik på Åsen | Spelmansmusik at Åsen (traditional music) - Autumn 2026 | Spelmansmusik på Åsen: Cinna Peyghamy + Totte Mattsson
-Fika,Mat & dryck,mat,5,5,3,llm,Smålands Fika🍰 | Thand Ringqvist och Kristersson möttes över en fika | Tysk-Svensk fika | Deutsch-Schwedische Fika
+fika,Mat & dryck,mat,5,5,3,llm,Smålands Fika🍰 | Thand Ringqvist och Kristersson möttes över en fika | Tysk-Svensk fika | Deutsch-Schwedische Fika
 kalendarieuppgifter,Attraktion med oklassad typ,"övrigt, utställning",5,5,4,llm,Stadsmuseets och Medeltidsmuseets kalendarieuppgifter 16–22 oktober8.10.2026 08:00:00 CEST | Pressmeddelande | Stadsmuseets och Medeltidsmuseets kalendarieuppgifter 18–24 september10.9.2026 08:00:00 CEST | Pressmeddelande | Stadsmuseets och Medeltidsmuseets kalendarieuppgifter 2–8 oktober24.9.2026 08:00:00 CEST | Pressmeddelande
 West Side Comedy,Scen & föreställning,standup,5,5,4,llm,West Side Comedy - Catrin Martinsson mfl | West Side Comedy - Diyari Mahmoud mfl | West Side Comedy - Felicia Tomala mfl
 Mässa,Mässa & marknad,"mässa, musikal",4,5,5,llm,BRUCKNER: Mässa i f-moll | Mässa C-moll - W.A Mozart | Mässa c-moll - WA Mozart
@@ -273,7 +272,8 @@ Support,Konsert & musikframträdande,konsert,3,5,5,llm,waterbaby + Support: Majv
 sång,Scen & föreställning,"musikal, konsert",3,5,5,llm,"Babybubblor och sång | Sång om stjärnorna med Radiokören | Glam, sång och starka känslor med Operadonnorna"
 Bokklubben,Språk & läsning,bokcirkel,3,5,5,llm,Bokklubben Kalabalik för 9-12 år | Bokklubben Lätta tyngden | Bokklubben Gasten: tjejer och icke-binära
 monolog,Scen & föreställning,teater,3,5,0,llm,Doktor Glas - en monolog med Jens Hultén | DOKTOR GLAS - en monolog med Jens Hultén | DOKTOR GLAS - en monolog med Jens Hultén - Stockholm - 29 Oktober
-poesifestival,Mässa & marknad,festival,3,5,0,llm,Stockholms internationella poesifestival | Stockholms Internationella Poesifestival: »NYA BLOMMORNAS SPRÅK« | Stockholms Internationella Poesifestival 2026
+PREMIÄR,Scen & föreställning,"PREMIÄR, övrigt, teater",3,5,5,rules+llm,RUMI & JULIA – PREMIÄR | Sommarnattens leende PREMIÄR | Frankenstein Premiär &#8211; Samarbete med Moomsteatern
+Poesifestival,Mässa & marknad,festival,3,5,0,llm,Stockholms internationella poesifestival | Stockholms Internationella Poesifestival: »NYA BLOMMORNAS SPRÅK« | Stockholms Internationella Poesifestival 2026
 Comic Con,Mässa & marknad,festival,2,5,0,llm,Comic Con Stockholm Winter 2026 | Comic Con Stockholm Winter
 höstlovsteater,Scen & föreställning,teater,2,5,0,llm,"Kris, kaos & katastrof - höstlovsteater | Höstlovsteater: Bygget"
 sjunger,Konsert & musikframträdande,konsert,2,5,5,llm,Malin Byström sjunger Strauss - och musik av Tjajkovskij och Wagner | Anastasía sjunger Alf Robertson | Kulturhuset Stadsteatern
@@ -304,9 +304,10 @@ Spela brädspel,Spel & social tävling,spel,1,5,0,llm,Spela brädspel på biblio
 Påsklovsteater,Scen & föreställning,teater,1,5,5,llm,Stäppvalpen – Påsklovsteater
 möts,Föreläsning & samtal,samtal,1,5,4,llm,Tre generationer möts på Farsta bibliotek
 lära dig hur din mobiltelefon fungerar,Workshops & kurser,kurs,1,5,5,llm,Vill du lära dig hur din mobiltelefon fungerar?
-HalloweenFest,Fest & nattliv,fest,4,4,3,llm,A Dance with the Dead &amp; Klubb Död - HalloweenFest! | Årets fetaste Halloweenfest i Sundsvall med ODZ | Halloweenfest
+Halloweenfest,Fest & nattliv,fest,4,4,3,llm,A Dance with the Dead &amp; Klubb Död - HalloweenFest! | Årets fetaste Halloweenfest i Sundsvall med ODZ | Halloweenfest
 Bio,Film & bio,bio,4,4,4,llm,Ato Karlsson Sundsvall – Bio Drakstaden | Baba-bio | Bio: La Grazia (filmomat-visning)
-vernissage,Utställning & konst,utställning,4,4,3,llm,Barnrättsveckan; vernissage i samarbete med förskolor | Vernissage 8 nov i Kallhäll | Vernissage: Apollonias hus
+Vernissage,Utställning & konst,utställning,4,4,3,llm,Barnrättsveckan; vernissage i samarbete med förskolor | Vernissage 8 nov i Kallhäll | Vernissage: Apollonias hus
+Café,Mat & dryck,"mat, Café",4,4,3,llm+rules,Café Hjärtat | New Year’s Eve at Café Klotet | Peter Asplund Big Band – The Christmas Feeling – Café Mosaic
 CHRISTMAS NIGHT,Konsert & musikframträdande,konsert,4,4,4,llm,CHRISTMAS NIGHT | Christmas Night – Kulturhuset | Christmas Night – Stage 1
 Christmas Unplugged,Konsert & musikframträdande,konsert,4,4,4,llm,"Christmas Unplugged – Konsertsalen Culturum | Christmas Unplugged 2026 – Kalmarsalen | Christmas Unplugged 2026 med Peter, Bruno, Matilda och Petra Wahlgren"
 Jubileumskalaset,Fest & nattliv,fest,4,4,4,llm,Det stora jubileumskalaset - Peter Jezewski 50-årsjubileum | Det stora Jubileumskalaset & A Tribute to The Boppers – Ystads Teater | Det stora jubileumskalaset Peter Jezewski Kalmar – Kalmar Teater
@@ -317,6 +318,7 @@ WALKS,Promenad & friluftsliv,promenad,4,4,4,llm,GALLERY WEEKEND STOCKHOLM WALKS 
 Party,Fest & nattliv,fest,4,4,4,llm,Glorias 50+ Disco Glitter Party Café Opera 19/12 | Party Med Smurfarna – SMURFHITS • 7/11 • Hässleholm | Party med Smurfarna – Växjö Teater
 Bokmässa,Mässa & marknad,mässa,4,4,4,llm,Halländsk Bokmässa Varberg 2026 | Kronobergs Bokmässa Växjö 2026 | Skärgårdens Bokmässa 2026
 Hogwarts Magic Symphony,Konsert & musikframträdande,konsert,4,4,4,llm,Hogwarts Magic Symphony | HOGWARTS MAGIC SYMPHONY – Växjö Konserthus | Hogwarts Magic Symphony by Lords of the Sound
+språk,Språk & läsning,språk,4,4,4,rules+llm,Hur lika är språk? | Lär dig mer om asiatiska språk | Negationer i världens språk
 Live Konsert,Konsert & musikframträdande,konsert,4,4,4,llm,PINK FLOYD'S DARK SIDE OF THE MOON - Live Konsert – Ystads Teater | PINK FLOYD'S THE WALL - Live Konsert – Ystads Teater | Pink Floyd´s Dark Side of the Moon - LIVE Konsert – Åhaga
 Beijer Hockey Games,Sport & tävling,match,4,4,4,llm,Schweiz – Tjeckien | Beijer Hockey Games | Sverige – Finland | Beijer Hockey Games | Sverige – Schweiz | Beijer Hockey Games
 Dance School Challenge,Sport & tävling,tävling,4,4,0,llm,Streetstar Dance School Challenge | Streetstar Dance School Challenge 2026: New Talent 8–13 år | Streetstar Dance School Challenge 2026: Next Generation 14-16 år
@@ -326,9 +328,9 @@ Vinterjazz,Konsert & musikframträdande,konsert,4,4,4,llm,Vinterjazz med Rudersd
 Arab Film Festival,Mässa & marknad,festival,3,4,4,llm,"Arab Film Festival - nära dig | Arab Film festival – nära dig | Arab film festival: Film, teater och skapande"
 Barnens Julvärld,Barn & familj,"barn, fest",3,4,4,llm,Barnens Julvärld | Barnens Julvärld med Nassim Al Fakir | Barnens Julvärld med Nassim Al Fakir – Ystads Teater
 Comedy,Scen & föreställning,standup,3,4,4,llm,Blackan Comedy 2026 | Hobo Comedy | Kärrtorp Comedy med Isak Jansson
-öppen scen,Konsert & musikframträdande,"show, övrigt",3,4,4,llm,Hökis Visrum i samarbete med Studiefrämjandet  Presenterar öppen scen | Öppen scen | Öppen Scen 2026
+Öppen scen,Konsert & musikframträdande,"show, övrigt",3,4,4,llm,Hökis Visrum i samarbete med Studiefrämjandet  Presenterar öppen scen | Öppen scen | Öppen Scen 2026
 Konferens,Utställning & konst,"konst, panel, seminarium",3,4,3,llm,Konferens: Offentlig konst i praktiken | Konferens: De delade världarnas teater | Varmt välkommen till Pingst Pastor Konferens den 12–14 januari 2027 i Filadelfia Stockholm!
-julbalett,Scen & föreställning,"dans, balett",3,4,4,llm+rules,Nötknäpparen – Klassisk julbalett med stråkkvartett | Nötknäpparen - Klassisk julbalett med stråkkvartett | Nötknäpparen – klassisk julbalett med stråkkvartett
+julbalett,Scen & föreställning,"dans, julbalett",3,4,4,llm+rules,Nötknäpparen – Klassisk julbalett med stråkkvartett | Nötknäpparen - Klassisk julbalett med stråkkvartett | Nötknäpparen – klassisk julbalett med stråkkvartett
 Antikmässan,Mässa & marknad,mässa,3,4,4,llm,Nya Antikmässan 2027 | Antikmässan 2027 | Nya Antikmässan
 Pianoafton,Konsert & musikframträdande,konsert,3,4,4,llm,Pianoafton med Andrejs Osokins | Pianoafton med Matti Hirvonen & Stina Ekblad | Pianoafton med Sten Ulloa Carler
 Main Concert,Konsert & musikframträdande,konsert,3,4,0,llm,Stockholm Sangeet Festival Main Concert | Stockholm Sangeet Festival - Main Concert | Stockholm Sangeet Festival 2026 Jubilee - Main Concert
@@ -395,7 +397,7 @@ Syjunta,Samhälle & möte,möte,1,4,4,llm,Syjunta på bibblan
 Meditation,Bad & välbefinnande,hälsa,1,4,4,llm,The Healing Power of Meditation
 Disco Night,Fest & nattliv,nattliv,3,3,1,llm,80s Disco Night Örnsköldsvik – Bruksgården | 80s disco night Piteå – Lemon Tree | Disco Night - Halloween Edition
 Testar nya skämt,Scen & föreställning,standup,3,3,3,llm,Al Pitcher – Testar nya skämt • 14/11 • Sala | Al Pitcher – Testar nya skämt • 25/11 • Ulricehamn | Al Pitcher – Testar nya skämt • 26/11 • Vänersborg
-Motion,Workshops & kurser,"träning, motion",3,3,1,llm+rules,"AlleManUt! Motion för ben och hjärna 25 oktober | Roots in Motion ° urban edition Stockholm | What set your confidence in motion? - For founders, powered by MoMo"
+Motion,Workshops & kurser,"träning, Motion, motion",3,3,1,llm+rules,"AlleManUt! Motion för ben och hjärna 25 oktober | Roots in Motion ° urban edition Stockholm | What set your confidence in motion? - For founders, powered by MoMo"
 Animation,Workshops & kurser,kurs,3,3,1,llm,Animation 10-11 år - Höstlovskurs | Animation 12-13 år - Höstlovskurs | Animation du débreffage - 17 décembre 2026 - En ligne
 Pianomania Nordica,Konsert & musikframträdande,konsert,3,3,1,llm,"Anna Fedorova Pianomania Nordica, presented by Niklas Sivelöv | Anna Fedorova Pianomania Nordica, presented by Niklas Sivelöv – Stage 2 | Steven Mayer Pianomania Nordica, presented by Niklas Sivelöv"
 Ansiktsmålning,Workshops & kurser,verkstan,3,3,1,llm,Ansiktsmålning | Ansiktsmålning och Levande saga med Biblioteket PLAY | Ansiktsmålning på familjelördagar - med Sadaf
@@ -407,20 +409,19 @@ Christmas market,Mässa & marknad,marknad,3,3,3,llm,Christmas market at the Roya
 Guided Tour,Promenad & friluftsliv,promenad,3,3,2,llm,Davide Rivalta - December Guided Tour in Hagaparken | Davide Rivalta - November Guided Tour in Gärdet | Family Guided Tour: Myths at Millesgården
 Konsertsalen,Konsert & musikframträdande,konsert,3,3,2,llm,"Elvis, Elvis, Elvis – Konsertsalen Culturum | En svensk, en dansk och en Bellman – Konsertsalen på Dunkers Kulturhus | Eric Bibb – Kulturhuset Najaden - konsertsalen"
 En strålande jul,Scen & föreställning,teater,3,3,3,llm,En strålande jul - Emelie Sundborn & Rikard Flink – Falkenbergs Stadsteater | En Strålande Jul – Auditoriet | En strålande jul – Kristianstads teater
-house,Fest & nattliv,house,3,3,2,rules,"EsDeeKid, Council House Rat Tour | HOUSE OF COMMAND / SURR3AL | House of Hallwyl"
+House,Fest & nattliv,"House, HOUSE",3,3,2,rules,"EsDeeKid, Council House Rat Tour | HOUSE OF COMMAND / SURR3AL | House of Hallwyl"
 kreativt läslov,Språk & läsning,läsning,3,3,0,llm,Ett kreativt läslov för dig 10-12 år! | Ett kreativt läslov för dig 11-13 år! | Ett kreativt läslov för dig 13-16 år!
-Museum,Utställning & konst,"utställning, museum",3,3,2,llm+rules,Europe - World's Largest Museum w Moon-Suck Song | Teodor Wolgers – Sörmlands museum | The Carling sisters – Sörmlands museum
+museum,Utställning & konst,"utställning, museum",3,3,2,llm+rules,Europe - World's Largest Museum w Moon-Suck Song | Teodor Wolgers – Sörmlands museum | The Carling sisters – Sörmlands museum
 collage,Utställning & konst,"konst, verkstan",3,3,3,llm,Familjesöndag - collage | Skapa & skåla - collage | Skapa & skåla – collage
 utställningar,Utställning & konst,utställning,3,3,3,llm,Fem nya utställningar på Konstakademien | Nu på lördag byter vi utställningar så om ni i | Tre utställningar på Grafiska
 Filharmoniker i närbild,Konsert & musikframträdande,konsert,3,3,3,llm,"Filharmoniker i närbild – Folkligt, lekfullt och nyskrivet | Filharmoniker i närbild – Tre sextetter | NORMAN STRÅKOKTETT  - Filharmoniker i Närbild"
 Outdoor Exploration Game,Spel & social tävling,spel,3,3,3,llm,"From Stockholm with Love Outdoor Exploration Game | Secret Societies of Stockholm Outdoor Exploration Game | Stockholm, City of My Dreams Outdoor Exploration Game"
-MUSIKALEN,Scen & föreställning,musikal,3,3,3,llm,GRINCHEN - Julen är stulen - MUSIKALEN | Musikalen - Julen i mitt hjärta (lördag 5/12) | Musikalen - Julen i mitt hjärta (Söndag 6/12)
+Musikalen,Scen & föreställning,musikal,3,3,3,llm,GRINCHEN - Julen är stulen - MUSIKALEN | Musikalen - Julen i mitt hjärta (lördag 5/12) | Musikalen - Julen i mitt hjärta (Söndag 6/12)
 GRYMLINGS,Konsert & musikframträdande,show,3,3,3,llm,GRYMLINGS - det bästa för dig | GRYMLINGS - det bästa för dig – Åhaga | GRYMLINGS - det bästa för dig – Växjö Konserthus
-HarmoniMässa,Mässa & marknad,mässa,3,3,3,llm,HarmoniMässa i Lilla Edet 2027 &#8211; Alternativ hälsomässa | Harmonimässa Medborgarhuset Säffle 2027 | Harmonimässa på Ritz i Arvika 2027
+Harmonimässa,Mässa & marknad,mässa,3,3,3,llm,HarmoniMässa i Lilla Edet 2027 &#8211; Alternativ hälsomässa | Harmonimässa Medborgarhuset Säffle 2027 | Harmonimässa på Ritz i Arvika 2027
 Höstlovsverkstad,Workshops & kurser,verkstan,3,3,0,llm,Höstlovsverkstad: Djur och natur | Höstlovsverkstad: skapa din egen ansiktsmask! | Höstlovsverkstad: Skapa din egen ansiktsmask!
-sprak,Språk & läsning,sprak,3,3,3,rules,Hur lika är språk? | Lär dig mer om asiatiska språk | Negationer i världens språk
 Jazzklubb,Konsert & musikframträdande,konsert,3,3,2,llm,Jazzklubb Hjorthagen -   Claes Jansson Trio | Jazzklubb Hjorthagen - Forslunds Fyra | Jazzklubb Hjorthagen - Gunilla Törnfeldt Kvintett
-JUBILEUMSKONSERT,Konsert & musikframträdande,konsert,3,3,2,llm,JUBILEUMSKONSERT  - 500 år av svensk militärmusik | Jubileumskonsert - Fira 30 år med Ankarstiftelsen – Växjö Konserthus | Jubileumskonsert: Stora läktarorgeln i Hedvig fyller 50 år!
+Jubileumskonsert,Konsert & musikframträdande,konsert,3,3,2,llm,JUBILEUMSKONSERT  - 500 år av svensk militärmusik | Jubileumskonsert - Fira 30 år med Ankarstiftelsen – Växjö Konserthus | Jubileumskonsert: Stora läktarorgeln i Hedvig fyller 50 år!
 Kids' Day,Barn & familj,barn,3,3,3,llm,Kids' Day - 27 December - New Year Edition | Kids' Day - 6 December - Christmas Edition | Kids' Day - 8 November
 Living Room Live,Konsert & musikframträdande,konsert,3,3,2,llm,Living Room Live med Mikael Rickfors | Living Room Live med Patrik Lundström | Living Room Live med The High Society
 Medrekmässan,Mässa & marknad,mässa,3,3,3,llm,Medrekmässan Göteborg 2026 | Medrekmässan Malmö 2027 | Medrekmässan Stockholm 2027
@@ -429,8 +430,7 @@ En show,Konsert & musikframträdande,show,3,3,3,llm,"Min Pappa Errol - En show o
 Roadshow,Utställning & konst,utställning,3,3,3,llm,Monitor Roadshow Gävle 2026 | Monitor Roadshow Sundsvall 2026 | Monitor Roadshow Umeå 2026
 MUSIK I VINTERTID,Scen & föreställning,musikal,3,3,3,llm,MUSIK I VINTERTID - SOFIA KÄLLGREN & ROBERT WELLS | MUSIK I VINTERTID - SOFIA KÄLLGREN & ROBERT WELLS – Gustav Adolfs kyrka | MUSIK I VINTERTID - SOFIA KÄLLGREN & ROBERT WELLS – Mora Kyrka
 Musikcaféserien,Scen & föreställning,musikal,3,3,3,llm,Musikcaféserien Eksjö  - Fröken Elvis – Olsbergs Arena | Musikcaféserien Eksjö  - Malena & Mats – Olsbergs Arena | Musikcaféserien Eksjö  - Minna Weurlander – Kraftspel – Olsbergs Arena
-cafe,Språk & läsning,cafe,3,3,3,rules,New Year’s Eve at Café Klotet | Peter Asplund Big Band – The Christmas Feeling – Café Mosaic | Sam Newbould Quintet – Café Mosaic
-sagor,Barn & familj,sagor,3,3,3,rules,Ni dricker öl medan jag läser sagor - Isak Jansson | Sagor & Swing och Pocket Size | Sagor och sång på somaliska med Iman Elmi
+Sagor,Barn & familj,"sagor, Sagor",3,3,3,rules,Ni dricker öl medan jag läser sagor - Isak Jansson | Sagor & Swing och Pocket Size | Sagor och sång på somaliska med Iman Elmi
 NYÅRSAFTON,Fest & nattliv,nattliv,3,3,3,llm,NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE | NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM | NYÅRSAFTON 2026/2027 PÅ SENSE - THE NODE - STHLM
 Odontologisk Riksstämma,Samhälle & möte,möte,3,3,3,llm,Odontologisk Riksstämma &#038; Swedental | Odontologisk Riksstämma &#038; Swedental 2027 | Odontologisk Riksstämma &amp; Swedental 2026
 ORGELMATINÉ,Konsert & musikframträdande,konsert,3,3,3,llm,ORGELMATINÉ  - med Jean-Baptiste Robin | ORGELMATINÉ  - med Johannes Skoog | Orgelmatiné med Johannes Skoog
@@ -441,7 +441,7 @@ Sketching Club,Workshops & kurser,verkstan,3,3,3,llm,Sketching Club: Collaborati
 kulturfestival,Mässa & marknad,festival,3,3,3,llm,Somalisk kulturfestival på Kista bibliotek | Somalisk kulturfestival: Poesin har många språk | Somalisk Kulturfestival: Poesin har många språk
 musikaliskt möte,Konsert & musikframträdande,konsert,3,3,3,llm,Stad i Ljus - Ett musikaliskt möte med Py Bäckman – Kulturhuset | Stad i ljus - Ett musikaliskt möte med Py Bäckman – Kulturhuset tio14 | Stad i ljus - Ett musikaliskt möte med Py Bäckman – Motala Folkets Hus
 STAR NIGHT,Konsert & musikframträdande,show,3,3,3,llm,STAR NIGHT | STAR NIGHT 2027 - Sveriges största 80-talshyllning någonsin! | Star Night 2027 @ Avicii Arena
-The World of Sevdah and more,Konsert & musikframträdande,konsert,3,3,3,llm,The World of Sevdah and more | The World of Sevdah and More | The World of Sevdah and More – PB-Hallen
+The World of Sevdah and More,Konsert & musikframträdande,konsert,3,3,3,llm,The World of Sevdah and more | The World of Sevdah and More | The World of Sevdah and More – PB-Hallen
 PARTYBUSS,Fest & nattliv,nattliv,3,3,3,llm,X-CRUISE - PARTYBUSS GÖTEBORG - STOCKHOLM | X-CRUISE - PARTYBUSS KARLSTAD - STOCKHOLM | X-CRUISE - PARTYBUSS SUNDSVALL - STOCKHOLM
 Yrkesmässa,Mässa & marknad,mässa,3,3,3,llm,Yrkesmässa Conventum Örebro 2026 | Yrkesmässa i Hjo 2027 &#8211; Jobbmässa på Lilla Park | Yrkesmässa på Malmömässan 2027
 Kortfilmspaket,Film & bio,film,2,3,1,llm,"27/10 Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal | Kortfilmspaket: If Things Could Talk (Stockholms filmfestival)"
@@ -458,11 +458,12 @@ Familjevandring,Promenad & friluftsliv,vandring,2,3,2,llm,Familjevandring i Gaml
 Filosofikafé,Föreläsning & samtal,samtal,2,3,3,llm,Filosofikafé | Filosofikafé. Öppet tema
 Metal Fest,Mässa & marknad,festival,2,3,2,llm,Halloween Metal Fest | HELLRAISER METAL FEST 7/11
 Halloweenpyssel,Barn & familj,"barn, verkstan",2,3,0,llm,Halloweenpyssel | Halloweenpyssel: gör din egen läskiga karta!
-film,Film & bio,film,2,3,1,rules,Ikatan Darah (Monsters of Film) | Monsters of Film 2026
+Film,Film & bio,Film,2,3,1,rules,Ikatan Darah (Monsters of Film) | Monsters of Film 2026
 Interaktiv högläsning,Språk & läsning,läsning,2,3,0,llm,Interaktiv högläsning: Ur dimman | Interaktiv högläsning: Välj väg ur dimman!
 Julvisning,Utställning & konst,utställning,2,3,3,llm,Julvisning av Stuckat&#xF6;rens v&#xE5;ning | Julvisning av Barnrikehuset
 Kallsup,Bad & välbefinnande,"bad, övrigt",2,3,3,llm,Kallsup | Hus 7 | Kallsup – Söderport
-techno,Fest & nattliv,techno,2,3,0,rules,"Koordinat Halloween / 3 Floors (techno, psy, hits) | KAPRIFOL - Techno Edition"
+utställningen,Utställning & konst,"utställning, utställningen",2,3,1,llm+rules,"Khelna Daien visar utställningen - Själens avtryck | Två besökare, sedda bakifrån, tittar upp på en vägg med affischer i utställningen Harder Better Faster Stronger – Are Men OK?"
+techno,Fest & nattliv,"techno, Techno",2,3,0,rules,"Koordinat Halloween / 3 Floors (techno, psy, hits) | KAPRIFOL - Techno Edition"
 Mat för livet,Mat & dryck,mat,2,3,3,llm,Mat för livet 2026 | Mat för Livet 2026
 MysteriumMässan,Mässa & marknad,mässa,2,3,0,llm,MysteriumMässan Borås 2026 | Mysteriummässan & Beyond Life
 Musikafton,Konsert & musikframträdande,konsert,2,3,3,llm,ÖMK Musikafton | Peña & musikafton på aliasTEATERN
@@ -472,7 +473,6 @@ Psykologer tittar på film,Film & bio,"bio, film",2,3,3,llm,Psykologer tittar p�
 Show & Tell,Attraktion med oklassad typ,"övrigt, show",2,3,1,llm,Show & Tell @ Oak Island Gallery – Creatives Getting Coffee | Creative Show & Tell
 Släktforskningshjälp,Attraktion med oklassad typ,övrigt,2,3,2,llm,Släktforskningshjälp | Släktforskningshjälp på Farsta bibliotek
 Socionomdagarna,Samhälle & möte,"möte, samhälle",2,3,3,llm,Socionomdagarna 2026 | Socionomdagarna
-PREMIÄR,Scen & föreställning,"övrigt, teater",2,3,3,llm,Sommarnattens leende PREMIÄR | Frankenstein Premiär &#8211; Samarbete med Moomsteatern
 Sportfiskemässan,Mässa & marknad,mässa,2,3,3,llm,Sportfiskemässan 2027 | Sportfiskemässan
 Stjärnhimlar,Utställning & konst,utställning,2,3,3,llm,Stjärnhimlar | Familjelördag: Stjärnhimlar
 Mahjong,Spel & social tävling,spel,2,3,1,llm,Thursday MCR Mahjong in Stockholm | Sunday MCR Mahjong in Stockholm
@@ -498,7 +498,6 @@ peinture et bougies parfumées,Workshops & kurser,verkstan,1,3,3,llm,Dans le sal
 Dansa och sjung,Scen & föreställning,dans,1,3,3,llm,Dansa och sjung eller måla med din klass eller förskolegrupp
 Designer Games Night,Spel & social tävling,spel,1,3,3,llm,Designer Games Night
 Artist,Konsert & musikframträdande,show,1,3,3,llm,En Hemlig Artist #12
-KVÄLL,Konsert & musikframträdande,konsert,1,3,1,llm,EN KVÄLL ATT MINNAS MED - STEN & STANLEY
 kväll med Medborgarna,Konsert & musikframträdande,konsert,1,3,3,llm,En kväll med Medborgarna
 baka pepparkakor,Workshops & kurser,verkstan,1,3,3,llm,Familjesöndag: baka pepparkakor på Ektorpet
 Föräldrakafé,Attraktion med oklassad typ,övrigt,1,3,3,llm,Föräldrakafé
@@ -523,7 +522,7 @@ polska,Scen & föreställning,musikal,1,3,3,llm,Roms fontäner och Tjajkovskijs 
 Samtidsquiza,Spel & social tävling,spel,1,3,3,llm,Samtidsquiza med Essy och Hanna!
 Sång- och sagostund,Barn & familj,barn,1,3,3,llm,Sång- och sagostund
 Sångstund,Barn & familj,barn,1,3,3,llm,Sångstund för 0-2 år
-seniortraff,Promenad & friluftsliv,traff,1,3,3,rules,Seniorträff
+Seniorträff,Promenad & friluftsliv,Seniorträff,1,3,3,rules,Seniorträff
 Släktforska!,Attraktion med oklassad typ,övrigt,1,3,3,llm,Släktforska!
 Stickpoesi,Språk & läsning,läsning,1,3,3,llm,Stickpoesi
 Sveriges sista magiker,Konsert & musikframträdande,show,1,3,2,llm,Sveriges sista magiker
@@ -536,7 +535,7 @@ Vinterstyling,Attraktion med oklassad typ,övrigt,2,2,2,llm,❄️ Vinterstyling
 DJ,Fest & nattliv,nattliv,2,2,2,llm,A.CHAL PE + Chancho & Nikee (DJ) PE/DK | CC Luna invites Berlin DJ Metapattern and Neo to Bronx Sauna
 showcase,Konsert & musikframträdande,show,2,2,1,llm,Action Athletics showcase HT 2026 | Streetstar Showcase of the Year 2026
 After school,Språk & läsning,"läsning, övrigt",2,2,1,llm,After school på bibblan! | Nacksta After School
-After work,Fest & nattliv,"nattliv, after work",2,2,2,llm+rules,After work | Metal After Work
+After work,Fest & nattliv,"nattliv, After Work",2,2,2,llm+rules,After work | Metal After Work
 Afterwork,Fest & nattliv,nattliv,2,2,1,llm,Afterwork i Konstbaren! | Afterwork with Volt Stockholm 🍻💜
 En Stilla Jul,Konsert & musikframträdande,konsert,2,2,2,llm,Anders Ekborg - En Stilla Jul | ANDERS EKBORG - EN STILLA JUL
 Den stora julfesten,Fest & nattliv,fest,2,2,2,llm,Anders F Rönnblom + gäster | Den stora julfesten | 18 december | Södra Teatern - Stockholm | Anders F Rönnblom + gäster | Den stora julfesten | 19 december | Södra Teatern - Stockholm
@@ -547,7 +546,7 @@ the end,Konsert & musikframträdande,show,2,2,0,llm,Audiorama: the end - Saturda
 charmkurs,Workshops & kurser,kurs,2,2,2,llm,Axel von Fersen charmkurs - Platinum Edition | Axel von Fersen charmkurs- Platinum Edition
 Backstage Club,Fest & nattliv,nattliv,2,2,2,llm,"Backstage Club | Backstage Club | 8 nov | Börsen, Stockholm"
 Balett,Scen & föreställning,dans,2,2,2,llm,Balett N 5-7 år | Balett N vuxna
-MUSICAL,Scen & föreställning,"musikal, musical",2,2,2,llm+rules,BAMBALINAS EL MUSICAL | Napalm Death | Campaign for Musical Destruction
+MUSICAL,Scen & föreställning,"musikal, Musical",2,2,2,llm+rules,BAMBALINAS EL MUSICAL | Napalm Death | Campaign for Musical Destruction
 Ölfestival,Mässa & marknad,festival,2,2,2,llm,Barley Brewers Fest 2027 – Ölfestival i Östersund | Växjö Ölfestival KÖK11 2027
 STRÅKTRIO,Scen & föreställning,"musikal, konsert",2,2,2,llm,BEETHOVENS STRÅKTRIO  - Filharmoniker i Närbild | ODD Stråktrio – Argussalen
 Bilderboksdagen,Barn & familj,barn,2,2,2,llm,Bilderboksdagen | Bilderboksdagen och nyinstiftat internationellt bilderbokspris!
@@ -580,11 +579,11 @@ Hallelujah,Scen & föreställning,musikal,2,2,2,llm,Ebba Forsberg – Hallelujah
 Echo Three Fest,Mässa & marknad,festival,2,2,2,llm,Echo Three Fest 2027 | ECHO THREE FEST 2027
 Stand-up Comedy,Scen & föreställning,standup,2,2,1,llm,Elina Du Rietz and Friends – Stand-up Comedy in Swedish | English stand-up comedy in Stockholm
 "Elvis, Elvis, Elvis!",Konsert & musikframträdande,konsert,2,2,1,llm,"Elvis, Elvis, Elvis! - 2026 – Halmstads Teater | Elvis, Elvis, Elvis! - 2026 – Karlstad CCC"
-massa,Mässa & marknad,massa,2,2,2,rules,En Jäkla Massa Schlager | Magnus Carlsson &amp; Linda Bengtzing - En jäkla massa schlager 2027
+Massa,Mässa & marknad,"Massa, massa",2,2,2,rules,En Jäkla Massa Schlager | Magnus Carlsson &amp; Linda Bengtzing - En jäkla massa schlager 2027
 körmusik,Konsert & musikframträdande,konsert,2,2,1,llm,Engelsk körmusik i Engelska kyrkan | Engelsk och svensk körmusik
 Examenshögtid,Fest & nattliv,fest,2,2,2,llm,Examenshögtid 2026 | Examenshögtid 2026 - inbjudna gäster
 Examenskonsert,Konsert & musikframträdande,konsert,2,2,1,llm,Examenskonsert Maria Jonsson | Marika Markström examenskonsert
-foto,Utställning & konst,foto,2,2,1,rules,F3 Foto | Stockholm | Foto: Levi Axene30 okt. 2026 – 20:30–22:30LIVE: Venus Anon
+Foto,Utställning & konst,Foto,2,2,1,rules,F3 Foto | Stockholm | Foto: Levi Axene30 okt. 2026 – 20:30–22:30LIVE: Venus Anon
 Lunch,Mat & dryck,mat,2,2,2,llm,Feminvest Fund Accelerator Lunch | LP Lunch @FEARLESS
 Hundmässa,Mässa & marknad,mässa,2,2,2,llm,Finlands Hundmässa 2026 | MyDOG Hundmässa Göteborg 2027
 The Watermelon Woman,Film & bio,film,2,2,2,llm,FLM presenrerar The Watermelon Woman | FLM presenterar The Watermelon Woman
@@ -606,9 +605,10 @@ Musik,Konsert & musikframträdande,konsert,2,2,1,llm,Hans Zimmers Musik – Teat
 slöjdcafé,Workshops & kurser,verkstan,2,2,2,llm,Hemslöjdsgillets slöjdcafé | Slöjdcafé med drop-in i Verkstan
 Stage 1,Konsert & musikframträdande,"konsert, teater",2,2,1,llm,Hogwarts Magic Symphony – Stage 1 | Skellefteå Symfoniorkester: Queen at the Opera – Stage 1
 höstlov för skollediga barn och medföljande vuxna,Barn & familj,barn,2,2,0,llm,höstlov för skollediga barn och medföljande vuxna | Höstlov för skollediga barn och medföljande vuxna
+Höstlovet,Barn & familj,"övrigt, höstlovet",2,2,0,llm+rules,Höstlovet på Rocksta gård | Låna i mörkret på höstlovet
 Höstlovskul,Spel & social tävling,spel,2,2,0,llm,Höstlovskul med Farsta Schackklubb | Höstlovskul på Skantzen
 Balett-intensiv/Repertoar,Workshops & kurser,kurs,2,2,0,llm,Höstlovskurs: Balett-intensiv/Repertoar 10-13 år F/M med Annika Höglind | Höstlovskurs: Balett-intensiv/Repertoar 14+ år F/M med Annika Höglind
-galleri,Utställning & konst,galleri,2,2,2,rules,HV Galleri | I will give my love an apple – Galleri Panncentralen
+Galleri,Utställning & konst,Galleri,2,2,2,rules,HV Galleri | I will give my love an apple – Galleri Panncentralen
 Walk Tour,Promenad & friluftsliv,"vandring, promenad",2,2,2,llm,"Industrial Walk Tour, Södermalm West | Walk tour, Kungsholmen west"
 musikalisk unik livsberättelse,Scen & föreställning,musikal,2,2,2,llm,Jag är Carola – en musikalisk unik livsberättelse – Stage 1 | Jag är Carola – En musikalisk unik livsberättelse 2026 – Magasinet
 Jazz Jam,Konsert & musikframträdande,konsert,2,2,0,llm,Jazz Jam Fridays • Vibrant jazz jam with Stockholms finest Live at Stampen! 23:30 - 02:00 | Jazz Jam Fridays • Vibrant jazz jam with Stockholms finest Live at Stampen! 23:30 &#8211; 02:00
@@ -783,7 +783,6 @@ Julspel,Spel & social tävling,spel,1,2,2,llm,"Julspel ""Ett barn är fött"""
 turné,Konsert & musikframträdande,konsert,1,2,2,llm,Kalabalik i Fabriken turné
 Candle light concert,Konsert & musikframträdande,konsert,1,2,2,llm,Kammarmusik: Candle light concert
 Kärnteknikdagarna,Föreläsning & samtal,föreläsning,1,2,2,llm,Kärnteknikdagarna / Swedish Conference on Nuclear Power 2026
-utställningen,Utställning & konst,utställning,1,2,1,llm,Khelna Daien visar utställningen - Själens avtryck
 Mangabokcirkel,Språk & läsning,bokcirkel,1,2,2,llm,Kista UNG: Mangabokcirkel
 Klösiga katters klubb,Barn & familj,barn,1,2,0,llm,Klösiga katters klubb (3-9 år)
 gör håraccessoarer,Workshops & kurser,verkstan,1,2,2,llm,Kom och gör håraccessoarer av pappersblommor.
@@ -840,7 +839,6 @@ Förfest,Fest & nattliv,fest,1,2,0,llm,Ramonsdag - Förfest inför Marky Ramone'
 Really Good Time,Fest & nattliv,fest,1,2,2,llm,Really Good Time | Hus 7
 Repair Cafe',Workshops & kurser,verkstan,1,2,2,llm,Repair Cafe' and Community banner workshop - Make Something Week
 Restaurant of the Week,Mat & dryck,mat,1,2,1,llm,Restaurant of the Week | Foodies + New Friends: Stockholm
-premiar,Scen & föreställning,premiar,1,2,2,rules,RUMI & JULIA – PREMIÄR
 deckargåta,Spel & social tävling,spel,1,2,0,llm,Ryslig deckargåta
 Sälenmässan,Mässa & marknad,mässa,1,2,0,llm,Sälenmässan 2026
 kvällsateljé,Scen & föreställning,teater,1,2,2,llm,Salongen – kvällsateljé för vuxna
@@ -959,7 +957,7 @@ Advent Concert,Konsert & musikframträdande,konsert,1,1,1,llm,Advent Concert in 
 Advent med LUX,Konsert & musikframträdande,konsert,1,1,1,llm,Advent med LUX
 Adventskonserten,Konsert & musikframträdande,konsert,1,1,1,llm,Adventskonserten i Blå hallen
 Affärsfokus,Attraktion med oklassad typ,övrigt,1,1,1,llm,Affärsfokus Lund 2026
-reggae,Konsert & musikframträdande,reggae,1,1,1,rules,Afro Reggae Mania Ep2
+Reggae,Konsert & musikframträdande,Reggae,1,1,1,rules,Afro Reggae Mania Ep2
 dansworkshop,Workshops & kurser,workshop,1,1,0,llm,Afrobeat Sessions - dansworkshop
 Art Evenings,Utställning & konst,konst,1,1,0,llm,After Hours – Art Evenings at Artipelag
 Collective Tools for Worker Organising,Attraktion med oklassad typ,övrigt,1,1,1,llm,Against Outsourcing: Collective Tools for Worker Organising
@@ -1064,7 +1062,7 @@ viner,Mat & dryck,dryck,1,1,1,llm,Berömda viner från Spanien
 Dramaten,Scen & föreställning,teater,1,1,1,llm,Berwaldhallen och Dramaten i Högdalen
 Camera Skills in the Field,Workshops & kurser,workshop,1,1,1,llm,Better Landscapes: Essential Camera Skills in the Field with Adam Edwards
 Decision Models,Föreläsning & samtal,seminarium,1,1,1,llm,Beyond LLMs: Meet Decision Models
-laslovet,Barn & familj,laslovet,1,1,0,rules,Bibblan på läslovet!
+läslovet,Barn & familj,läslovet,1,1,0,rules,Bibblan på läslovet!
 Revue,Scen & föreställning,revy,1,1,0,llm,Big T Blues Revue Live at Stampen • October 28 • 17:00-19:00 • Free entry!
 Bildorientering,Attraktion med oklassad typ,övrigt,1,1,0,llm,Bildorientering i Älskade Västmanland
 LIVE musik,Konsert & musikframträdande,konsert,1,1,1,llm,Bio & LIVE musik Monica Z
@@ -1100,7 +1098,6 @@ Lunch Talks,Föreläsning & samtal,samtal,1,1,1,llm,"Brown Bag Lunch Talks @ MSD
 mysterier,Attraktion med oklassad typ,övrigt,1,1,0,llm,Bus och mysterier med Alfons Åberg
 Byggsvängen,Promenad & friluftsliv,vandring,1,1,1,llm,Bussturen Byggsvängen 2026
 Byggmässan,Mässa & marknad,mässa,1,1,1,llm,Byggmässan Stockholm 2027
-Café,Mat & dryck,mat,1,1,0,llm,Café Hjärtat
 Christmas Classics,Scen & föreställning,musikal,1,1,1,llm,Candlelight: Christmas Classics
 Coldplay Meets Imagine Dragons,Konsert & musikframträdande,konsert,1,1,0,llm,Candlelight: Coldplay Meets Imagine Dragons | Stockholm
 Carl Eldhs samlade verk,Utställning & konst,utställning,1,1,1,llm,Carl Eldhs samlade verk
@@ -1111,7 +1108,7 @@ Cavern Deep,Konsert & musikframträdande,konsert,1,1,1,llm,Cavern Deep @ Fredags
 Celebrate St. Martin's Day,Fest & nattliv,fest,1,1,1,llm,Celebrate St. Martin's Day on Långholmen
 Chakradance,Scen & föreställning,dans,1,1,0,llm,Chakradance™ i Sollefteå
 Chaos Fest,Mässa & marknad,festival,1,1,1,llm,Chaos Fest IV | Tyrann + Century + Mutation
-choklad,Mat & dryck,choklad,1,1,1,rules,Choklad- &amp; Konfektyrfestivalen 2027
+Choklad,Mat & dryck,Choklad,1,1,1,rules,Choklad- &amp; Konfektyrfestivalen 2027
 Christmas baking workshop,Workshops & kurser,verkstan,1,1,1,llm,Christmas baking workshop
 Christmas Day Party,Fest & nattliv,fest,1,1,1,llm,Christmas Day Party @Hyde
 Christmas Party,Fest & nattliv,fest,1,1,1,llm,Christmas Party med The Weather Girls & DJ Gunn
@@ -1160,7 +1157,7 @@ Harmony for the Holidays,Konsert & musikframträdande,konsert,1,1,1,llm,Dad Harm
 "Dags att lämna Meta, Google och TikTok?",Föreläsning & samtal,föreläsning,1,1,1,llm,"Dags att lämna Meta, Google och TikTok?"
 Dahlkvistkvartetten med cello,Konsert & musikframträdande,konsert,1,1,1,llm,Dahlkvistkvartetten med cello – Kalmar Slott Gröna salen
 Trädgårdsmässa,Mässa & marknad,mässa,1,1,1,llm,Dalarnas Hem &#038; Trädgårdsmässa 2027
-jakt,Promenad & friluftsliv,jakt,1,1,1,rules,Dalarnas Jakt &#038; Fiskemässa 2027
+Jakt,Promenad & friluftsliv,Jakt,1,1,1,rules,Dalarnas Jakt &#038; Fiskemässa 2027
 Dalcroze,Workshops & kurser,kurs,1,1,1,llm,Dalcroze – att lyssna med hela kroppen
 Djurgården Hockey - HV71,Sport & tävling,match,1,1,1,llm,DAM | Djurgården Hockey - HV71
 Djurgården Hockey - Luleå Hockey/MSSK,Sport & tävling,match,1,1,1,llm,DAM | Djurgården Hockey - Luleå Hockey/MSSK
@@ -1225,7 +1222,7 @@ Drop-in frukost,Mat & dryck,mat,1,1,1,llm,Drop-in frukost i S:t Mikael &#8211; N
 Drottning Kristina 400år,Utställning & konst,utställning,1,1,1,llm,Drottning Kristina 400år – Jäders Kyrka
 CAFÈ,Mat & dryck,mat,1,1,1,llm,Dubbel CAFÈ med M.O.K. och Miranda Pérez kvartett
 Dubbelutställning,Utställning & konst,utställning,1,1,0,llm,Dubbelutställning i Flygeln
-duett,Konsert & musikframträdande,duett,1,1,0,rules,Duett i elände
+Duett,Konsert & musikframträdande,Duett,1,1,0,rules,Duett i elände
 Sacred Concert,Konsert & musikframträdande,konsert,1,1,0,llm,Duke Ellingtons Sacred Concert
 exklusiv förhandsvisning,Film & bio,film,1,1,1,llm,Dune: Part Three - exklusiv förhandsvisning
 Dunya Fest,Mässa & marknad,festival,1,1,1,llm,Dunya Fest 2026
@@ -1276,7 +1273,7 @@ Den underbara färgen,Utställning & konst,utställning,1,1,1,llm,Familjesöndag
 Familjevisningar,Utställning & konst,utställning,1,1,1,llm,Familjevisningar med Helsingborgs museum
 Fanzinemarknad,Mässa & marknad,marknad,1,1,1,llm,Fanzinemarknad - Pär Thörn Live!
 Folkbildning,Föreläsning & samtal,föreläsning,1,1,1,llm,Farsta samtalar: Folkbildning
-fashion,Scen & föreställning,fashion,1,1,1,rules,Fashion * Art * Connect * TogetherGRATIS
+Fashion,Scen & föreställning,Fashion,1,1,1,rules,Fashion * Art * Connect * TogetherGRATIS
 Fashion Tech Evening,Scen & föreställning,övrigt,1,1,0,llm,Fashion Tech Evening
 FC Järfälla vs Herrar,Sport & tävling,match,1,1,1,llm,FC Järfälla vs Herrar
 FC Rosengård – Hammarby IF,Sport & tävling,match,1,1,1,llm,FC Rosengård – Hammarby IF
@@ -1430,7 +1427,6 @@ Höstlov på Postmusuem,Barn & familj,barn,1,1,0,llm,Höstlov på Postmusuem
 Höstlov på Ståhl Collection,Barn & familj,barn,1,1,0,llm,Höstlov på Ståhl Collection
 Ficklampsvisning,Barn & familj,övrigt,1,1,0,llm,Höstlov: Ficklampsvisning i slottskällarens mörker
 Tygtryck,Workshops & kurser,verkstan,1,1,0,llm,Höstlov: Tygtryck på Textilmuseet
-Höstlovet,Barn & familj,övrigt,1,1,0,llm,Höstlovet på Rocksta gård
 Höstlovsbio,Film & bio,bio,1,1,0,llm,"Höstlovsbio ""Monster Mia"""
 Höstlovsjakt,Spel & social tävling,spel,1,1,0,llm,Höstlovsjakt på Kungliga slottet
 Höstlovsklubb,Barn & familj,barn,1,1,0,llm,Höstlovsklubb
@@ -1546,7 +1542,7 @@ Konsten att bygga meningar,Workshops & kurser,kurs,1,1,1,llm,"Konsten att bygga 
 Konsten att kommunicera,Workshops & kurser,kurs,1,1,1,llm,Konsten att kommunicera med PG Wettsjö
 anatomiundervisning,Föreläsning & samtal,föreläsning,1,1,1,llm,Konstfacks anatomiundervisning
 Konstfika,Mat & dryck,mat,1,1,0,llm,Konstfika på finska - Eija Liisa Ahtila
-konsthall,Utställning & konst,konsthall,1,1,1,rules,Konsthall 16
+Konsthall,Utställning & konst,Konsthall,1,1,1,rules,Konsthall 16
 Collage och arkiv,Workshops & kurser,verkstan,1,1,1,llm,Konstlördagar med Studio Funk: Collage och arkiv
 KONSTNÄRSVISNINGAR,Utställning & konst,utställning,1,1,1,llm,KONSTNÄRSVISNINGAR
 Smideskonst,Utställning & konst,konst,1,1,0,llm,Konstsmed Anki Edlund - Smideskonst
@@ -1581,7 +1577,6 @@ Labyrint,Konsert & musikframträdande,show,1,1,1,llm,Labyrint | Slaktkyrkan
 Ladies’ Night,Fest & nattliv,nattliv,1,1,1,llm,Ladies’ Night ✨ Royal Edition | حفلة نسائية
 SM i dressyr,Sport & tävling,tävling,1,1,0,llm,Lag - SM i dressyr Ponny på Hallsta Ridklubb
 Lag-SM Brottning,Sport & tävling,tävling,1,1,1,llm,Lag-SM Brottning
-hostlovet,Barn & familj,hostlovet,1,1,0,rules,Låna i mörkret på höstlovet
 music and dance,Scen & föreställning,dans,1,1,1,llm,Lane 8 - An evening of music and dance
 Lansering,Attraktion med oklassad typ,övrigt,1,1,1,llm,Lansering: Mileis Argentina
 Läs,Språk & läsning,läsning,1,1,0,llm,Läs för Janice
@@ -1873,7 +1868,7 @@ pappersingenjörskonst,Workshops & kurser,verkstan,1,1,0,llm,Rörligt papper: Sk
 Garden Party,Fest & nattliv,fest,1,1,1,llm,Rosendal Garden Party 2027
 BOOTCAMP,Workshops & kurser,träning,1,1,1,llm,RUNBOX BOOTCAMP 18.30
 Ryttargalan,Attraktion med oklassad typ,övrigt,1,1,1,llm,Ryttargalan 2026
-Dansmuseet,Utställning & konst,museet,1,1,1,rules,Sagodans med Dansmuseet
+Dansmuseet,Utställning & konst,Dansmuseet,1,1,1,rules,Sagodans med Dansmuseet
 Smyckestens- och Mineralmässa,Mässa & marknad,mässa,1,1,1,llm,SAGS Smyckestens- och Mineralmässa 2026
 PROVA PÅ,Workshops & kurser,övrigt,1,1,0,llm,SALSA - GRATIS PROVA PÅ
 SAMHAIN SÉANCE,Attraktion med oklassad typ,övrigt,1,1,1,llm,SAMHAIN SÉANCE: Ancestral Collaboration with Pam Grossman & Janaka Stucky
@@ -1913,7 +1908,7 @@ Shared reading - gemensam läsning,Språk & läsning,läsning,1,1,0,llm,Shared r
 In the flesh,Konsert & musikframträdande,konsert,1,1,1,llm,Shine On You - In the flesh. A journey into Pink Floyd. – Lokomotivet
 "DANCE, KID, DANCE ACT II",Konsert & musikframträdande,konsert,1,1,1,llm,"Shinedown: DANCE, KID, DANCE ACT II"
 Shttl + Q&A,Film & bio,film,1,1,1,llm,Shttl + Q&A (Yiddish Film Festival)
-release,Konsert & musikframträdande,release,1,1,1,rules,Sibille Attar - AMOR FATI ZINE RELEASE - vol 1 the love issue
+RELEASE,Konsert & musikframträdande,RELEASE,1,1,1,rules,Sibille Attar - AMOR FATI ZINE RELEASE - vol 1 the love issue
 Mahjong Night,Spel & social tävling,spel,1,1,1,llm,Sichuan Mahjong Night: A Classic Chinese Social Game
 "Signes likör – en teater om livet, relationer och minnen som berör",Scen & föreställning,teater,1,1,1,llm,"Signes likör – en teater om livet, relationer och minnen som berör"
 Silent Night,Scen & föreställning,musikal,1,1,1,llm,Silent Night med Christian Kjellvander
@@ -1927,7 +1922,7 @@ PIANOKVINTETT,Konsert & musikframträdande,konsert,1,1,1,llm,SJOSTAKOVITJ PIANOK
 Teckning och collage,Workshops & kurser,verkstan,1,1,1,llm,Skapa & kaka: Teckning och collage
 filmworkshop,Workshops & kurser,workshop,1,1,1,llm,Skapa din egen berättelse – filmworkshop för unga
 Skapa din egen sugarskull,Workshops & kurser,verkstan,1,1,0,llm,Skapa din egen sugarskull
-skapa,Workshops & kurser,skapa,1,1,0,rules,Skapa ditt eget brädspel!
+Skapa,Workshops & kurser,Skapa,1,1,0,rules,Skapa ditt eget brädspel!
 Skapa ditt eget papper,Workshops & kurser,verkstan,1,1,1,llm,Skapa ditt eget papper
 Skapa ditt egna brädspel,Workshops & kurser,verkstan,1,1,0,llm,Skapa ditt egna brädspel
 Skapa egna bokmärken,Workshops & kurser,verkstan,1,1,0,llm,Skapa egna bokmärken
@@ -1991,7 +1986,6 @@ Spökhistorievisning,Attraktion med oklassad typ,övrigt,1,1,0,llm,Spökhistorie
 Spökspår,Attraktion med oklassad typ,övrigt,1,1,0,llm,Spökspår Riddersviks 4H
 Spooky hour,Fest & nattliv,nattliv,1,1,0,llm,Spooky hour
 Sportklubben,Sport & tävling,sport,1,1,1,llm,Sportklubben
-Språk,Språk & läsning,språk,1,1,1,llm,Språk med krux
 fortbildningsdag,Attraktion med oklassad typ,övrigt,1,1,1,llm,SPRÅKFESTEN! 2026 - fortbildningsdag
 Språkträff,Språk & läsning,språk,1,1,0,llm,Språkträff
 Spring Fire,Konsert & musikframträdande,konsert,1,1,1,llm,Spring Fire with Orozco-Estrada & Byström
@@ -2052,7 +2046,7 @@ Big Band Jazz,Konsert & musikframträdande,konsert,1,1,1,llm,Sundbybergs Storban
 Super Smash Bros. Ultimate,Spel & social tävling,spel,1,1,0,llm,Super Smash Bros. Ultimate på Kappa
 Super Smash Ultimate,Spel & social tävling,spel,1,1,1,llm,Super Smash Ultimate Saturday in Stockholm
 SURVIVOR – Berättelsernas kamp,Konsert & musikframträdande,show,1,1,1,llm,SURVIVOR – Berättelsernas kamp
-Konstmuseum,Utställning & konst,museum,1,1,1,rules,Sven-Harrys Konstmuseum
+Konstmuseum,Utställning & konst,Konstmuseum,1,1,1,rules,Sven-Harrys Konstmuseum
 Svensk Kortfilm,Film & bio,film,1,1,0,llm,Svensk Kortfilm c/o Folkets Bio
 Svenska Cupen,Sport & tävling,tävling,1,1,1,llm,Svenska Cupen 2026 i Counter-Strike
 Svenska Deckarfestivalen,Mässa & marknad,festival,1,1,1,llm,Svenska Deckarfestivalen 2026 Sundsvall
@@ -2090,7 +2084,7 @@ Pre Party,Fest & nattliv,nattliv,1,1,1,llm,Techno Stockholm DIMENSION - Pre Part
 Technostate BIGBANG Halloween,Fest & nattliv,nattliv,1,1,1,llm,Technostate BIGBANG Halloween
 TECHNOSTATE BIGBANG HALLOWEEN 2026,Fest & nattliv,nattliv,1,1,0,llm,TECHNOSTATE BIGBANG HALLOWEEN 2026
 Signerat Peter Nordahl,Konsert & musikframträdande,show,1,1,1,llm,TED GÄRDESTAD  - Signerat Peter Nordahl
-ungdom,Barn & familj,ungdom,1,1,1,rules,Tegs SK Hockey Ungdom – Njurunda SK (U20)
+Ungdom,Barn & familj,Ungdom,1,1,1,rules,Tegs SK Hockey Ungdom – Njurunda SK (U20)
 Teknikhjälp,Workshops & kurser,verkstan,1,1,0,llm,Teknikhjälp
 Teknikhjälpen,Workshops & kurser,verkstan,1,1,1,llm,Teknikhjälpen
 Tequila Club,Fest & nattliv,nattliv,1,1,1,llm,Tequila Club #26
@@ -2140,12 +2134,12 @@ lunchmusik,Konsert & musikframträdande,konsert,1,1,0,llm,Toner vid tolv: Middag
 danskväll,Scen & föreställning,dans,1,1,0,llm,Torsdagens danskväll på Dance Vida
 Torsdagsträff,Samhälle & möte,möte,1,1,0,llm,Torsdagsträff
 Traditional Reiki Healing Course - Level 1 (Shoden),Workshops & kurser,kurs,1,1,1,llm,Traditional Reiki Healing Course - Level 1 (Shoden)
-traff,Promenad & friluftsliv,traff,1,1,0,rules,Träff för daglediga: Odla tillsammansGRATIS
+Träff,Promenad & friluftsliv,Träff,1,1,0,rules,Träff för daglediga: Odla tillsammansGRATIS
 Träffpunkt,Sport & tävling,sport,1,1,1,llm,Träffpunkt Idrott 2027
 Trafikkunskap på lätt svenska,Språk & läsning,språk,1,1,0,llm,Trafikkunskap på lätt svenska
 Hjulmarknad,Mässa & marknad,marknad,1,1,1,llm,Trafiknostalgisk Hjulmarknad
 Trailer Trucking Festival,Mässa & marknad,festival,1,1,1,llm,Trailer Trucking Festival 2027
-mass,Mässa & marknad,mass,1,1,1,rules,Trakktor + Mass Murder Agenda
+Mass,Mässa & marknad,Mass,1,1,1,rules,Trakktor + Mass Murder Agenda
 Träningsmatch,Workshops & kurser,träning,1,1,1,llm,Träningsmatch Hammarby // Dam &#8211; AIK
 Transportforum,Samhälle & möte,samhälle,1,1,1,llm,Transportforum Linköping 2027
 Market,Mässa & marknad,marknad,1,1,1,llm,Travel News Market 2026
@@ -2163,7 +2157,6 @@ Tu madre/Din mamma,Scen & föreställning,teater,1,1,1,llm,Tu madre/Din mamma p�
 Restaurang Bolaget,Mat & dryck,mat,1,1,1,llm,Tuckers Lilla Kapell – Restaurang Bolaget
 Jul marknad,Mässa & marknad,marknad,1,1,1,llm,Tullinge Jul marknad 2026
 barn- och familjefotografering,Barn & familj,barn,1,1,1,llm,Tumba Centrum Stockholm - Kostnadsfri barn- och familjefotografering
-utstallningen,Utställning & konst,utstallningen,1,1,0,rules,"Två besökare, sedda bakifrån, tittar upp på en vägg med affischer i utställningen Harder Better Faster Stronger – Are Men OK?"
 skånskt yllebroderi,Workshops & kurser,verkstan,1,1,1,llm,Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne
 väva i bandgrind,Workshops & kurser,verkstan,1,1,1,llm,Tvådagarskurs: Lär dig väva i bandgrind
 Twilight Rave,Fest & nattliv,nattliv,1,1,0,llm,Twilight Rave (Stockholm)
@@ -2184,7 +2177,7 @@ en föreställning om Fred och Försoning,Scen & föreställning,teater,1,1,1,ll
 Utforska rymden,Föreläsning & samtal,föreläsning,1,1,1,llm,Utforska rymden med Peter Ekberg
 Utnarm,Attraktion med oklassad typ,övrigt,1,1,1,llm,Utnarm 2026
 UTSÅLT,Utställning & konst,utställning,1,1,0,llm,UTSÅLT: Markuskyrkans varma brutalism
-design,Utställning & konst,design,1,1,1,rules,Vad handlar Enterprise Design egentligen om?
+Design,Utställning & konst,Design,1,1,1,rules,Vad handlar Enterprise Design egentligen om?
 muntliga presentationer,Attraktion med oklassad typ,övrigt,1,1,1,llm,Våga tala – att hantera nervositet vid muntliga presentationer
 Vägledardagen,Attraktion med oklassad typ,övrigt,1,1,1,llm,Vägledardagen 2026
 Välgörenhetskonsert,Konsert & musikframträdande,konsert,1,1,1,llm,Välgörenhetskonsert för hjälp till ukrainska barn

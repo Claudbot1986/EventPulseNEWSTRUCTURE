@@ -365,21 +365,29 @@ function compoundMatch(token) {
 function runRules(titles) {
   const out = [];
   for (const t of titles) {
-    const ts = tok(t.title);
+    // Keep the ORIGINAL token (case + diacritics) for output, use a normalized
+    // key for matching — otherwise "Höstlov" would be reported as "hostlov".
+    const orig = t.title
+      .replace(/[–—]/g, '-')
+      .split(/[^a-zA-ZåäöÅÄÖéÉèÈáÁàÀíÍóÓúÚñÑçÇ0-9]+/i)
+      .filter(Boolean);
+    const ts = orig.map(norm);
     const hits = [];
     for (let i = 0; i < ts.length - 1; i++) {
       for (const mh of multiHeads) {
         const p = mh.split(' ');
-        if (ts[i] === p[0] && ts[i + 1] === p[1]) hits.push({ phrase: mh, group: headMap.get(mh), len: mh.length, idx: i });
+        if (ts[i] === p[0] && ts[i + 1] === p[1]) {
+          hits.push({ phrase: `${orig[i]} ${orig[i + 1]}`, group: headMap.get(mh), len: mh.length, idx: i });
+        }
       }
     }
     for (let i = 0; i < ts.length; i++) {
       const w = ts[i];
       if (STOPWORDS.has(w)) continue;
-      if (headMap.has(w)) hits.push({ phrase: w, group: headMap.get(w), len: w.length, idx: i });
+      if (headMap.has(w)) hits.push({ phrase: orig[i], group: headMap.get(w), len: w.length, idx: i });
       else {
         const cm = compoundMatch(w);
-        if (cm) hits.push({ phrase: cm.head, group: cm.group, len: w.length, idx: i });
+        if (cm) hits.push({ phrase: orig[i], group: cm.group, len: w.length, idx: i });
       }
     }
     hits.sort((a, b) => b.len - a.len || b.idx - a.idx);
@@ -441,12 +449,20 @@ function buildTaxonomy(merged) {
   for (const m of merged) {
     if (!m.attraction) continue;
     const k = m.attraction.toLowerCase();
-    if (!attractions.has(k)) attractions.set(k, { phrase: m.attraction, class: m.class, types: new Set(), titles: 0, events: 0, future: 0, examples: [], origins: {} });
+    if (!attractions.has(k)) attractions.set(k, { phrase: m.attraction, class: m.class, types: new Set(), titles: 0, events: 0, future: 0, examples: [], origins: {}, forms: new Map() });
     const a = attractions.get(k);
     a.titles++; a.events += m.n_events; a.future += m.n_future;
     a.types.add(m.type);
     a.origins[m.origin] = (a.origins[m.origin] || 0) + 1;
+    a.forms.set(m.attraction, (a.forms.get(m.attraction) || 0) + 1);
     if (a.examples.length < 3) a.examples.push(m.title);
+  }
+  // Most frequent spelling variant wins, so the inventory is deterministic
+  // ("Concert" vs "concert" must not depend on iteration order).
+  for (const a of attractions.values()) {
+    let best = a.phrase, bestN = -1;
+    for (const [form, n] of a.forms) if (n > bestN) { best = form; bestN = n; }
+    a.phrase = best;
   }
   const classRows = [...classes.entries()].map(([cls, v]) => ({
     class: cls, distinct_titles: v.titles, events: v.events, future_events: v.future,

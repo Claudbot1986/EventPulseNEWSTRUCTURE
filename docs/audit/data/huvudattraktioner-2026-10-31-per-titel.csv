@@ -43,7 +43,7 @@ Beri bortom bergen,Inget typord i titeln,,,show_title,none,31,25,community|theat
 Brokeback Mountain,Inget typord i titeln,,,show_title,none,31,31,community|music|theatre-drama
 Julkonsert,Konsert & musikframträdande,Julkonsert,konsert,type_in_title,llm,31,31,classical|exhibition|music|theatre-drama
 Stilleben,Inget typord i titeln,,,show_title,none,31,31,community|theatre-comedy|theatre-drama
-Yttling Jazz,Konsert & musikframträdande,jazz,jazz,artist_name,rules,31,31,community|music
+Yttling Jazz,Konsert & musikframträdande,Jazz,Jazz,artist_name,rules,31,31,community|music
 Titanique,Inget typord i titeln,,,show_title,none,28,28,music|theatre-comedy|theatre-drama
 A Christmas Carol,Inget typord i titeln,,,show_title,none,27,27,community|opera|theatre-comedy|theatre-drama
 Emil i Lönneberga,Inget typord i titeln,,,show_title,none,26,22,community|family|kids|music|theatre-drama
@@ -52,7 +52,7 @@ KONSERTHUSETS KONSTVISNING,Utställning & konst,KONSTVISNING,utställning,type_i
 Nötknäpparen,Inget typord i titeln,,,show_title,none,26,26,dance|family|film
 Jag är Ulla Winblad,Inget typord i titeln,,,artist_name,none,25,15,community|music|opera|theatre-drama
 MAFFIA COMEDY SUPERWEEKEND,Konsert & musikframträdande,COMEDY SUPERWEEKEND,show,type_in_title,llm,25,25,theatre-comedy
-"Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,show_title,rules,25,22,music
+"Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,show_title,rules,25,22,music
 Caligula,Inget typord i titeln,,,show_title,none,24,24,community|theatre-drama
 En kärlekshistoria,Inget typord i titeln,,,show_title,none,24,24,community|film|theatre-drama
 Fejk,Inget typord i titeln,,,show_title,none,24,18,community|theatre-comedy|theatre-drama
@@ -77,7 +77,7 @@ BLAND CELLOFODRAL & PARTITUR  - Guidad visning för barn,Barn & familj,Guidad vi
 Från Broadway till Duvemåla,Scen & föreställning,Från Broadway till Duvemåla,musikal,type_in_title,llm,20,10,community|music|musical-theatre|theatre-drama
 Skapandeverkstaden,Workshops & kurser,Skapandeverkstaden,verkstan,type_in_title,llm,20,10,community|kids
 StandUpSverige - Din Guide Till Gratis Skratt (Biljettreservation krävs),Scen & föreställning,StandUpSverige,standup,type_in_title,llm,20,18,theatre-comedy
-Stickcafé,Språk & läsning,stickcafe,stickcafe,other,rules,20,18,community
+Stickcafé,Språk & läsning,Stickcafé,Stickcafé,other,rules,20,18,community
 David Ritschard,Inget typord i titeln,,,artist_name,none,19,19,community|music
 Nietzsche kontra Wagner,Inget typord i titeln,,,show_title,none,19,13,community|opera|theatre-drama
 Oh What a Night,Inget typord i titeln,,,show_title,none,19,14,community|exhibition|music|theatre-drama
@@ -104,7 +104,7 @@ Tomten är far till alla barnen,Barn & familj,barnen,barnen,show_title,rules,16,
 Vernon Subutex,Inget typord i titeln,,,artist_name,none,16,14,theatre-drama
 (O)möjliga samtal,Föreläsning & samtal,samtal,samtal,type_in_title,llm,15,9,community
 Arkipelag,Inget typord i titeln,,,artist_name,none,15,6,community|film
-Helgpyssel,Barn & familj,Helgpyssel,pyssel,type_in_title,rules,15,14,community
+Helgpyssel,Barn & familj,Helgpyssel,Helgpyssel,type_in_title,rules,15,14,community
 HippHipp Live!,Konsert & musikframträdande,Live!,show,type_in_title,llm,15,15,community|music|theatre-comedy
 RITSCH RATSCH på Vasan,Konsert & musikframträdande,RITSCH RATSCH,show,type_in_title,llm,15,15,music|theatre-comedy|theatre-drama
 Studio Acusticum i Piteå,Inget typord i titeln,,,venue_only,none,15,11,community
@@ -125,11 +125,11 @@ Läxhjälp på Skärholmens bibliotek,Workshops & kurser,Läxhjälp,verkstan,typ
 Matteläxhjälp,Workshops & kurser,Matteläxhjälp,verkstan,type_in_title,llm,13,13,community
 Skolbesök i Omfamnad,Attraktion med oklassad typ,Skolbesök,övrigt,type_in_title,llm,13,13,exhibition|kids
 Bamse och Sjörövarskatten,Inget typord i titeln,,,show_title,none,12,8,community|theatre-comedy
-Bo Kaspers Orkester - Il magnifico,Konsert & musikframträdande,orkester,orkester,artist_name,rules,12,11,community|music
+Bo Kaspers Orkester - Il magnifico,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,12,11,community|music
 Claes och Andreas leker affär,Spel & social tävling,affär,spel,type_in_title,llm,12,8,community|theatre-drama
 Dalija Acin Thelander | Forza Forza!,Inget typord i titeln,,,show_title,none,12,12,dance|family
 DJ-workshop,Workshops & kurser,DJ-workshop,workshop,type_in_title,llm,12,12,community|workshop
-Höstlov: Bland cellofodral och partitur,Barn & familj,hostlov,hostlov,other,rules,12,0,community|music
+Höstlov: Bland cellofodral och partitur,Barn & familj,Höstlov,Höstlov,other,rules,12,0,community|music
 Kärlek över Tanger,Konsert & musikframträdande,Kärlek över Tanger,konsert,type_in_title,llm,12,4,community|film
 Lilla spöket Laban busar vidare,Inget typord i titeln,,,show_title,none,12,5,community|film|kids
 När Findus var liten och försvann (från 3 år) Vardag,Inget typord i titeln,,,show_title,none,12,12,family|theatre-drama
@@ -145,7 +145,7 @@ AIK Hockey,Sport & tävling,Hockey,sport,type_in_title,llm,11,4,community|sports
 Benjamin Ingrosso,Inget typord i titeln,,,artist_name,none,11,8,community
 En bro till förut,Inget typord i titeln,,,show_title,none,11,7,community
 Ge mig handen,Inget typord i titeln,,,show_title,none,11,11,community|theatre-drama
-Graveyard & Blues Pills,Konsert & musikframträdande,blues,blues,artist_name,rules,11,11,community|music
+Graveyard & Blues Pills,Konsert & musikframträdande,Blues,Blues,artist_name,rules,11,11,community|music
 JÄVLA KARLAR,Inget typord i titeln,,,show_title,none,11,11,theatre-comedy|theatre-drama
 Junior Brielle,Inget typord i titeln,,,artist_name,none,11,10,community
 Lars Winnerbäck,Inget typord i titeln,,,artist_name,none,11,11,community|music
@@ -154,7 +154,7 @@ Marcus Berggren,Inget typord i titeln,,,artist_name,none,11,11,community|theatre
 Miss Li,Inget typord i titeln,,,artist_name,none,11,11,community|music
 Petter,Inget typord i titeln,,,artist_name,none,11,11,community|music
 SKOLKONSERT  - LasseMaja och Konsertmysteriet,Konsert & musikframträdande,SKOLKONSERT,konsert,type_in_title,llm,11,11,music
-Tosca på Kungliga Operan,Scen & föreställning,operan,operan,show_title,rules,11,8,community|opera
+Tosca på Kungliga Operan,Scen & föreställning,Operan,Operan,show_title,rules,11,8,community|opera
 TROLLKARLEN FRÅN OZ,Inget typord i titeln,,,show_title,none,11,11,theatre-comedy|theatre-drama
 Euskefeurat,Fest & nattliv,Euskefeurat,fest,type_in_title,llm,10,10,community|music
 Julfrossa (från 5 år) Helg,Scen & föreställning,Julfrossa,dans,type_in_title,llm,10,10,family|kids
@@ -749,7 +749,7 @@ The Mwuanas,Inget typord i titeln,,,artist_name,none,4,4,food|music
 The Plan,Inget typord i titeln,,,show_title,none,4,4,community|music
 The Simon & Garfunkel Story,Inget typord i titeln,,,show_title,none,4,4,circus|community|music
 The Streets,Inget typord i titeln,,,artist_name,none,4,4,community|music
-The Witcher in Concert 2026,Konsert & musikframträdande,concert,concert,show_title,rules,4,4,community|music
+The Witcher in Concert 2026,Konsert & musikframträdande,Concert,Concert,show_title,rules,4,4,community|music
 Thrown,Inget typord i titeln,,,artist_name,none,4,4,community
 Till minnet av en gud - Wilsons Shango Memory,Inget typord i titeln,,,artist_name,none,4,4,classical|opera
 Tisdagskul,Inget typord i titeln,,,other,none,4,3,community
@@ -783,7 +783,7 @@ Allt,Inget typord i titeln,,,other,none,3,3,community
 Amon Amarth,Inget typord i titeln,,,artist_name,none,3,0,community|music
 Amon Amarth: The Allfather Awakens Tour 2026,Inget typord i titeln,,,artist_name,none,3,1,community
 Anastasía sjunger Alf Robertson,Inget typord i titeln,,,artist_name,none,3,3,community
-André Rieu's 2026 Christmas Concert: Let It Snow,Konsert & musikframträdande,concert,concert,artist_name,rules,3,3,film
+André Rieu's 2026 Christmas Concert: Let It Snow,Konsert & musikframträdande,Concert,Concert,artist_name,rules,3,3,film
 Äntligen måndag med pianotrio,Scen & föreställning,pianotrio,musikal,type_in_title,llm,3,0,community|music
 Bäbisbabbel!,Attraktion med oklassad typ,Bäbisbabbel!,övrigt,type_in_title,llm,3,3,community
 Bäbismys på biblioteket,Attraktion med oklassad typ,Bäbismys,övrigt,type_in_title,llm,3,3,community
@@ -845,7 +845,7 @@ EN KVÄLL ATT MINNAS MED - STEN & STANLEY,Konsert & musikframträdande,KVÄLL,ko
 En kväll med Medborgarna,Konsert & musikframträdande,kväll med Medborgarna,konsert,type_in_title,llm,3,3,community|music
 En vandring till Sibelius,Promenad & friluftsliv,vandring,vandring,type_in_title,llm,3,3,classical|music
 Engines in the Ashes,Inget typord i titeln,,,show_title,none,3,0,community|talks-lectures
-Ensemble Anaracho feat. Andreas Hourdakis & Fredrik Nordström,Konsert & musikframträdande,ensemble,ensemble,artist_name,rules,3,3,music
+Ensemble Anaracho feat. Andreas Hourdakis & Fredrik Nordström,Konsert & musikframträdande,Ensemble,Ensemble,artist_name,rules,3,3,music
 Esdeekid,Inget typord i titeln,,,artist_name,none,3,3,community|music
 FAMILJEFEST - MAMMA MIA! THE PARTY,Konsert & musikframträdande,THE PARTY,show,type_in_title,llm,3,1,family|theatre-comedy
 Familjesöndag: baka pepparkakor på Ektorpet,Workshops & kurser,baka pepparkakor,verkstan,type_in_title,llm,3,3,community
@@ -975,11 +975,11 @@ Michelle David & The True Tones,Inget typord i titeln,,,artist_name,none,3,3,com
 Mick Harvey & Amanda Acevedo,Inget typord i titeln,,,artist_name,none,3,0,community
 MIKKEY DEE With Friends Playing MOTÖRHEAD Classics,Inget typord i titeln,,,artist_name,none,3,0,music
 MINI  - Blåset!,Inget typord i titeln,,,other,none,3,3,music
-MINI  - Ensemble Beethoven!,Konsert & musikframträdande,ensemble,ensemble,other,rules,3,3,music
+MINI  - Ensemble Beethoven!,Konsert & musikframträdande,Ensemble,Ensemble,other,rules,3,3,music
 Ministry,Inget typord i titeln,,,artist_name,none,3,3,community
 MINNESLUCKOR med Jan Rippe och Per Fritzell,Inget typord i titeln,,,show_title,none,3,3,theatre-comedy
 Minnet av en gud,Inget typord i titeln,,,show_title,none,3,3,classical|music
-Moderna Museet,Utställning & konst,museet,museet,venue_only,rules,3,3,community
+Moderna Museet,Utställning & konst,Museet,Museet,venue_only,rules,3,3,community
 Moon Walker,Inget typord i titeln,,,artist_name,none,3,3,community
 Mordmysterium + Middag = Succé (Sjöfart),Mat & dryck,Middag,mat,type_in_title,llm,3,2,community|workshop
 Moritz Ostruschnjak - NON + ULTRAS,Inget typord i titeln,,,artist_name,none,3,3,dance|theatre-comedy
@@ -1029,7 +1029,7 @@ Sång om stjärnorna med Radiokören - i Storkyrkan,Konsert & musikframträdande
 Sång- och sagostund,Barn & familj,Sång- och sagostund,barn,type_in_title,llm,3,3,kids
 Sångstund för 0-2 år,Barn & familj,Sångstund,barn,type_in_title,llm,3,3,community
 "Sara-Vide Ericson, DRIFT",Inget typord i titeln,,,artist_name,none,3,3,community|exhibition
-Seniorträff,Promenad & friluftsliv,seniortraff,traff,type_in_title,rules,3,3,community
+Seniorträff,Promenad & friluftsliv,Seniorträff,Seniorträff,type_in_title,rules,3,3,community
 Ser jag tjock ut i den här?,Inget typord i titeln,,,show_title,none,3,3,community|theatre-comedy|theatre-drama
 Serietekets tecknarhäng,Inget typord i titeln,,,show_title,none,3,3,community
 Simple Plan: Bigger Than You Think! Europe Tour 2026,Inget typord i titeln,,,artist_name,none,3,1,community
@@ -1112,7 +1112,7 @@ Allt förutom en stoner,Inget typord i titeln,,,show_title,none,2,2,theatre-dram
 Almtuna &#8211; AIK (Omgång 17),Inget typord i titeln,,,artist_name,none,2,2,community
 An Oyster Affair at Americain,Inget typord i titeln,,,show_title,none,2,0,community
 Anders F Rönnblom – Julfesten,Fest & nattliv,Julfesten,fest,type_in_title,llm,2,2,music
-Anders F Rönnblom @ Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,2,2,music
+Anders F Rönnblom @ Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,2,2,music
 Ann-Christin von Reybekiel,Inget typord i titeln,,,artist_name,none,2,2,community
 Annette Alsiö,Inget typord i titeln,,,artist_name,none,2,1,community
 Annika Eliasson,Inget typord i titeln,,,artist_name,none,2,1,community
@@ -1167,7 +1167,7 @@ Blackan Comedy 2026,Scen & föreställning,Comedy,standup,type_in_title,llm,2,2,
 Blackout,Inget typord i titeln,,,show_title,none,2,2,community
 BLANACE and BERNS presents PAUL VAN DYK & ORJAN NILSEN!,Inget typord i titeln,,,artist_name,none,2,2,music
 Bloody Tennis - avslutningsfilm (Monsters of Film),Film & bio,avslutningsfilm,film,type_in_title,llm,2,0,community|film
-Bo Kaspers Orkester - Il magnifico – Stage 1,Konsert & musikframträdande,orkester,orkester,artist_name,rules,2,2,music
+Bo Kaspers Orkester - Il magnifico – Stage 1,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,2,2,music
 "Bokcirkel - ""Öppen bok""",Språk & läsning,Bokcirkel,bokcirkel,type_in_title,llm,2,2,community
 Bokcirkel FULLSATT,Språk & läsning,Bokcirkel,bokcirkel,type_in_title,llm,2,2,community
 Bokcirkel i Skärholmen,Språk & läsning,Bokcirkel,bokcirkel,type_in_title,llm,2,2,community
@@ -1202,7 +1202,7 @@ Brodera dagbok,Workshops & kurser,Brodera dagbok,verkstan,type_in_title,llm,2,0,
 Bromander live på Twang,Inget typord i titeln,,,artist_name,none,2,2,community|music
 BROR GUNNAR JANSSON & The Escapism,Inget typord i titeln,,,artist_name,none,2,2,community
 Bruce Dickinson,Inget typord i titeln,,,artist_name,none,2,2,community
-"BRUCKNER SYMFONI NR 8  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent",Konsert & musikframträdande,symfoni,symfoni,type_in_title,rules,2,2,music
+"BRUCKNER SYMFONI NR 8  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,type_in_title,rules,2,2,music
 BRUCKNER: Mässa i f-moll,Mässa & marknad,Mässa,mässa,type_in_title,llm,2,2,music
 Buffalo Traffic  Jam,Konsert & musikframträdande,Traffic Jam,konsert,type_in_title,llm,2,2,music
 Build your first Autonomous AI Agent,Workshops & kurser,Autonomous AI Agent,verkstan,type_in_title,llm,2,2,community
@@ -1356,7 +1356,7 @@ Framstående fruntimmer i 1800-talets Stockholm,Inget typord i titeln,,,show_tit
 Framtidens författare - årskurs 2 om hösten,Inget typord i titeln,,,show_title,none,2,2,community
 Fran Lebowitz,Inget typord i titeln,,,artist_name,none,2,2,community|talks-lectures
 Fredrik Andersson - TOO SOON,Inget typord i titeln,,,artist_name,none,2,2,theatre-comedy
-Friday Night Magic,Scen & föreställning,magic,magic,show_title,rules,2,1,community
+Friday Night Magic,Scen & föreställning,Magic,Magic,show_title,rules,2,1,community
 From practice to product - let's solve the next gen accounting software,Inget typord i titeln,,,other,none,2,2,community
 FROST 1 & 2 - MUSIKSHOW PÅ IS,Konsert & musikframträdande,MUSIKSHOW PÅ IS,show,type_in_title,llm,2,2,community|music
 FULLBOKAT! Magasinsvisning,Utställning & konst,Magasinsvisning,utställning,type_in_title,llm,2,2,community
@@ -1422,8 +1422,8 @@ Hoppsan! (från 4 år & för seniorer) Vardag,Barn & familj,Hoppsan!,barn,type_i
 Hörs det vad jag säger nu då?,Inget typord i titeln,,,other,none,2,2,community|theatre-comedy
 Horse Lords | Hus 7,Inget typord i titeln,,,artist_name,none,2,2,music
 Hösthäng på öppna förskolan kulan,Inget typord i titeln,,,other,none,2,1,community
-Höstlov för skollovslediga barn och medföljande vuxna,Barn & familj,hostlov,hostlov,barn,rules,2,0,exhibition
-Höstlov på Gripsholm,Barn & familj,hostlov,hostlov,barn,rules,2,0,community
+Höstlov för skollovslediga barn och medföljande vuxna,Barn & familj,Höstlov,Höstlov,barn,rules,2,0,exhibition
+Höstlov på Gripsholm,Barn & familj,Höstlov,Höstlov,barn,rules,2,0,community
 Höstlovs-slöjd för barn,Workshops & kurser,Höstlovs-slöjd,verkstan,type_in_title,llm,2,0,kids
 Höstmarknad på Ulriksdal,Mässa & marknad,Höstmarknad,marknad,type_in_title,llm,2,0,community
 Humorkonceptet The Comedy Store återvänder till Stockholm,Scen & föreställning,The Comedy Store,standup,type_in_title,llm,2,2,community|theatre-comedy
@@ -1432,7 +1432,7 @@ Hur du undviker plagiering,Inget typord i titeln,,,other,none,2,2,family
 Hus &amp; Hem Kristianstad Arena 2027,Inget typord i titeln,,,show_title,none,2,2,community
 I väntan på Vadå? - en interaktiv barnföreställning,Scen & föreställning,interaktiv barnföreställning,teater,type_in_title,llm,2,2,community
 IF Sundsvall Hockey – AIK,Sport & tävling,Hockey,match,type_in_title,llm,2,2,community
-Ikatan Darah (Monsters of Film),Film & bio,film,film,show_title,rules,2,0,community|film
+Ikatan Darah (Monsters of Film),Film & bio,Film,Film,show_title,rules,2,0,community|film
 INA LUNDSTRÖM – ”SANNINGEN OM GÖTEBORG”,Inget typord i titeln,,,artist_name,none,2,2,theatre-comedy
 Inflow | Oneflow product event 2026,Attraktion med oklassad typ,product event,övrigt,type_in_title,llm,2,2,community|exhibition
 INSTÄLLT &#8211; UK Pink Floyd Experience,Konsert & musikframträdande,UK Pink Floyd Experience,konsert,type_in_title,llm,2,0,community
@@ -1496,7 +1496,7 @@ KMFDM,Inget typord i titeln,,,artist_name,none,2,2,community|music
 Knattebio: Lilla Spöket Laban - spökdags,Film & bio,Knattebio,bio,type_in_title,llm,2,2,community|film
 Knattebio: Lilla spöket Laban spökar igen,Film & bio,Knattebio,bio,type_in_title,llm,2,0,community|film
 Knattebio: Vem är vem?,Film & bio,Knattebio,bio,type_in_title,llm,2,0,community|film
-Knock-Out Greg och The Blue Flames framför X-mas Special,Konsert & musikframträdande,blue,blue,artist_name,rules,2,2,community|music
+Knock-Out Greg och The Blue Flames framför X-mas Special,Konsert & musikframträdande,Blue,Blue,artist_name,rules,2,2,community|music
 Kom och gör håraccessoarer av pappersblommor.,Workshops & kurser,gör håraccessoarer,verkstan,type_in_title,llm,2,2,community
 Kommande evenemang,Inget typord i titeln,,,other,none,2,0,community
 Kommunfullmäktige sammanträder,Samhälle & möte,Kommunfullmäktige sammanträder,möte,type_in_title,llm,2,1,community
@@ -1520,7 +1520,7 @@ Läslov på Enskede bibliotek,Språk & läsning,Läslov,läsning,type_in_title,l
 Lättpratad bokcirkel - historiska romaner,Språk & läsning,bokcirkel,bokcirkel,type_in_title,llm,2,1,community
 Legimusregistrering,Inget typord i titeln,,,other,none,2,2,community
 "Leo, Max och Chris hyllar Jojje Wadenius – E-Street",Inget typord i titeln,,,artist_name,none,2,2,music
-Leopoldstadt- en kväll tillägnad Tom Stoppard,Fest & nattliv,kvall,kvall,show_title,rules,2,2,community|talks-lectures
+Leopoldstadt- en kväll tillägnad Tom Stoppard,Fest & nattliv,kväll,kväll,show_title,rules,2,2,community|talks-lectures
 Leyr x Lovable Buildathon: Build Your EHR,Workshops & kurser,Buildathon,workshop,type_in_title,llm,2,2,community
 Lilla Lucia,Inget typord i titeln,,,show_title,none,2,2,music
 Linda Lampenius & Pete Parkkonen,Inget typord i titeln,,,artist_name,none,2,2,community
@@ -1719,7 +1719,7 @@ Rollspelsklubben presenterar: SKRÄCK!,Inget typord i titeln,,,show_title,none,2
 Roms fontäner och Tjajkovskijs polska  - Kavakos i Szymanowskis violinkonsert,Konsert & musikframträdande,violinkonsert,konsert,type_in_title,llm,2,2,music
 Roots Reality,Inget typord i titeln,,,show_title,none,2,0,community|music
 Roslagsmålarnas höstsalong,Inget typord i titeln,,,show_title,none,2,2,community
-RUMI & JULIA – PREMIÄR,Scen & föreställning,premiar,premiar,show_title,rules,2,2,community|musical-theatre
+RUMI & JULIA – PREMIÄR,Scen & föreställning,PREMIÄR,PREMIÄR,show_title,rules,2,2,community|musical-theatre
 "RUSH, FIFTY SOMETHING, Platinumbiljetter",Inget typord i titeln,,,artist_name,none,2,2,community
 Ryslig deckargåta,Spel & social tävling,deckargåta,spel,type_in_title,llm,2,0,community
 Sabaton,Inget typord i titeln,,,UNCLASSIFIED,none,2,2,community
@@ -1827,7 +1827,7 @@ Sven Ingvars Scalateatern 2026-11-27 19:00,Inget typord i titeln,,,artist_name,n
 Sven Ingvars Scalateatern 2026-11-28 16:00,Inget typord i titeln,,,artist_name,none,2,2,community|musical-theatre
 Sven Ingvars Scalateatern 2026-11-28 19:30,Inget typord i titeln,,,artist_name,none,2,2,community|musical-theatre
 Sven Ingvars Tonhallen 2026-12-05 19:30,Inget typord i titeln,,,artist_name,none,2,2,community|musical-theatre
-Sven Ingvars Uppsala Konsert & Kongress 2026-11-06 19:00,Konsert & musikframträdande,konsert,konsert,artist_name,rules,2,2,music|musical-theatre
+Sven Ingvars Uppsala Konsert & Kongress 2026-11-06 19:00,Konsert & musikframträdande,Konsert,Konsert,artist_name,rules,2,2,music|musical-theatre
 Sven Ingvars Växjö Konserthus 2026-11-21 19:30,Inget typord i titeln,,,artist_name,none,2,2,community|musical-theatre
 Sweden Water Expo 2028,Utställning & konst,Water Expo,utställning,type_in_title,llm,2,2,community|exhibition
 Sweden Zumba Festival Stockholm Halloween Party ft. William The Wild Shaker,Mässa & marknad,Zumba Festival,festival,type_in_title,llm,2,2,community|music
@@ -1960,7 +1960,7 @@ Yttling Jazz @ Fasching,Konsert & musikframträdande,Yttling Jazz,konsert,type_i
 """Elton meets Freddie"" Boding Gideon",Inget typord i titeln,,,show_title,none,1,0,music
 """Fantastiska fullkorn-från Nakenhavre till Nobelfest""",Mat & dryck,fullkorn,mat,type_in_title,llm,1,1,community
 ”ground grow cool under feet”GRATIS,Inget typord i titeln,,,other,none,1,1,community
-"""HAPPY ROCKIN' BLUES n' SKA"" – Orangeriet",Konsert & musikframträdande,blues,blues,artist_name,rules,1,1,music
+"""HAPPY ROCKIN' BLUES n' SKA"" – Orangeriet",Konsert & musikframträdande,BLUES,BLUES,artist_name,rules,1,1,music
 """Siempre es hoy""-EUGENIA ALMEIDA-VIRTUAL",Inget typord i titeln,,,show_title,none,1,1,community
 """Smaka på"" gin",Mat & dryck,Smaka på,dryck,type_in_title,llm,1,1,wine-tasting
 """Smaka på"" gin - Grupp 1",Mat & dryck,Smaka på gin,dryck,type_in_title,llm,1,1,community
@@ -2124,7 +2124,7 @@ A night with Henry Wagons @Twang,Inget typord i titeln,,,artist_name,none,1,0,mu
 A sweet history of cake and Christmas,Inget typord i titeln,,,show_title,none,1,1,community
 A Tribute to Dire Straits,Inget typord i titeln,,,artist_name,none,1,0,community
 A Tribute to Kal P Dal,Inget typord i titeln,,,artist_name,none,1,1,community
-A Tribute to the Women in Soul & Jazz,Konsert & musikframträdande,jazz,jazz,artist_name,rules,1,1,music
+A Tribute to the Women in Soul & Jazz,Konsert & musikframträdande,Jazz,Jazz,artist_name,rules,1,1,music
 A TRUE ROCK´N ROLL CHRISTMAS SHOW 2026,Konsert & musikframträdande,ROCK´N ROLL CHRISTMAS SHOW,show,type_in_title,llm,1,1,music
 A Walk to Sibelius,Promenad & friluftsliv,Walk,promenad,type_in_title,llm,1,1,community
 A Zero8 Christmas,Inget typord i titeln,,,show_title,none,1,1,music
@@ -2157,7 +2157,7 @@ aespa @ Avicii Arena,Inget typord i titeln,,,artist_name,none,1,1,music
 "aespa LIVE TOUR - SYNK : COMPLæXITY – in STOCKHOLM, Platinumbiljetter",Inget typord i titeln,,,artist_name,none,1,1,music
 Aeternam - Gustaf Sjökvists Kammarkör,Inget typord i titeln,,,show_title,none,1,1,music
 Affärsfokus Lund 2026,Attraktion med oklassad typ,Affärsfokus,övrigt,type_in_title,llm,1,1,community
-Afro Reggae Mania Ep2,Konsert & musikframträdande,reggae,reggae,show_title,rules,1,1,music
+Afro Reggae Mania Ep2,Konsert & musikframträdande,Reggae,Reggae,show_title,rules,1,1,music
 Afrobeat Sessions - dansworkshop,Workshops & kurser,dansworkshop,workshop,type_in_title,llm,1,0,community
 After Hours – Art Evenings at Artipelag,Utställning & konst,Art Evenings,konst,type_in_title,llm,1,0,community
 After Hours på Artipelag,Inget typord i titeln,,,other,none,1,0,community
@@ -2279,7 +2279,7 @@ Alt Nite - Halloween Edition,Fest & nattliv,Alt Nite,nattliv,type_in_title,llm,1
 "ALT NITE, Halloween Edition | Paraknas Live!",Fest & nattliv,"ALT NITE, Halloween Edition",nattliv,type_in_title,llm,1,0,community
 Alternativ Hälsomässa Nuntorp Gård 2026,Mässa & marknad,Hälsomässa,mässa,type_in_title,llm,1,1,exhibition
 Amanda Bergman – Stage,Inget typord i titeln,,,artist_name,none,1,1,music
-"Amanda Bergman, Gamla Teatern Östersund – Gamla Teatern",Scen & föreställning,teatern,teatern,artist_name,rules,1,0,music
+"Amanda Bergman, Gamla Teatern Östersund – Gamla Teatern",Scen & föreställning,Teatern,Teatern,artist_name,rules,1,0,music
 "Amanda Ginsburg - ""Det är jul nu igen""",Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
 Amanda Ginsburg - Det är jul nu igen,Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
 "Amanda Ginsburg - Det är jul nu igen | 10/12 Malmö, Palladium",Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
@@ -2288,7 +2288,7 @@ Amanda Ginsburg - Det är jul nu igen,Konsert & musikframträdande,Det är jul n
 "Amanda Ginsburg - Det är jul nu igen | 4/12 Örebro, Kulturkvarteret",Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
 "Amanda Ginsburg - Det är jul nu igen | 6/12 Stockholm, Södra Teatern",Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
 Amanda Ginsburg – Det är jul nu igen,Konsert & musikframträdande,Det är jul nu igen,show,type_in_title,llm,1,1,music
-Amanda Ginsburg @ Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,music
+Amanda Ginsburg @ Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,music
 Amanda Ginsburg med musiker – Teaterbistron,Inget typord i titeln,,,artist_name,none,1,1,music
 Amaranthe – Magasinet,Inget typord i titeln,,,artist_name,none,1,0,music
 Amaranthe – Vävenscenen,Inget typord i titeln,,,artist_name,none,1,0,music
@@ -2311,10 +2311,10 @@ Anders Ekborg - En Stilla Jul,Konsert & musikframträdande,En Stilla Jul,konsert
 ANDERS EKBORG - EN STILLA JUL,Konsert & musikframträdande,EN STILLA JUL,konsert,type_in_title,llm,1,1,music
 Anders Ekborg - En stilla jul – Cassels,Inget typord i titeln,,,show_title,none,1,1,music
 Anders Ekborg - En Stilla Jul – Hudiksvalls teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-Anders Ekborg - En Stilla Jul – Kalmar Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Anders Ekborg - En Stilla Jul – Kalmar Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Anders Ekborg - En Stilla Jul – Marsvinsholms kyrka,Inget typord i titeln,,,show_title,none,1,1,music
 Anders Ekborg - En Stilla Jul – Sagateatern,Inget typord i titeln,,,show_title,none,1,1,music
-Anders Ekborg - En Stilla Jul – Växjö Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Anders Ekborg - En Stilla Jul – Växjö Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Anders F Rönnblom + gäster | Den stora julfesten | 18 december | Södra Teatern - Stockholm,Fest & nattliv,Den stora julfesten,fest,type_in_title,llm,1,1,music
 Anders F Rönnblom + gäster | Den stora julfesten | 19 december | Södra Teatern - Stockholm,Fest & nattliv,Den stora julfesten,fest,type_in_title,llm,1,1,music
 Anders Ståhl – ”Franska landskap”,Inget typord i titeln,,,show_title,none,1,1,community
@@ -2328,7 +2328,7 @@ Andrew Strong - The Commitments – Arbis,Inget typord i titeln,,,artist_name,no
 ANDREW STRONG - THE COMMITMENTS – The Tivoli,Inget typord i titeln,,,artist_name,none,1,0,music
 ANDRZEJKI 2026 - Stockholm,Inget typord i titeln,,,show_title,none,1,1,nightlife
 Andy and the Rockets,Inget typord i titeln,,,artist_name,none,1,1,music
-Änglagård – Kristianstad Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Änglagård – Kristianstad Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Änglarna i rummet – de 20 första åren med Unisoul Vocal Choir,Inget typord i titeln,,,artist_name,none,1,1,music
 ÄNGLARNAS TID - MAGNUS CARLSSON – Ystads Teater,Scen & föreställning,Teater,teater,type_in_title,llm,1,1,music
 Angus – The Ultimate AC/DC Tribute på Lumber &#038; Karle,Konsert & musikframträdande,Tribute,konsert,type_in_title,llm,1,1,community
@@ -2415,8 +2415,8 @@ Ateljé 47,Inget typord i titeln,,,show_title,none,1,0,community
 ATL’S BIGGEST HALLOWEEN TAKEOVER,Fest & nattliv,HALLOWEEN TAKEOVER,fest,type_in_title,llm,1,0,community
 Atlar Presents: CFO AI Dinner,Mat & dryck,CFO AI Dinner,mat,type_in_title,llm,1,1,community
 Atmospheric Lucia Celebrations at Skansen 2026,Konsert & musikframträdande,Lucia Celebrations,konsert,type_in_title,llm,1,1,community
-Ato Karlsson Eskilstuna – Eskilstuna Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
-Ato Karlsson Mariestad – Mariestads Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Ato Karlsson Eskilstuna – Eskilstuna Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
+Ato Karlsson Mariestad – Mariestads Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Ato Karlsson Östersund – Folkets Hus,Inget typord i titeln,,,artist_name,none,1,1,music
 Ato Karlsson Stockholm,Inget typord i titeln,,,artist_name,none,1,1,community
 Ato Karlsson Sundsvall – Bio Drakstaden,Film & bio,Bio,bio,type_in_title,llm,1,1,music
@@ -2437,7 +2437,7 @@ Aurell & Gullberg – Killarna mot tjejerna,Inget typord i titeln,,,show_title,
 Aurell & Gullberg – Killarna Mot Tjejerna • 14/11 • Växjö,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
 Aurell & Gullberg – Killarna Mot Tjejerna • 20/11 • Borlänge,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
 Aurell & Gullberg – Killarna Mot Tjejerna • 21/11 • Söderhamn,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
-Aurell & Gullberg Killarna mot tjejerna på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Aurell & Gullberg Killarna mot tjejerna på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Author talk: Arne Lygre (Norway),Föreläsning & samtal,Author talk,samtal,type_in_title,llm,1,1,community
 Author Talk: Carl-Johan Vallgren (Sweden),Föreläsning & samtal,Author Talk,samtal,type_in_title,llm,1,0,community
 Author Talk: Hemley Boum (Cameroon),Föreläsning & samtal,Author Talk,samtal,type_in_title,llm,1,1,community
@@ -2459,8 +2459,8 @@ AW+Sthlms-quiz med 08!,Spel & social tävling,quiz,spel,type_in_title,llm,1,1,co
 Axel Sjöberg - Bland kobbar och skär,Inget typord i titeln,,,artist_name,none,1,1,film
 Axel von Fersen charmkurs - Platinum Edition,Workshops & kurser,charmkurs,kurs,type_in_title,llm,1,1,theatre-comedy
 Axel von Fersen charmkurs- Platinum Edition,Workshops & kurser,charmkurs,kurs,type_in_title,llm,1,1,talks-lectures
-Azvá - Månens Tårar | Södra Teatern,Scen & föreställning,teatern,teatern,show_title,rules,1,1,theatre-drama
-Azvá – Månens tårar med Arthem – Romska Teatern,Scen & föreställning,teatern,teatern,show_title,rules,1,1,theatre-drama
+Azvá - Månens Tårar | Södra Teatern,Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,theatre-drama
+Azvá – Månens tårar med Arthem – Romska Teatern,Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,theatre-drama
 B-Movie | hus 7,Inget typord i titeln,,,other,none,1,1,community
 Baba-bio,Film & bio,bio,bio,type_in_title,llm,1,1,community
 Babbel! – Gäst: Carl Johan Lundgren,Attraktion med oklassad typ,Babbel!,övrigt,type_in_title,llm,1,1,community
@@ -2546,15 +2546,15 @@ Bebiscafe – musikmagi för de allra minsta.,Mat & dryck,Bebiscafe,mat,type_in_
 Bebisföreställning: VAU VAU,Scen & föreställning,Bebisföreställning,teater,type_in_title,llm,1,1,community
 Beer & Taste Umeå 2026,Mat & dryck,Beer & Taste,mat,type_in_title,llm,1,1,community
 "BEETHOVEN - VÅRSONATEN  - James Ehenes, violin - Orion Weiss, piano",Konsert & musikframträdande,violin,violin,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 1  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Jörg Widman, klarinett",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 2  - Gävle Symfoniorkester, Christian Reif, dirigent",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 3  - Sveriges Radios Symfoniorkester, Nicholas Collon, dirigent",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 4  - Norrköpings Symfoniorkester, Karl-Heinz Steffens, dirigent",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 5  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Katharine Dain, sopran",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 6  - Kungliga Hovkapellet, Alan Gilbert, dirigent",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 7  - Göteborgs Symfoniker, Pekka Kuusisto, dirigent",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 8  - Svenska Kammarorkestern, Martin Fröst, dirigent & klarinettsolist",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
-"BEETHOVEN SYMFONI NR 9  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Eric Ericsons Kammarkör",Konsert & musikframträdande,symfoni,symfoni,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 1  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Jörg Widman, klarinett",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 2  - Gävle Symfoniorkester, Christian Reif, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 3  - Sveriges Radios Symfoniorkester, Nicholas Collon, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 4  - Norrköpings Symfoniorkester, Karl-Heinz Steffens, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 5  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Katharine Dain, sopran",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 6  - Kungliga Hovkapellet, Alan Gilbert, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 7  - Göteborgs Symfoniker, Pekka Kuusisto, dirigent",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 8  - Svenska Kammarorkestern, Martin Fröst, dirigent & klarinettsolist",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
+"BEETHOVEN SYMFONI NR 9  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Eric Ericsons Kammarkör",Konsert & musikframträdande,SYMFONI,SYMFONI,show_title,rules,1,1,music
 Beethoven's Missa Solemnis,Scen & föreställning,Missa Solemnis,musikal,type_in_title,llm,1,1,food
 BEETHOVENS STRÅKTRIO  - Filharmoniker i Närbild,Scen & föreställning,STRÅKTRIO,musikal,type_in_title,llm,1,1,music
 Behemoth @ B-K,Inget typord i titeln,,,artist_name,none,1,0,music
@@ -2563,7 +2563,7 @@ Behemoth & Dimmu Borgir – In League with Satan Tour,Inget typord i titeln,,,ar
 Below Zero (SWE),Inget typord i titeln,,,show_title,none,1,1,community
 Ben Folds – Paper Airplane Request Tour,Inget typord i titeln,,,artist_name,none,1,1,community
 Ben Folds @ Göta Lejon,Inget typord i titeln,,,artist_name,none,1,1,music
-"Ben Folds: Paper Airplane Request Tour Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Ben Folds: Paper Airplane Request Tour Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Ben Nicky in Stockholm,Inget typord i titeln,,,artist_name,none,1,1,community
 Bendik | Hus 7,Inget typord i titeln,,,artist_name,none,1,1,jazz
 Benjamin Ingrosso  | WHAT HAPPENS NEXT?,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -2590,14 +2590,14 @@ Berwaldhallen och Dramaten i Högdalen,Scen & föreställning,Dramaten,teater,ty
 Best of Stockholm comedy club at Gamestreet 1,Scen & föreställning,comedy club,standup,type_in_title,llm,1,1,theatre-comedy
 Best of the Boss - The Bruce Springsteen Tribute,Konsert & musikframträdande,tribute,konsert,type_in_title,llm,1,1,music
 "Best of the Boss - The Bruce Springsteen Tribute – Hebeteatern, Folkets Hus Kulturhuset",Inget typord i titeln,,,show_title,none,1,1,music
-Best of the Boss - The BRUCE SPRINGSTEEN tribute – Ystads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Best of the Boss - The BRUCE SPRINGSTEEN tribute – Ystads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Beth Gibbons,Inget typord i titeln,,,artist_name,none,1,1,community
 Beth Hart @ B-K,Inget typord i titeln,,,artist_name,none,1,1,music
 Better Landscapes: Essential Camera Skills in the Field with Adam Edwards,Workshops & kurser,Camera Skills in the Field,workshop,type_in_title,llm,1,1,community
 Beyond LLMs: Meet Decision Models,Föreläsning & samtal,Decision Models,seminarium,type_in_title,llm,1,1,community
 Bi-2 @ Göta Lejon,Inget typord i titeln,,,show_title,none,1,1,music
-"BI-2 Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,time_only,rules,1,1,music
-Bibblan på läslovet!,Barn & familj,laslovet,laslovet,show_title,rules,1,0,community
+"BI-2 Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,time_only,rules,1,1,music
+Bibblan på läslovet!,Barn & familj,läslovet,läslovet,show_title,rules,1,0,community
 Bibblan spelar,Inget typord i titeln,,,show_title,none,1,0,community
 Bibliotekariernas Nobelbokcirkel: litteraturpriset 2026,Inget typord i titeln,,,type_in_title,none,1,1,community
 Biblioteket kommer på besök,Inget typord i titeln,,,other,none,1,1,community
@@ -2613,13 +2613,13 @@ Biljettkontor,Inget typord i titeln,,,other,none,1,0,community
 Bill Bailey: Vaudevillean,Inget typord i titeln,,,artist_name,none,1,1,theatre-comedy
 BILLIE JO >> LAMACHINE (STHLM)  >> ARANEA (GBG)  >> PAUL FITZGIBBON (IRLAND)  >> RAVEMAN IN BUNKER,Inget typord i titeln,,,artist_name,none,1,1,community
 BILLY OPEL,Inget typord i titeln,,,artist_name,none,1,1,music
-Billy Opel - Kalmar Teater – Kalmar Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Billy Opel - Kalmar Teater – Kalmar Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Billy Opel - Motala Folkets Hus – Motala FH,Inget typord i titeln,,,artist_name,none,1,1,music
-Billy Opel - Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,theatre-comedy
-"Billy Opel - Södra Teatern, Stockholm",Scen & föreställning,teatern,teatern,artist_name,rules,1,1,theatre-comedy
-Billy Opel - Växjö Teater – Växjö Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Billy Opel - Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,theatre-comedy
+"Billy Opel - Södra Teatern, Stockholm",Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,theatre-comedy
+Billy Opel - Växjö Teater – Växjö Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 BILLY OPEL – Scalateatern,Inget typord i titeln,,,artist_name,none,1,1,music
-Billy Opel – Ystads Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Billy Opel – Ystads Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Bio & LIVE musik Monica Z,Konsert & musikframträdande,LIVE musik,konsert,type_in_title,llm,1,1,community
 Bio: La Grazia (filmomat-visning),Film & bio,Bio,bio,type_in_title,llm,1,1,community
 Bio: Monster (filmomat-visning),Film & bio,Bio,bio,type_in_title,llm,1,1,community
@@ -2649,13 +2649,13 @@ Bloodred Hourglass,Inget typord i titeln,,,artist_name,none,1,1,music
 Bloody Tennis,Sport & tävling,Tennis,sport,type_in_title,llm,1,0,theatre-drama
 Blue House Jazz – Hiromi,Konsert & musikframträdande,Jazz,konsert,type_in_title,llm,1,1,music
 Blue House Jazz – Wynton Marsalis & JLCO,Konsert & musikframträdande,Jazz,konsert,type_in_title,llm,1,1,music
-Blues At Sea - ONE MORE TIME!,Konsert & musikframträdande,blues,blues,show_title,rules,1,1,community
-"Blues, svett och tårar",Konsert & musikframträdande,blues,blues,show_title,rules,1,1,music
-Bo Kaspers Orkester - Il magnifico – Conventum Arena,Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,1,music
-Bo Kaspers Orkester - Il magnifico – Kalmarsalen,Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,1,music
-Bo Kaspers Orkester - Il magnifico – Karlstad CCC,Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,1,music
-Bo Kaspers Orkester - Il magnifico – Linköping Konsert & Kongress,Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,0,music
-Bo Kaspers Orkester - Il magnifico – Västerås Konserthus,Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,1,music
+Blues At Sea - ONE MORE TIME!,Konsert & musikframträdande,Blues,Blues,show_title,rules,1,1,community
+"Blues, svett och tårar",Konsert & musikframträdande,Blues,Blues,show_title,rules,1,1,music
+Bo Kaspers Orkester - Il magnifico – Conventum Arena,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,1,music
+Bo Kaspers Orkester - Il magnifico – Kalmarsalen,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,1,music
+Bo Kaspers Orkester - Il magnifico – Karlstad CCC,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,1,music
+Bo Kaspers Orkester - Il magnifico – Linköping Konsert & Kongress,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,0,music
+Bo Kaspers Orkester - Il magnifico – Västerås Konserthus,Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,1,music
 Bob Hansson & Backlura – Teaterbistron,Inget typord i titeln,,,artist_name,none,1,1,music
 Bob Hansson | Kulturhuset Stadsteatern,Inget typord i titeln,,,artist_name,none,1,1,theatre-comedy
 Body percussion N - rytm och rörelse,Workshops & kurser,Body percussion,kurs,type_in_title,llm,1,1,community
@@ -2731,7 +2731,7 @@ Brita Borg 100 år - Banne mej!,Inget typord i titeln,,,show_title,none,1,1,thea
 Broadways magi till Sickla,Scen & föreställning,magi,magi,show_title,rules,1,1,music
 Broder John - 10 ÅR,Inget typord i titeln,,,show_title,none,1,1,music
 Brodera för biologisk mångfald,Workshops & kurser,Brodera,verkstan,type_in_title,llm,1,1,community
-Bröderna Johansson spelar Jan Johansson – Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Bröderna Johansson spelar Jan Johansson – Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Brokeback Mountain- Swedish Premiere on stage,Inget typord i titeln,,,show_title,none,1,1,community
 Bröllopsfeber Göteborg 2027,Konsert & musikframträdande,Bröllopsfeber,show,type_in_title,llm,1,1,community
 Bröllopsfeber Malmö 2027,Konsert & musikframträdande,Bröllopsfeber,show,type_in_title,llm,1,1,community
@@ -2818,8 +2818,8 @@ Charta 77 + Bonta från Asta Kask | Rockland | Sala | 7 november,Inget typord i 
 Che Guevara: De sista följeslagarna (Stockholms filmfestival),Film & bio,filmfestival,film,type_in_title,llm,1,1,film
 Chelsea Wolfe @ Vasateatern,Inget typord i titeln,,,artist_name,none,1,1,music
 "Children on Björkö, Halloween",Inget typord i titeln,,,other,none,1,1,rock
-Chip och Fjärilsdalen – Mariestads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-Choklad- &amp; Konfektyrfestivalen 2027,Mat & dryck,choklad,choklad,type_in_title,rules,1,1,food
+Chip och Fjärilsdalen – Mariestads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
+Choklad- &amp; Konfektyrfestivalen 2027,Mat & dryck,Choklad,Choklad,type_in_title,rules,1,1,food
 Chris Andersen Quartet feat. Joanna Wojtkiewicz,Inget typord i titeln,,,artist_name,none,1,1,community
 Chris D'Elia - Go For It! The Tour - Stockholm,Inget typord i titeln,,,artist_name,none,1,0,community
 CHRIS D’ELIA: GO FOR IT TOUR,Inget typord i titeln,,,artist_name,none,1,0,theatre-comedy
@@ -2915,7 +2915,7 @@ Copenhagen Drummers @ Göta Lejon,Inget typord i titeln,,,artist_name,none,1,1,m
 Cory Wong @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 Cory Wong | The Fretboard Odyssey,Inget typord i titeln,,,show_title,none,1,1,music
 Così fan tutte,Inget typord i titeln,,,show_title,none,1,1,community
-Così fan tutte på Kungliga Operan,Scen & föreställning,operan,operan,show_title,rules,1,1,community
+Così fan tutte på Kungliga Operan,Scen & föreställning,Operan,Operan,show_title,rules,1,1,community
 Cosplay Concert: COURAGE – Kulturhuset tio14,Konsert & musikframträdande,Cosplay Concert,konsert,type_in_title,llm,1,0,music
 Country Christmas – Scenkonstverkstan - Estrad Norr,Workshops & kurser,Scenkonstverkstan,verkstan,type_in_title,llm,1,1,music
 Courtesy of,Inget typord i titeln,,,other,none,1,1,music
@@ -2930,7 +2930,7 @@ Creedence Tribute – Best of CCR & John Fogerty Tour – Auditoriet,Konsert & m
 "Creedence Tribute, Best of CCR & John Fogerty Tour – Folkets Hus",Konsert & musikframträdande,Creedence Tribute,konsert,type_in_title,llm,1,0,music
 "Creedence Tribute, Best of CCR & John Fogerty Tour – Kulturhuset",Konsert & musikframträdande,Creedence Tribute,konsert,type_in_title,llm,1,1,music
 "Creedence Tribute, Best of CCR & John Fogerty Tour – Lokomotivet",Inget typord i titeln,,,show_title,none,1,1,music
-"Creedence Tribute, Best of CCR & John Fogerty Tour – Ystads Teater",Scen & föreställning,teater,teater,show_title,rules,1,0,music
+"Creedence Tribute, Best of CCR & John Fogerty Tour – Ystads Teater",Scen & föreställning,Teater,Teater,show_title,rules,1,0,music
 "Critical Mass Stockholm, the monthly bike celebration",Fest & nattliv,bike celebration,fest,type_in_title,llm,1,0,community
 Crochet a granny square or keep knitting with EvaLotta,Workshops & kurser,Crochet a granny square or keep knitting,verkstan,type_in_title,llm,1,1,community
 "CRYPTORIUM- releaseparty, support IMMERITS & Virus",Fest & nattliv,releaseparty,fest,type_in_title,llm,1,1,music
@@ -2955,7 +2955,7 @@ DAGNY - LIVE AT BERNS,Konsert & musikframträdande,LIVE AT BERNS,konsert,type_in
 Dags att välja dig själv – En dag för personlig utveckling,Workshops & kurser,personlig utveckling,workshop,type_in_title,llm,1,1,community
 Dahlkvistkvartetten med cello – Kalmar Slott Gröna salen,Konsert & musikframträdande,Dahlkvistkvartetten med cello,konsert,type_in_title,llm,1,1,music
 Dalarnas Hem &#038; Trädgårdsmässa 2027,Mässa & marknad,Trädgårdsmässa,mässa,type_in_title,llm,1,1,exhibition
-Dalarnas Jakt &#038; Fiskemässa 2027,Promenad & friluftsliv,jakt,jakt,type_in_title,rules,1,1,exhibition
+Dalarnas Jakt &#038; Fiskemässa 2027,Promenad & friluftsliv,Jakt,Jakt,type_in_title,rules,1,1,exhibition
 Dalcroze – att lyssna med hela kroppen,Workshops & kurser,Dalcroze,kurs,type_in_title,llm,1,1,music
 DAM | Djurgården Hockey - HV71,Sport & tävling,Djurgården Hockey - HV71,match,type_in_title,llm,1,1,sports
 DAM | Djurgården Hockey - Luleå Hockey/MSSK,Sport & tävling,Djurgården Hockey - Luleå Hockey/MSSK,match,type_in_title,llm,1,1,sports
@@ -2972,11 +2972,11 @@ Dancing My Mind 2 (both 20st and 21st of November),Konsert & musikframträdande,
 DanFish International 2027,Inget typord i titeln,,,show_title,none,1,1,exhibition
 Daniel Adams-Ray med Norrköpings symfoniorkester,Inget typord i titeln,,,artist_name,none,1,1,music
 Daniel Adams-Ray och Nordiska Kammarorkestern – Tonhallen,Inget typord i titeln,,,artist_name,none,1,1,music
-Daniel Kane - Impossible Magic – Dramalogen,Scen & föreställning,magic,magic,artist_name,rules,1,1,music
-Daniel Kane – Impossible MAGIC • 14/11 • Hallstavik,Scen & föreställning,magic,magic,artist_name,rules,1,1,theatre-drama
-Daniel Kane – Impossible MAGIC • 21/11 • Kristianstad,Scen & föreställning,magic,magic,artist_name,rules,1,1,theatre-drama
-Daniel Kane – Impossible MAGIC • 7/11 • Halmstad,Scen & föreställning,magic,magic,artist_name,rules,1,1,circus
-Daniel Kane – Impossible MAGIC • 8/11 • Ulricehamn,Scen & föreställning,magic,magic,artist_name,rules,1,1,circus
+Daniel Kane - Impossible Magic – Dramalogen,Scen & föreställning,Magic,Magic,artist_name,rules,1,1,music
+Daniel Kane – Impossible MAGIC • 14/11 • Hallstavik,Scen & föreställning,MAGIC,MAGIC,artist_name,rules,1,1,theatre-drama
+Daniel Kane – Impossible MAGIC • 21/11 • Kristianstad,Scen & föreställning,MAGIC,MAGIC,artist_name,rules,1,1,theatre-drama
+Daniel Kane – Impossible MAGIC • 7/11 • Halmstad,Scen & föreställning,MAGIC,MAGIC,artist_name,rules,1,1,circus
+Daniel Kane – Impossible MAGIC • 8/11 • Ulricehamn,Scen & föreställning,MAGIC,MAGIC,artist_name,rules,1,1,circus
 "Dans för Parkinson, kurs 2 HT Lund",Workshops & kurser,Dans för Parkinson,kurs,type_in_title,llm,1,1,community
 Dans i bärsele - Najell x Binta Blackout,Scen & föreställning,Dans i bärsele,dans,type_in_title,llm,1,1,kids
 DANS LES ARBRES,Scen & föreställning,DANS LES ARBRES,dans,type_in_title,llm,1,1,music
@@ -3186,13 +3186,13 @@ Druha Rika,Inget typord i titeln,,,show_title,none,1,1,music
 Du sotige vallon - Fabrikörerna,Inget typord i titeln,,,show_title,none,1,1,film
 Dubbel CAFÈ med M.O.K. och Miranda Pérez kvartett,Mat & dryck,CAFÈ,mat,type_in_title,llm,1,1,music
 Dubbelutställning i Flygeln,Utställning & konst,Dubbelutställning,utställning,type_in_title,llm,1,0,community
-Duett i elände,Konsert & musikframträdande,duett,duett,show_title,rules,1,0,theatre-drama
+Duett i elände,Konsert & musikframträdande,Duett,Duett,show_title,rules,1,0,theatre-drama
 Duke Ellingtons Sacred Concert,Konsert & musikframträdande,Sacred Concert,konsert,type_in_title,llm,1,0,music
 Dun Ringill + Mirror Of My Soul,Inget typord i titeln,,,artist_name,none,1,1,music
 Dune: Part Three - exklusiv förhandsvisning,Film & bio,exklusiv förhandsvisning,film,type_in_title,llm,1,1,film
 Dungen @ Vasateatern,Inget typord i titeln,,,show_title,none,1,1,music
 "Dungen | Vasateatern, Stockholm",Inget typord i titeln,,,show_title,none,1,1,music
-Dungen på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Dungen på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Dunya Fest 2026,Mässa & marknad,Dunya Fest,festival,type_in_title,llm,1,1,community
 Dygdernas ordning med Radiokören  - Doyle dirigerar Macmillan & von Bingen,Inget typord i titeln,,,show_title,none,1,1,music
 "Eagles of Death Metal | Pustervik, Gothenburg",Inget typord i titeln,,,artist_name,none,1,1,music
@@ -3260,7 +3260,7 @@ Elton John meets Freddie Mercury 2026 – Magasinet,Konsert & musikframträdande
 "Elvis, Elvis, Elvis! - 2026 – Halmstads Teater",Konsert & musikframträdande,"Elvis, Elvis, Elvis!",konsert,type_in_title,llm,1,0,music
 "Elvis, Elvis, Elvis! - 2026 – Karlstad CCC",Konsert & musikframträdande,"Elvis, Elvis, Elvis!",konsert,type_in_title,llm,1,1,music
 "Elvis, Elvis, Elvis! - 2026 – Växjö Konserthus",Inget typord i titeln,,,show_title,none,1,1,music
-"Elvis, Elvis, Elvis! - 2026 @ Nya Cirkus",Scen & föreställning,cirkus,cirkus,show_title,rules,1,1,music
+"Elvis, Elvis, Elvis! - 2026 @ Nya Cirkus",Scen & föreställning,Cirkus,Cirkus,show_title,rules,1,1,music
 "ELVIS, ELVIS, ELVIS! – 2026 – Idun, Umeå Folkets Hus",Inget typord i titeln,,,show_title,none,1,1,music
 "Elvis, Elvis, Elvis! – Hammarskjöldsalen",Inget typord i titeln,,,show_title,none,1,1,music
 "Elvis, Elvis, Elvis! – Kalmarsalen",Inget typord i titeln,,,show_title,none,1,0,music
@@ -3291,10 +3291,10 @@ En hyllning till Björn Afzelius – 80 år,Inget typord i titeln,,,show_title,n
 En hyllning till Björn Afzelius – 80 år - 14.00,Inget typord i titeln,,,show_title,none,1,1,music
 En hyllning till Björn Afzelius – 80 år – Auditoriet,Inget typord i titeln,,,show_title,none,1,1,music
 En hyllning till Björn Afzelius – 80 år – Cassels,Inget typord i titeln,,,show_title,none,1,1,music
-En hyllning till Björn Afzelius – 80 år – Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+En hyllning till Björn Afzelius – 80 år – Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 En hyllning till Björn Afzelius – 80 år – Kulturhuset Strömmen,Inget typord i titeln,,,show_title,none,1,1,music
-En hyllning till Björn Afzelius – 80 år – Växjö Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-En hyllning till Björn Afzelius – 80 år – Ystads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+En hyllning till Björn Afzelius – 80 år – Växjö Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
+En hyllning till Björn Afzelius – 80 år – Ystads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 EN HYLLNING TILL GUNNAR BUCHT,Inget typord i titeln,,,show_title,none,1,1,music
 EN HYLLNING TILL KAL P DAL,Inget typord i titeln,,,show_title,none,1,1,music
 En hyllning till Lana Del Rey med Moto Boy – Stadshallen (N),Inget typord i titeln,,,show_title,none,1,1,music
@@ -3303,25 +3303,25 @@ En innerlig jul med Andreas Aleman & Tareq Taylor – Västerås Konserthus,Inge
 En innerlig Jul med Andreas Aleman & Tareq Taylor – Växjö Konserthus,Inget typord i titeln,,,show_title,none,1,1,music
 En innerlig jul with Andreas Aleman and Tareq Taylor,Inget typord i titeln,,,show_title,none,1,1,music
 En innerlig jul with Andreas Aleman and Tareq Taylor – Stage 1,Inget typord i titeln,,,show_title,none,1,1,music
-En Jäkla Massa Schlager,Mässa & marknad,massa,massa,show_title,rules,1,1,music
+En Jäkla Massa Schlager,Mässa & marknad,Massa,Massa,show_title,rules,1,1,music
 En julsaga - den magiska snögloben,Inget typord i titeln,,,show_title,none,1,1,music
 En koffert fylld med minnen,Inget typord i titeln,,,show_title,none,1,1,community
 En kväll att minnas - med Sten & Stanley – Härnösands teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Flygeln,Fest & nattliv,kvall,kvall,show_title,rules,1,1,music
-EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Glada Hudik,Fest & nattliv,kvall,kvall,show_title,rules,1,1,music
-EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Kulturhuset,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,music
-EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Sagateatern,Fest & nattliv,kvall,kvall,artist_name,rules,1,0,music
-EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Storsjöteatern,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,music
-En kväll att minnas med – Sten & Stanley,Fest & nattliv,kvall,kvall,artist_name,rules,1,0,community
-En kväll att minnas med &#8211; Sten &amp; Stanley,Fest & nattliv,kvall,kvall,artist_name,rules,1,0,music
-En kväll att minnas med Sten & Stanley – Auditoriet,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,music
-En kväll med gotisk litteratur,Fest & nattliv,kvall,kvall,other,rules,1,1,community
-En kväll med Shan Atci,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,community
-EN KVÄLL MED SHAN ATCI - STOCKHOLM,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,theatre-comedy
-En kväll om Gunnar Ekelöf & Pär Anders Fogelström,Fest & nattliv,kvall,kvall,artist_name,rules,1,1,community
-En kväll om nonsens,Fest & nattliv,kvall,kvall,other,rules,1,1,exhibition
-En kväll om Sofia Gumaelius,Fest & nattliv,kvall,kvall,other,rules,1,1,community
-"En kväll, tre författarstjärnor",Fest & nattliv,kvall,kvall,other,rules,1,1,community
+EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Flygeln,Fest & nattliv,KVÄLL,KVÄLL,show_title,rules,1,1,music
+EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Glada Hudik,Fest & nattliv,KVÄLL,KVÄLL,show_title,rules,1,1,music
+EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Kulturhuset,Fest & nattliv,KVÄLL,KVÄLL,artist_name,rules,1,1,music
+EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Sagateatern,Fest & nattliv,KVÄLL,KVÄLL,artist_name,rules,1,0,music
+EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Storsjöteatern,Fest & nattliv,KVÄLL,KVÄLL,artist_name,rules,1,1,music
+En kväll att minnas med – Sten & Stanley,Fest & nattliv,kväll,kväll,artist_name,rules,1,0,community
+En kväll att minnas med &#8211; Sten &amp; Stanley,Fest & nattliv,kväll,kväll,artist_name,rules,1,0,music
+En kväll att minnas med Sten & Stanley – Auditoriet,Fest & nattliv,kväll,kväll,artist_name,rules,1,1,music
+En kväll med gotisk litteratur,Fest & nattliv,kväll,kväll,other,rules,1,1,community
+En kväll med Shan Atci,Fest & nattliv,kväll,kväll,artist_name,rules,1,1,community
+EN KVÄLL MED SHAN ATCI - STOCKHOLM,Fest & nattliv,KVÄLL,KVÄLL,artist_name,rules,1,1,theatre-comedy
+En kväll om Gunnar Ekelöf & Pär Anders Fogelström,Fest & nattliv,kväll,kväll,artist_name,rules,1,1,community
+En kväll om nonsens,Fest & nattliv,kväll,kväll,other,rules,1,1,exhibition
+En kväll om Sofia Gumaelius,Fest & nattliv,kväll,kväll,other,rules,1,1,community
+"En kväll, tre författarstjärnor",Fest & nattliv,kväll,kväll,other,rules,1,1,community
 "En man i keps ligger på rygg på en yogamatta och ler mot en bebis som ligger på hans bröst. Han håller bebisen med båda händerna. Bakom dem lyser en varm, orange bakgrund.",Inget typord i titeln,,,other,none,1,1,community
 En monolog med Jens Hultén,Scen & föreställning,En monolog,standup,type_in_title,llm,1,1,community
 En soc.tant berättar,Inget typord i titeln,,,other,none,1,1,community
@@ -3343,8 +3343,8 @@ Engmans Kapell Julturné 2026,Konsert & musikframträdande,Julturné,konsert,typ
 Enhörningsmys med Anna Ahlund,Barn & familj,Enhörningsmys,barn,type_in_title,llm,1,0,community
 Enough is Enough (Stockholms filmfestival),Mässa & marknad,filmfestival,festival,type_in_title,llm,1,1,film
 Ensam,Inget typord i titeln,,,show_title,none,1,1,community
-Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström,Konsert & musikframträdande,ensemble,ensemble,artist_name,rules,1,1,music
-"Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström | Fasching, Stockholm",Konsert & musikframträdande,ensemble,ensemble,artist_name,rules,1,1,jazz
+Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström,Konsert & musikframträdande,Ensemble,Ensemble,artist_name,rules,1,1,music
+"Ensemble Anaracho feat. Andreas Hourdakis &amp; Fredrik Nordström | Fasching, Stockholm",Konsert & musikframträdande,Ensemble,Ensemble,artist_name,rules,1,1,jazz
 Entré/Entrance January-August 2027,Inget typord i titeln,,,time_only,none,1,1,community
 Entré/Entrance June-December 2026,Inget typord i titeln,,,time_only,none,1,0,community
 Epic season finale @ Tropical pirate nights,Inget typord i titeln,,,other,none,1,1,community
@@ -3361,7 +3361,7 @@ Erik Grönwall,Inget typord i titeln,,,artist_name,none,1,1,community
 Erik Nylander,Inget typord i titeln,,,artist_name,none,1,0,community
 Eriksberg Fun Zone Höstlov,Barn & familj,Fun Zone,övrigt,type_in_title,llm,1,1,community
 EsDeeKid,Inget typord i titeln,,,artist_name,none,1,1,music
-"EsDeeKid, Council House Rat Tour",Fest & nattliv,house,house,show_title,rules,1,1,community
+"EsDeeKid, Council House Rat Tour",Fest & nattliv,House,House,show_title,rules,1,1,community
 Essinge Comedy Club – Isak Jansson,Scen & föreställning,Comedy Club,standup,type_in_title,llm,1,1,theatre-drama
 "ETC 50 år – med Mapei, Alkberg, Gardell & Admira",Inget typord i titeln,,,other,none,1,1,music
 ETC:s 50-årsfest,Fest & nattliv,50-årsfest,fest,type_in_title,llm,1,1,community
@@ -3418,7 +3418,7 @@ Eyes Of The Oak + Mushroom Caravan Overdrive,Inget typord i titeln,,,artist_name
 Ezhel @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 Ezra Collective,Inget typord i titeln,,,artist_name,none,1,1,music
 "Ezra Collective | Fållan, Stockholm",Inget typord i titeln,,,artist_name,none,1,1,music
-F3 Foto | Stockholm,Utställning & konst,foto,foto,other,rules,1,1,exhibition
+F3 Foto | Stockholm,Utställning & konst,Foto,Foto,other,rules,1,1,exhibition
 Få individuell IT-hjälp på persiska/ dari på Bas Barkarby bibliotek!,Workshops & kurser,IT-hjälp,kurs,type_in_title,llm,1,1,community
 Fackboksfestivalen Minerva 2027,Mässa & marknad,Fackboksfestivalen,festival,type_in_title,llm,1,1,talks-lectures
 Fågelskådaren i Stockholm,Promenad & friluftsliv,Fågelskådaren,friluftsliv,type_in_title,llm,1,1,theatre-drama
@@ -3446,7 +3446,7 @@ FANTASM,Inget typord i titeln,,,show_title,none,1,1,community
 Fanzinemarknad - Pär Thörn Live!,Mässa & marknad,Fanzinemarknad,marknad,type_in_title,llm,1,1,flea-market
 Får jag använda den här bilden i mitt exjobb eller avhandling?,Inget typord i titeln,,,other,none,1,1,family
 Farsta samtalar: Folkbildning,Föreläsning & samtal,Folkbildning,föreläsning,type_in_title,llm,1,1,community
-Fashion * Art * Connect * TogetherGRATIS,Scen & föreställning,fashion,fashion,type_in_title,rules,1,1,community
+Fashion * Art * Connect * TogetherGRATIS,Scen & föreställning,Fashion,Fashion,type_in_title,rules,1,1,community
 Fashion Tech Evening,Scen & föreställning,Fashion Tech Evening,övrigt,type_in_title,llm,1,0,community
 Fastighet 2026 Ängelholm,Inget typord i titeln,,,other,none,1,1,community
 Fastighet 2026 Linköping,Inget typord i titeln,,,show_title,none,1,1,community
@@ -3606,7 +3606,7 @@ Första blatten på månen,Fest & nattliv,blatten,nattliv,type_in_title,llm,1,0,
 Fortet,Inget typord i titeln,,,show_title,none,1,1,community
 Fotbollsstudion,Sport & tävling,Fotbollsstudion,sport,type_in_title,llm,1,0,community
 "Foto: Adam Ahmed Pihlgren t.v., Shanya Amoah t.h.3 nov. 2026 – 18:00–21:00SELF: Artist Talk & öppning",Föreläsning & samtal,Artist Talk & öppning,samtal,type_in_title,llm,1,1,community
-Foto: Levi Axene30 okt. 2026 – 20:30–22:30LIVE: Venus Anon,Utställning & konst,foto,foto,type_in_title,rules,1,0,community
+Foto: Levi Axene30 okt. 2026 – 20:30–22:30LIVE: Venus Anon,Utställning & konst,Foto,Foto,type_in_title,rules,1,0,community
 Fotografi med Kulturfabriken,Workshops & kurser,Fotografi,kurs,type_in_title,llm,1,0,community
 Fotografi med Kulturfabriken!,Workshops & kurser,Fotografi,kurs,type_in_title,llm,1,0,community
 "Founders Conference Stockholm Nov 11, 2026",Inget typord i titeln,,,other,none,1,1,workshop
@@ -3618,7 +3618,7 @@ Främlingen,Inget typord i titeln,,,show_title,none,1,0,film
 Framtidens stad med människan i centrum,Inget typord i titeln,,,show_title,none,1,1,community
 Från A till B - och bortom,Inget typord i titeln,,,show_title,none,1,1,talks-lectures
 Från Blåsut till Zinkensdamm,Inget typord i titeln,,,show_title,none,1,1,community
-"Från Broadway till Duvemåla | Stockholm, Södra Teatern",Scen & föreställning,teatern,teatern,show_title,rules,1,1,music
+"Från Broadway till Duvemåla | Stockholm, Södra Teatern",Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,music
 Från Kristina till AI – tryckfrihetsförordningen firar 260 år,Föreläsning & samtal,tryckfrihetsförordningen,föreläsning,type_in_title,llm,1,1,community
 Från parkering till tivoli,Fest & nattliv,tivoli,nattliv,type_in_title,llm,1,1,community
 Frankenstein Premiär &#8211; Samarbete med Moomsteatern,Scen & föreställning,Premiär,teater,type_in_title,llm,1,1,community
@@ -3649,24 +3649,24 @@ French Songs & Gypsy Jazz with Marie-Chantal Long & Swing Club,Scen & förestäl
 French Wine Day 2026,Mat & dryck,French Wine Day,mat,type_in_title,llm,1,1,community
 Frequently asked questions,Attraktion med oklassad typ,Frequently asked questions,övrigt,type_in_title,llm,1,1,community
 Fri entré - Postmuseum 120 år,Utställning & konst,Postmuseum 120 år,utställning,type_in_title,llm,1,1,exhibition
-Fri fredag på Moderna Museet,Utställning & konst,museet,museet,venue_only,rules,1,0,community
-Fri Fredag på Moderna Museet,Utställning & konst,museet,museet,venue_only,rules,1,0,community
+Fri fredag på Moderna Museet,Utställning & konst,Museet,Museet,venue_only,rules,1,0,community
+Fri Fredag på Moderna Museet,Utställning & konst,Museet,Museet,venue_only,rules,1,0,community
 Frida Mirage,Inget typord i titeln,,,artist_name,none,1,1,community
 FriskvårdPlus – Studio Acusticum,Inget typord i titeln,,,venue_only,none,1,1,music
 Fritidshusmässan Idre Himmelfjäll 2026,Mässa & marknad,Fritidshusmässan,mässa,type_in_title,llm,1,1,exhibition
 FRNDS+FMLY w/ Chris Veron (DE),Inget typord i titeln,,,show_title,none,1,0,community
 FRNDS+FMLY w/ Chris Veron (DE) + HITS STOCKHOLM,Inget typord i titeln,,,show_title,none,1,0,music
 Fröken Elvis – Motala Folkets Hus,Inget typord i titeln,,,show_title,none,1,1,music
-Fröken Elvis – Ystads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Fröken Elvis – Ystads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Fröken Elvis Jul - Sandviken,Inget typord i titeln,,,show_title,none,1,1,music
-Fröken Elvis Jul – Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-Fröken Elvis Jul – Nyköpings Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-Fröken Elvis Jul – Teatern,Scen & föreställning,teatern,teatern,show_title,rules,1,1,music
-Fröken Elvis Jul | Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Fröken Elvis Jul – Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
+Fröken Elvis Jul – Nyköpings Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
+Fröken Elvis Jul – Teatern,Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,music
+Fröken Elvis Jul | Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Fröken Elvis Jul | Göteborg Stenhammarsalen,Inget typord i titeln,,,show_title,none,1,1,music
 Fröken Elvis Jul | Haninge Kulturhus,Inget typord i titeln,,,show_title,none,1,1,music
 Fröken Elvis Jul | Katalin Uppsala,Inget typord i titeln,,,show_title,none,1,1,music
-Fröken Elvis Jul | Nyköpings Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Fröken Elvis Jul | Nyköpings Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 "Fröken Elvis Jul | Örebro, Kulturkvarteret",Inget typord i titeln,,,show_title,none,1,1,music
 "Fröken Elvis Jul | Stockholm, Intiman",Inget typord i titeln,,,show_title,none,1,1,music
 "Fröken Elvis Jul | Ulricehamn, Hermans lada",Inget typord i titeln,,,show_title,none,1,1,music
@@ -4024,7 +4024,7 @@ Hökis Visrum Presenterar Gunnar Källström,Inget typord i titeln,,,artist_name
 Hökis Visrum Presenterar Lars Persa,Inget typord i titeln,,,artist_name,none,1,1,music
 Hökis Visrum Presenterar Ola Sandström,Inget typord i titeln,,,artist_name,none,1,1,music
 Hökis Visrum Presenterar Ted Bjurwill,Inget typord i titeln,,,artist_name,none,1,1,music
-Holiday fun at the Opera,Scen & föreställning,opera,opera,show_title,rules,1,0,opera
+Holiday fun at the Opera,Scen & föreställning,Opera,Opera,show_title,rules,1,0,opera
 Holistisk Hälsomässa Norrköping 2026,Mässa & marknad,Hälsomässa,mässa,type_in_title,llm,1,1,exhibition
 Holistisk Hälsomässa Nyköping 2027,Mässa & marknad,Hälsomässa,mässa,type_in_title,llm,1,1,exhibition
 HOMMAGE TILL FRED ÅKERSTRÖM: SPEGELBILDER,Inget typord i titeln,,,show_title,none,1,0,music
@@ -4045,7 +4045,7 @@ Höstlov för skollediga barn och medföljande vuxna,Barn & familj,höstlov för
 Höstlov i Hbg: Välj ditt eget äventyr – Spökhuset,Barn & familj,Spökhuset,övrigt,type_in_title,llm,1,0,community
 Höstlov på Gamestreet 1: Ninja attack!,Barn & familj,Ninja attack!,övrigt,type_in_title,llm,1,0,community
 Höstlov på Naturskolan,Barn & familj,Höstlov på Naturskolan,barn,type_in_title,llm,1,0,community
-Höstlov på Överjärva gårdGRATIS,Barn & familj,hostlov,hostlov,type_in_title,rules,1,0,community
+Höstlov på Överjärva gårdGRATIS,Barn & familj,Höstlov,Höstlov,type_in_title,rules,1,0,community
 Höstlov på Postmusuem,Barn & familj,Höstlov på Postmusuem,barn,type_in_title,llm,1,0,community
 Höstlov på Ståhl Collection,Barn & familj,Höstlov på Ståhl Collection,barn,type_in_title,llm,1,0,community
 Höstlov: Ficklampsvisning i slottskällarens mörker,Barn & familj,Ficklampsvisning,övrigt,type_in_title,llm,1,0,community
@@ -4070,8 +4070,8 @@ Höstlovsverkstad: Skapa din egen ansiktsmask!,Workshops & kurser,Höstlovsverks
 Höstmingel - upptäck framtidens matteundervisning tillsammans med dina kollegor,Samhälle & möte,Höstmingel,samhälle,type_in_title,llm,1,1,community
 Höststyling Aleksandra x Marga Ståhl,Workshops & kurser,Höststyling,workshop,type_in_title,llm,1,1,community
 Hot Records Skivmässa,Mässa & marknad,Skivmässa,mässa,type_in_title,llm,1,1,community
-HOUSE OF COMMAND / SURR3AL,Fest & nattliv,house,house,other,rules,1,0,community
-House of Hallwyl,Fest & nattliv,house,house,show_title,rules,1,1,music
+HOUSE OF COMMAND / SURR3AL,Fest & nattliv,HOUSE,HOUSE,other,rules,1,0,community
+House of Hallwyl,Fest & nattliv,House,House,show_title,rules,1,1,music
 House of Metal 2026 – Umeå Folkets Hus,Konsert & musikframträdande,House of Metal,konsert,type_in_title,llm,1,1,music
 How each got their first 10 customers - STHLM,Inget typord i titeln,,,other,none,1,1,community
 How to Build AI the World Will Let In (A Conversation With Tandem Health),Föreläsning & samtal,Conversation,samtal,type_in_title,llm,1,1,community
@@ -4091,10 +4091,10 @@ Humorquizet – Sveriges roligaste frågesport! – Ystads Teater,Spel & social 
 Hur gick det sen?,Inget typord i titeln,,,show_title,none,1,0,community
 Hur låter en tomat?,Inget typord i titeln,,,show_title,none,1,1,community
 Hur låter en tomat? Klockan 14.00,Inget typord i titeln,,,show_title,none,1,1,community
-Hur lika är språk?,Språk & läsning,sprak,sprak,show_title,rules,1,1,exhibition
+Hur lika är språk?,Språk & läsning,språk,språk,show_title,rules,1,1,exhibition
 Hur ser framtiden för Villa San Michele ut?,Inget typord i titeln,,,show_title,none,1,1,talks-lectures
 Huseby Julmässa 2026,Mässa & marknad,Julmässa,mässa,type_in_title,llm,1,1,exhibition
-HV Galleri,Utställning & konst,galleri,galleri,venue_only,rules,1,1,community
+HV Galleri,Utställning & konst,Galleri,Galleri,venue_only,rules,1,1,community
 HVB- och Familjehemsdagen Växjö 2026,Barn & familj,HVB- och Familjehemsdagen,familj,type_in_title,llm,1,1,community
 HYBRIS HEALERS + LOVE RÖNNLUND,Inget typord i titeln,,,artist_name,none,1,1,music
 Hydroglyph – Anna Ofelia Johansson,Inget typord i titeln,,,show_title,none,1,1,community
@@ -4107,7 +4107,7 @@ I Can! (2-5 years),Inget typord i titeln,,,other,none,1,1,community
 I de stora skogarna - Höstkonsert med Damkören SALT,Konsert & musikframträdande,Höstkonsert,konsert,type_in_title,llm,1,1,music
 "I dialog med Gunilla Lundahl: Om samisk arkitektur, kollektiva praktiker och feminism",Inget typord i titeln,,,type_in_title,none,1,1,exhibition
 "I ETT VINTERLAND - Malena Ernman, Johanna Moraeus & David Carbe",Inget typord i titeln,,,type_in_title,none,1,1,music
-"I Ett Vinterland - Malena Ernman, Johanna Moraeus och David Carbe – Ystads Teater",Scen & föreställning,teater,teater,type_in_title,rules,1,1,music
+"I Ett Vinterland - Malena Ernman, Johanna Moraeus och David Carbe – Ystads Teater",Scen & föreställning,Teater,Teater,type_in_title,rules,1,1,music
 I ett vinterland – Cassels konsert- & kulturhus i Grängesberg,Konsert & musikframträdande,konsert- & kulturhus,konsert,type_in_title,llm,1,1,music
 I ett vinterland – Gustav Adolfs kyrka,Inget typord i titeln,,,show_title,none,1,1,music
 I ett vinterland – Mimershus,Inget typord i titeln,,,show_title,none,1,1,music
@@ -4123,16 +4123,16 @@ I Juletid - Gäst Andreas Weise – Marstrand Havshotell,Inget typord i titeln,,
 I Juletid - Gäst Andreas Weise – Mörrums kyrka,Inget typord i titeln,,,artist_name,none,1,1,music
 I Juletid - Gäst Andreas Weise – Vinbergs Kyrka,Inget typord i titeln,,,artist_name,none,1,1,music
 I Juletid - Gäst LaGaylia Fraizer – Höreda kyrka,Inget typord i titeln,,,artist_name,none,1,1,music
-I Juletid på turné igen – med Andreas Weise som årets gästartist. – Ystads Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+I Juletid på turné igen – med Andreas Weise som årets gästartist. – Ystads Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 "I kunglig tjänst- drabanter, hovfröknar, lakejer",Inget typord i titeln,,,show_title,none,1,0,community
 I list & lust – Kristianstads teater,Scen & föreställning,teater,teater,type_in_title,llm,1,1,music
 I list och lust – Ystads Teater,Scen & föreställning,teater,teater,type_in_title,llm,1,1,music
 I Skymningslandet - höst 26,Inget typord i titeln,,,show_title,none,1,0,kids
 I varandras händer,Inget typord i titeln,,,show_title,none,1,0,community
-I will give my love an apple – Galleri Panncentralen,Utställning & konst,galleri,galleri,show_title,rules,1,1,music
+I will give my love an apple – Galleri Panncentralen,Utställning & konst,Galleri,Galleri,show_title,rules,1,1,music
 "Ian Venables: Requiem, OP. 48",Scen & föreställning,Requiem,musikal,type_in_title,llm,1,1,music
 Ibex Band,Inget typord i titeln,,,artist_name,none,1,1,community
-IBEX band l Selam Festival Stockholm,Mässa & marknad,festival,festival,artist_name,rules,1,1,music
+IBEX band l Selam Festival Stockholm,Mässa & marknad,Festival,Festival,artist_name,rules,1,1,music
 ICMLT 2027 in Stockholm - Machine Learning Technologies,Attraktion med oklassad typ,Machine Learning Technologies,övrigt,type_in_title,llm,1,1,electronic
 Icona Pop – Arbis,Inget typord i titeln,,,artist_name,none,1,1,music
 Icona Pop – Mejeriet,Inget typord i titeln,,,artist_name,none,1,0,music
@@ -4243,8 +4243,8 @@ Jag är en människa,Inget typord i titeln,,,show_title,none,1,1,community
 Jag är en sån,Inget typord i titeln,,,show_title,none,1,1,theatre-drama
 Jag är Ulla Winblad (matinéföreställning),Scen & föreställning,matinéföreställning,teater,type_in_title,llm,1,1,opera
 Jag har inte tid – Sista chansen tour,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
-Jag har inte tid – Sista chansen tour - Andreas Forsén Jonsson på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
-Jag har inte tid – Sista chansen tour – Kristianstad Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Jag har inte tid – Sista chansen tour - Andreas Forsén Jonsson på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
+Jag har inte tid – Sista chansen tour – Kristianstad Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Jag Kan! (2-5 år) RELAXED PERFORMANCE,Konsert & musikframträdande,RELAXED PERFORMANCE,show,type_in_title,llm,1,0,kids
 Jake Bugg,Inget typord i titeln,,,artist_name,none,1,1,community
 Jake Bugg - Alamo - UK & European Tour,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4258,7 +4258,7 @@ Jam Session: Romme / Fjeldsted / Lindberg,Konsert & musikframträdande,Jam Sessi
 James Marriott,Inget typord i titeln,,,artist_name,none,1,1,music
 James Yorkston,Inget typord i titeln,,,artist_name,none,1,1,music
 Jamie Woon @ Kollektivet Livet,Inget typord i titeln,,,artist_name,none,1,1,music
-Jamshid @ Cirkus,Scen & föreställning,cirkus,cirkus,artist_name,rules,1,1,music
+Jamshid @ Cirkus,Scen & föreställning,Cirkus,Cirkus,artist_name,rules,1,1,music
 Järfälla Läser,Inget typord i titeln,,,other,none,1,1,community
 Järfälla läser Den lyckligaste leken i BAS,Inget typord i titeln,,,show_title,none,1,1,community
 Jaripeo (Stockholms filmfestival),Mässa & marknad,filmfestival,festival,type_in_title,llm,1,1,film
@@ -4302,7 +4302,7 @@ Jobbstudion på Ryds bibliotek,Workshops & kurser,Jobbstudion,verkstan,type_in_t
 Joddla med Siv – Arbis,Inget typord i titeln,,,artist_name,none,1,0,music
 Joe Bonamassa,Inget typord i titeln,,,artist_name,none,1,0,community
 Joe Bonamassa: Live in concert,Konsert & musikframträdande,Live in concert,konsert,type_in_title,llm,1,1,community
-Joel Alme - Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,music
+Joel Alme - Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,music
 Joel Lyssarides Trio,Inget typord i titeln,,,artist_name,none,1,1,music
 Johan Airijoki duo,Inget typord i titeln,,,artist_name,none,1,1,music
 Johan Dalene & Sebastian Iivonen – Argussalen,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4325,8 +4325,8 @@ John Lundvik med Mats Björkes Caravan – julturné 2026 – Tonhallen,Inget ty
 John Lundvik med Mats Björkes Caravan – julturné 2026 – Västerås Konserthus,Inget typord i titeln,,,artist_name,none,1,1,music
 John Lundvik with Mats Björkes Caravan – Christmas Tour 2026,Inget typord i titeln,,,artist_name,none,1,1,music
 John Lundvik with Mats Björkes Caravan – Christmas Tour 2026 – Stage 1,Inget typord i titeln,,,artist_name,none,1,1,music
-John Németh & Knock-Out Greg & Blue Flames – Söderport,Konsert & musikframträdande,blue,blue,artist_name,rules,1,0,music
-John Németh with Knock-Out Greg & the Blue Flames,Konsert & musikframträdande,blue,blue,artist_name,rules,1,0,music
+John Németh & Knock-Out Greg & Blue Flames – Söderport,Konsert & musikframträdande,Blue,Blue,artist_name,rules,1,0,music
+John Németh with Knock-Out Greg & the Blue Flames,Konsert & musikframträdande,Blue,Blue,artist_name,rules,1,0,music
 John Vincent III @ Debaser Nova,Inget typord i titeln,,,artist_name,none,1,1,music
 Jon Henrik Fjällgren - Karlstad,Inget typord i titeln,,,artist_name,none,1,1,music
 Jon Henrik Fjällgren - Karlstad – Tingvallakyrkan,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4362,7 +4362,7 @@ Jul i Folkton,Fest & nattliv,Jul i Folkton,fest,type_in_title,llm,1,1,music
 Jul i Jens,Inget typord i titeln,,,show_title,none,1,1,music
 Jul i palatset,Inget typord i titeln,,,show_title,none,1,1,exhibition
 Jul i Vasastan – Årets Julkonsert,Konsert & musikframträdande,Julkonsert,konsert,type_in_title,llm,1,1,music
-Jul med Sigfridssons – Kristianstad Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Jul med Sigfridssons – Kristianstad Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Jul på Hovstallet,Inget typord i titeln,,,show_title,none,1,1,community
 Julablot 2026,Inget typord i titeln,,,other,none,1,1,music
 Julbord - 2026,Mat & dryck,Julbord,mat,type_in_title,llm,1,1,food
@@ -4443,10 +4443,10 @@ Kanan Gill: Not This Again,Inget typord i titeln,,,artist_name,none,1,1,theatre-
 kanketsu | track #007,Inget typord i titeln,,,other,none,1,1,community
 kanketsu aw #027,Inget typord i titeln,,,other,none,1,1,community
 kanketsu x OpenAI,Inget typord i titeln,,,other,none,1,1,community
-KAPRIFOL - Techno Edition,Fest & nattliv,techno,techno,artist_name,rules,1,0,community
+KAPRIFOL - Techno Edition,Fest & nattliv,Techno,Techno,artist_name,rules,1,0,community
 Kära Selma – En improviserad hyllningsföreställning,Konsert & musikframträdande,hyllningsföreställning,show,type_in_title,llm,1,1,theatre-drama
 Karin Hammar & Huddinge Big Band,Inget typord i titeln,,,artist_name,none,1,1,music
-KARIN HELLQVIST - VIOLIN,Konsert & musikframträdande,violin,violin,artist_name,rules,1,1,music
+KARIN HELLQVIST - VIOLIN,Konsert & musikframträdande,VIOLIN,VIOLIN,artist_name,rules,1,1,music
 Karl May Total - online Fantreffen Nr. 45,Samhälle & möte,online Fantreffen,möte,type_in_title,llm,1,1,community
 Karl Olandersson kvartett,Inget typord i titeln,,,artist_name,none,1,1,music
 Karl Olandersson kvartett – First Hotel Witt,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4458,7 +4458,7 @@ Karlskoga &#8211; AIK (Omgång 37),Inget typord i titeln,,,other,none,1,1,commun
 Karlstad Storloppis,Mässa & marknad,Storloppis,loppis,type_in_title,llm,1,1,community
 "Karma Halloween: Office Hours, Afterlife Edition 🎃",Inget typord i titeln,,,show_title,none,1,0,community
 Kärrtorp Comedy med Isak Jansson,Scen & föreställning,Comedy,standup,type_in_title,llm,1,1,theatre-comedy
-"Kasino - Solo 2027 | Södra Teatern, Stockholm",Scen & föreställning,teatern,teatern,show_title,rules,1,1,music
+"Kasino - Solo 2027 | Södra Teatern, Stockholm",Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,music
 KASINO - SOLO 2027 | STORA TEATERN,Konsert & musikframträdande,KASINO,show,type_in_title,llm,1,1,music
 Kat Eaton @ Fasching,Inget typord i titeln,,,artist_name,none,1,0,music
 Kate Voegele,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4484,7 +4484,7 @@ Kilu KajanneGRATIS,Inget typord i titeln,,,other,none,1,1,community
 Kim Wilde @ Göta Lejon,Inget typord i titeln,,,artist_name,none,1,1,music
 KIM WILDE | THE SINGLES TOUR 2027,Inget typord i titeln,,,artist_name,none,1,1,music
 Kim Wilde in Stockholm,Inget typord i titeln,,,artist_name,none,1,1,music
-"Kim Wilde Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Kim Wilde Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 KIND Diskuterar,Inget typord i titeln,,,show_title,none,1,1,community
 Kinesisk bokcirkel 中文读书会,Språk & läsning,Kinesisk bokcirkel,bokcirkel,type_in_title,llm,1,1,community
 KiNgDoN_SaVaGe,Inget typord i titeln,,,artist_name,none,1,1,community
@@ -4502,7 +4502,7 @@ KlimakterieResan 4.0,Workshops & kurser,KlimakterieResan,träning,type_in_title,
 Klubb 033 – Åhaga,Inget typord i titeln,,,show_title,none,1,1,music
 KLUBB 65,Inget typord i titeln,,,show_title,none,1,1,community
 Klubb DÖD: Crooked Mouth + Träet-Mund-Spilli,Inget typord i titeln,,,artist_name,none,1,1,music
-Klubb DÖD: Pink Turns Blue + All Lost Joys,Konsert & musikframträdande,blue,blue,artist_name,rules,1,1,music
+Klubb DÖD: Pink Turns Blue + All Lost Joys,Konsert & musikframträdande,Blue,Blue,artist_name,rules,1,1,music
 Klubb DÖD: SPK,Inget typord i titeln,,,artist_name,none,1,1,music
 Klubb DÖD: SPK + THE STELLAR CULT,Inget typord i titeln,,,artist_name,none,1,1,music
 Klubb Mariama 10 Year Anniversary -Acoustic Edition,Inget typord i titeln,,,show_title,none,1,1,music
@@ -4557,7 +4557,7 @@ Konstantin ZhukovGRATIS,Inget typord i titeln,,,artist_name,none,1,1,community
 Konsten att kommunicera med PG Wettsjö,Workshops & kurser,Konsten att kommunicera,kurs,type_in_title,llm,1,1,talks-lectures
 Konstfacks anatomiundervisning,Föreläsning & samtal,anatomiundervisning,föreläsning,type_in_title,llm,1,1,community
 Konstfika på finska - Eija Liisa Ahtila,Mat & dryck,Konstfika,mat,type_in_title,llm,1,0,community
-Konsthall 16,Utställning & konst,konsthall,konsthall,venue_only,rules,1,1,community
+Konsthall 16,Utställning & konst,Konsthall,Konsthall,venue_only,rules,1,1,community
 Konstlördagar med Studio Funk: Collage och arkiv,Workshops & kurser,Collage och arkiv,verkstan,type_in_title,llm,1,1,workshop
 KONSTNÄRSVISNINGAR,Utställning & konst,KONSTNÄRSVISNINGAR,utställning,type_in_title,llm,1,1,community
 Konstruktion och bildGRATIS,Inget typord i titeln,,,type_in_title,none,1,1,community
@@ -4618,10 +4618,10 @@ KURS: Sticka samiska vantmönster,Workshops & kurser,KURS: Sticka samiska vantm�
 KURS: Sy och brodera en maxad marsma,Workshops & kurser,KURS: Sy och brodera en maxad marsma,kurs,type_in_title,llm,1,1,workshop
 Kurt Rosenwinkel &#039;The Remedy&#039;,Inget typord i titeln,,,artist_name,none,1,0,music
 Kusligt i Gamla Linköping,Inget typord i titeln,,,other,none,1,0,community
-KUSTBANDET IN CONCERT,Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+KUSTBANDET IN CONCERT,Konsert & musikframträdande,CONCERT,CONCERT,artist_name,rules,1,1,music
 KVAHs traditionella julkonsert,Konsert & musikframträdande,julkonsert,konsert,type_in_title,llm,1,1,music
 Kvalitetsmässan 2027,Mässa & marknad,Kvalitetsmässan,mässa,type_in_title,llm,1,1,exhibition
-Kväll Höglund,Fest & nattliv,kvall,kvall,show_title,rules,1,1,music
+Kväll Höglund,Fest & nattliv,Kväll,Kväll,show_title,rules,1,1,music
 Kvällsvisning av Medborgarhuset,Utställning & konst,Kvällsvisning,utställning,type_in_title,llm,1,1,community
 Kvällsvisningar med Helsingborgs museum,Utställning & konst,Kvällsvisningar,utställning,type_in_title,llm,1,1,community
 Kvinnorna i 2 tjugotal,Inget typord i titeln,,,show_title,none,1,1,community
@@ -4643,7 +4643,7 @@ LaLa - Sing Along Party 28 November 2026,Konsert & musikframträdande,Sing Along
 LaLa - Sing Along Party 31 Oktober 2026,Konsert & musikframträdande,Sing Along Party,show,type_in_title,llm,1,1,music
 Lamb of God @ Avicii Arena,Inget typord i titeln,,,artist_name,none,1,1,music
 Lambrini Girls,Inget typord i titeln,,,artist_name,none,1,1,music
-Låna i mörkret på höstlovet,Barn & familj,hostlovet,hostlovet,show_title,rules,1,0,community
+Låna i mörkret på höstlovet,Barn & familj,höstlovet,höstlovet,show_title,rules,1,0,community
 Landskrona Skivmässa 2026,Mässa & marknad,Skivmässa,mässa,type_in_title,llm,1,0,exhibition
 Lane 8 - An evening of music and dance,Scen & föreställning,music and dance,dans,type_in_title,llm,1,1,music
 Lane 8 @ Bar15,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4651,7 +4651,7 @@ Länge Leve 70-talet,Inget typord i titeln,,,show_title,none,1,1,community
 Lansering: Mileis Argentina,Attraktion med oklassad typ,Lansering,övrigt,type_in_title,llm,1,1,community
 Lantbruket i Centrum 2027,Inget typord i titeln,,,show_title,none,1,1,community
 Lappa och laga med Evelina,Inget typord i titeln,,,artist_name,none,1,0,community
-Lär dig mer om asiatiska språk,Språk & läsning,sprak,sprak,språk,rules,1,1,talks-lectures
+Lär dig mer om asiatiska språk,Språk & läsning,språk,språk,språk,rules,1,1,talks-lectures
 Lär dig spela shax (somaliskt schack),Spel & social tävling,schack,schack,spel,rules,1,1,community
 Lär dig stöpa ljus med bivax,Inget typord i titeln,,,verkstan,none,1,1,workshop
 Lär dig tälja köksredskap,Inget typord i titeln,,,verkstan,none,1,1,community
@@ -4725,13 +4725,13 @@ Lilla klädkammaren,Inget typord i titeln,,,show_title,none,1,0,family
 Lina Lövstrand Woodwind Stories,Inget typord i titeln,,,artist_name,none,1,1,music
 LINDA LAMPENIUS X PETE PARKKONEN STOCKHOLM,Inget typord i titeln,,,artist_name,none,1,1,community
 Linköping Beer Expo 2027 – Ölmässa i Linköping,Mässa & marknad,Ölmässa,mässa,type_in_title,llm,1,1,community
-Linnea Henriksson - Östersund Gamla teatern – ÖSTERSUND - GAMLA TEATERN,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,music
-Linnea Henriksson – Bara vi – Kramfors Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Linnea Henriksson - Östersund Gamla teatern – ÖSTERSUND - GAMLA TEATERN,Scen & föreställning,TEATERN,TEATERN,artist_name,rules,1,1,music
+Linnea Henriksson – Bara vi – Kramfors Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Linnéa Henriksson – Bara vi – Mejeriet,Inget typord i titeln,,,artist_name,none,1,1,music
 "Linnea Henriksson ""Bara vi"" – Cassels Konserthus",Inget typord i titeln,,,artist_name,none,1,0,music
 "Linnea Henriksson ""Bara vi"" – Örebro Konserthus",Inget typord i titeln,,,artist_name,none,1,1,music
-"Linnea Henriksson ""Bara vi"" – Söderhamns Teater",Scen & föreställning,teater,teater,artist_name,rules,1,0,music
-"Linnea Henriksson ""Bara vi"" – Ystads Teater",Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+"Linnea Henriksson ""Bara vi"" – Söderhamns Teater",Scen & föreställning,Teater,Teater,artist_name,rules,1,0,music
+"Linnea Henriksson ""Bara vi"" – Ystads Teater",Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Linnea Henriksson till Cassels konserthus! – Cassels,Inget typord i titeln,,,artist_name,none,1,0,music
 Linnea i målarens trädgård,Inget typord i titeln,,,artist_name,none,1,1,community
 Linnea Jonsson – Hive Mind – Västerås Konserthus,Inget typord i titeln,,,show_title,none,1,1,music
@@ -4854,7 +4854,7 @@ Luther Journey to Reformation Sites in Germany 28.10.-1.11.2026,Inget typord i t
 Lycka till - Cirkus Cirkör – Lunds stadsteater,Scen & föreställning,Cirkus Cirkör,cirkus,type_in_title,llm,1,1,music
 LYSSNA!,Inget typord i titeln,,,other,none,1,1,community
 M.ill.ion +  Roulette,Inget typord i titeln,,,artist_name,none,1,1,music
-Macbeth – Jönköping Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Macbeth – Jönköping Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Machine Command,Inget typord i titeln,,,show_title,none,1,1,community
 Madi Banja,Inget typord i titeln,,,artist_name,none,1,1,music
 Madison McFerrin,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4872,7 +4872,7 @@ Magnus Carlson & Weekend choir – Science Village Hall,Inget typord i titeln,,,
 Magnus Carlson &amp; The Moon Ray Quintet,Inget typord i titeln,,,artist_name,none,1,1,music
 MAGNUS CARLSSON - ÄNGLARNAS TID – Grangärde kyrka,Inget typord i titeln,,,show_title,none,1,1,music
 MAGNUS CARLSSON - ÄNGLARNAS TID – Gustav Adolfs kyrka,Inget typord i titeln,,,show_title,none,1,1,music
-MAGNUS CARLSSON - ÄNGLARNAS TID – Kalmar Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+MAGNUS CARLSSON - ÄNGLARNAS TID – Kalmar Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 MAGNUS CARLSSON - ÄNGLARNAS TID – Kristianstads teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
 MAGNUS CARLSSON - ÄNGLARNAS TID – Vinbergs Kyrka,Inget typord i titeln,,,show_title,none,1,1,music
 MAGNUS CARLSSON - SE MIG BARA FÖR DEN JAG ÄR,Inget typord i titeln,,,show_title,none,1,0,music
@@ -4888,7 +4888,7 @@ Make it Count med gästtalare MSI Choice,Föreläsning & samtal,Make it Count,f�
 Make your own mustard,Workshops & kurser,Make your own mustard,verkstan,type_in_title,llm,1,1,exhibition
 Make your own Princesstårta,Workshops & kurser,Make your own Princesstårta,verkstan,type_in_title,llm,1,0,community
 Makross – Kulturhuset Najaden -Foajéscenen,Inget typord i titeln,,,show_title,none,1,1,music
-"Maksim Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Maksim Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Måla en tygkasse,Inget typord i titeln,,,other,none,1,0,community
 Måla halloween-stenar!,Inget typord i titeln,,,other,none,1,0,community
 "Malcolm Todd + Support: Natanya | Fryshuset Arenan, Stockholm",Inget typord i titeln,,,artist_name,none,1,1,music
@@ -4904,8 +4904,8 @@ Malmö Skivmässa Mitt Möllan 2026,Mässa & marknad,Skivmässa,mässa,type_in_t
 Mamma Mia! The Party! 🎉,Konsert & musikframträdande,THE PARTY,show,type_in_title,llm,1,1,community
 Managing Your Emotions - Prof Ethan Kross,Föreläsning & samtal,Managing Your Emotions,föreläsning,type_in_title,llm,1,1,community
 Måndag,Inget typord i titeln,,,show_title,none,1,1,community
-"Manfred Mann’s Earth Band – 9 nov, Cirkus",Scen & föreställning,cirkus,cirkus,artist_name,rules,1,1,music
-Manfred Mann's Earth Band @ Cirkus,Scen & föreställning,cirkus,cirkus,artist_name,rules,1,1,music
+"Manfred Mann’s Earth Band – 9 nov, Cirkus",Scen & föreställning,Cirkus,Cirkus,artist_name,rules,1,1,music
+Manfred Mann's Earth Band @ Cirkus,Scen & föreställning,Cirkus,Cirkus,artist_name,rules,1,1,music
 Manfred Mann's Earth Band | Göteborgs Konserthus,Inget typord i titeln,,,artist_name,none,1,1,music
 Manfred Manns Earth Band,Inget typord i titeln,,,artist_name,none,1,1,community
 MANNE FORSSBERG X CONVENDUM X GATORADE: LÖPNING + FRUKOST 10/11,Workshops & kurser,LÖPNING + FRUKOST,träning,type_in_title,llm,1,1,community
@@ -4931,7 +4931,7 @@ Markoolio,Inget typord i titeln,,,artist_name,none,1,1,community
 Marky Ramone @ Kollektivet Livet,Inget typord i titeln,,,artist_name,none,1,0,music
 Marky Ramone's Blitzkrieg – Stage,Inget typord i titeln,,,artist_name,none,1,0,music
 Marky Ramone's Blitzkrieg | Stockholm,Inget typord i titeln,,,artist_name,none,1,0,music
-Marky Ramone´s Blitzkrieg – Katalin and all that Jazz,Konsert & musikframträdande,jazz,jazz,artist_name,rules,1,1,music
+Marky Ramone´s Blitzkrieg – Katalin and all that Jazz,Konsert & musikframträdande,Jazz,Jazz,artist_name,rules,1,1,music
 Marstein,Inget typord i titeln,,,other,none,1,1,community
 "Mårten 'Mindbender' Attling & Friends - HYPNOREX [Berlin] T.B.A, T.B.A",Inget typord i titeln,,,artist_name,none,1,1,community
 Martin och Emma i Jazzmanegen,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5002,7 +5002,7 @@ Mellanrum Mellan RumGRATIS,Attraktion med oklassad typ,Mellanrum,övrigt,type_in
 Melodic Winter Metal Night,Konsert & musikframträdande,Metal Night,konsert,type_in_title,llm,1,1,music
 Melrose Avenue + Support: Arankai + Call Me Amour,Inget typord i titeln,,,artist_name,none,1,1,music
 "Men's Wellness: Get clear, Move forward in life and business",Bad & välbefinnande,Men's Wellness,hälsa,type_in_title,llm,1,0,community
-Mending Magic med Stina Löving,Scen & föreställning,magic,magic,show_title,rules,1,0,community
+Mending Magic med Stina Löving,Scen & föreställning,Magic,Magic,show_title,rules,1,0,community
 Mental Cruelty @ Kollektivet Livet,Inget typord i titeln,,,artist_name,none,1,1,music
 Mental Cruelty + Ov Sulfur + Extermination Dismemberment + Acranius,Inget typord i titeln,,,artist_name,none,1,1,music
 Mer info / More info,Inget typord i titeln,,,other,none,1,0,community
@@ -5010,7 +5010,7 @@ Merit Hemmingson – Extrakonsert,Konsert & musikframträdande,Extrakonsert,kons
 "Merit Hemmingson – Storsjöteatern, Salongen",Inget typord i titeln,,,artist_name,none,1,1,music
 Messiah,Inget typord i titeln,,,show_title,none,1,1,community
 Messias av G.F. Händel,Inget typord i titeln,,,show_title,none,1,1,music
-Metal After Work,Fest & nattliv,after work,after work,other,rules,1,1,music
+Metal After Work,Fest & nattliv,After Work,After Work,other,rules,1,1,music
 Metalheadz,Inget typord i titeln,,,artist_name,none,1,1,community
 Metallprägling - Corazón de Milagrito,Inget typord i titeln,,,show_title,none,1,1,community
 Mezzoforte's Gulli Briem - Nordic Groove Gang,Inget typord i titeln,,,artist_name,none,1,0,community
@@ -5022,7 +5022,7 @@ MIC OFF – Gör egna beats,Workshops & kurser,Gör egna beats,workshop,type_in_
 MIC ON - Studiotid,Attraktion med oklassad typ,Studiotid,övrigt,type_in_title,llm,1,0,community
 Michael Bladt,Inget typord i titeln,,,artist_name,none,1,1,community
 Michael Jeff Johnson,Inget typord i titeln,,,artist_name,none,1,1,music
-Michael Starring Ben – The Magic of Michael Jackson,Scen & föreställning,magic,magic,show_title,rules,1,1,music
+Michael Starring Ben – The Magic of Michael Jackson,Scen & föreställning,Magic,Magic,show_title,rules,1,1,music
 Michelle Buteau   - ''The Surviving and Thriving Tour'',Inget typord i titeln,,,artist_name,none,1,1,theatre-comedy
 Michelle David & The True-tones @ Fasching,Inget typord i titeln,,,artist_name,none,1,1,music
 Michelle David &amp; The True Tones,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5039,7 +5039,7 @@ Mikail Aslan Live Stockholm,Konsert & musikframträdande,Live,konsert,type_in_ti
 Mike Rice: Cruel Little Man,Konsert & musikframträdande,Mike Rice: Cruel Little Man,konsert,type_in_title,llm,1,1,community
 MIKKEY DEE With Friends Playing MOTÖRHEAD Classics – Garden,Konsert & musikframträdande,Playing MOTÖRHEAD Classics,konsert,type_in_title,llm,1,0,music
 Miles Davis 100 år — Milestones &amp; Kind of Blue,Konsert & musikframträdande,Miles Davis 100 år,konsert,type_in_title,llm,1,0,music
-Miles Davis 100 Years – Milestones & Kind of Blue,Konsert & musikframträdande,blue,blue,show_title,rules,1,0,community
+Miles Davis 100 Years – Milestones & Kind of Blue,Konsert & musikframträdande,Blue,Blue,show_title,rules,1,0,community
 Millesgården,Inget typord i titeln,,,other,none,1,1,community
 Mimverkstaden - för barn 10-12år,Workshops & kurser,Mimverkstaden,verkstan,type_in_title,llm,1,0,community
 Mimverkstaden - för barn 6-9år,Workshops & kurser,Mimverkstaden,verkstan,type_in_title,llm,1,0,community
@@ -5058,7 +5058,7 @@ Minecrafttävling,Sport & tävling,Minecrafttävling,tävling,type_in_title,llm,
 MINERALISM: Teaterföreställning för barn,Scen & föreställning,Teaterföreställning,teater,type_in_title,llm,1,1,community
 Minibio,Film & bio,Minibio,bio,type_in_title,llm,1,1,community
 Ministry // Special guest/ Förband: Die Krupps,Inget typord i titeln,,,artist_name,none,1,1,music
-Minna Weurlander - Cinematic Images – Sundsvalls Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+Minna Weurlander - Cinematic Images – Sundsvalls Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Minnen genom färg,Inget typord i titeln,,,show_title,none,1,0,community
 MINU Festival: Songs About Everything,Mässa & marknad,Festival,festival,type_in_title,llm,1,1,community
 Miriam Aïda – Loving the Hero – Olsbergs Arena,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5075,7 +5075,7 @@ Mjällby AIF – Hammarby IF,Inget typord i titeln,,,other,none,1,0,sports
 Mjuk och skön yoga - gratis,Bad & välbefinnande,yoga,yoga,type_in_title,llm,1,0,community
 ML Buch,Inget typord i titeln,,,artist_name,none,1,1,music
 Mo Gilligan – The Mo You Know,Inget typord i titeln,,,artist_name,none,1,1,community
-"Mo Gilligan Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Mo Gilligan Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Modest People- Releasefest på Twang,Fest & nattliv,Releasefest,fest,type_in_title,llm,1,1,music
 MoDo &#8211; AIK (Omgång 34),Inget typord i titeln,,,other,none,1,1,community
 Moishe Badkhn + intro + Dockan Glick,Bad & välbefinnande,Badkhn,bad,type_in_title,llm,1,1,film
@@ -5098,10 +5098,10 @@ Monday Bar Halloween Cruise 2026 (no 65),Fest & nattliv,Halloween Cruise,nattliv
 Monitor Roadshow Gävle 2026,Utställning & konst,Roadshow,utställning,type_in_title,llm,1,1,community
 Monitor Roadshow Sundsvall 2026,Utställning & konst,Roadshow,utställning,type_in_title,llm,1,1,community
 Monitor Roadshow Umeå 2026,Utställning & konst,Roadshow,utställning,type_in_title,llm,1,1,community
-Mönsterås Blues Band,Konsert & musikframträdande,blues,blues,artist_name,rules,1,1,community
+Mönsterås Blues Band,Konsert & musikframträdande,Blues,Blues,artist_name,rules,1,1,community
 Monsterkonst,Inget typord i titeln,,,show_title,none,1,0,community
 MonsterRock med Skräckkabinettet – Auditoriet,Inget typord i titeln,,,artist_name,none,1,1,music
-Monsters of Film 2026,Film & bio,film,film,show_title,rules,1,1,community
+Monsters of Film 2026,Film & bio,Film,Film,show_title,rules,1,1,community
 Monsterverkstad,Workshops & kurser,Monsterverkstad,verkstan,type_in_title,llm,1,0,community
 MOONICA MAC,Inget typord i titeln,,,artist_name,none,1,1,music
 "Moonica Mac – Grand Hall, Steam Hotel",Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5184,7 +5184,7 @@ Nadja Hjorton: CANCER DANCE,Scen & föreställning,CANCER DANCE,dans,type_in_tit
 NANNE GRÖNVALLS JUBILEUMSTURNÉ - HÄR ÄR JAG,Inget typord i titeln,,,artist_name,none,1,1,music
 NANNE GRÖNVALLS JUBILEUMSTURNÉ - HÄR ÄR JAG – Växjö Konserthus,Inget typord i titeln,,,artist_name,none,1,1,music
 Nanne Grönwall - Här är jag,Inget typord i titeln,,,artist_name,none,1,1,music
-Napalm Death | Campaign for Musical Destruction,Scen & föreställning,musical,musical,artist_name,rules,1,1,music
+Napalm Death | Campaign for Musical Destruction,Scen & föreställning,Musical,Musical,artist_name,rules,1,1,music
 "Napalm Death | Live på Kollektivet Livet, Stockholm",Konsert & musikframträdande,Live,konsert,type_in_title,llm,1,1,community
 När alla vet att alla vet,Inget typord i titeln,,,show_title,none,1,0,theatre-drama
 När demokratin utmanas – vad krävs av akademin?,Inget typord i titeln,,,show_title,none,1,1,talks-lectures
@@ -5209,7 +5209,7 @@ NAZARETH | Stockholm,Inget typord i titeln,,,artist_name,none,1,1,music
 NDSML Summit 2026,Mässa & marknad,NDSML Summit 2026,festival,type_in_title,llm,1,1,community
 Needle felting & Embroidery Jewellery with Ran,Workshops & kurser,Needle felting & Embroidery Jewellery,verkstan,type_in_title,llm,1,1,community
 Negar Zarassi @ Riddarhussalen - Riddarhuset,Inget typord i titeln,,,artist_name,none,1,1,music
-Negationer i världens språk,Språk & läsning,sprak,sprak,show_title,rules,1,1,community
+Negationer i världens språk,Språk & läsning,språk,språk,show_title,rules,1,1,community
 Neil Young Tribute – Sagateatern,Inget typord i titeln,,,artist_name,none,1,1,music
 Neil Young Tribute // EP´S Trailer Park – Söderport,Inget typord i titeln,,,artist_name,none,1,1,music
 Neil Young Tribute med EP's Trailer Park + Gäster,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5232,7 +5232,7 @@ New Year's concert with the Stockholm Strauss Orchestra,Konsert & musikframträd
 New Year's Eve 2026 at HYDE Stockholm,Inget typord i titeln,,,other,none,1,1,community
 New Year’s Eve 2026/2027 at Biblioteket Live,Inget typord i titeln,,,other,none,1,1,community
 New Year's Eve 2026/2027 at The Node – Stockholm,Inget typord i titeln,,,other,none,1,1,community
-New Year’s Eve at Café Klotet,Språk & läsning,cafe,cafe,other,rules,1,1,community
+New Year’s Eve at Café Klotet,Språk & läsning,Café,Café,other,rules,1,1,community
 New Year’s Eve at Gondolen,Inget typord i titeln,,,other,none,1,1,community
 New Year’s Eve Celebration at Luzette,Inget typord i titeln,,,other,none,1,1,community
 New Year’s Eve with a View of Stockholm,Inget typord i titeln,,,other,none,1,1,community
@@ -5240,7 +5240,7 @@ Ni dricker öl medan jag läser sagor - Isak Jansson,Barn & familj,sagor,sagor,a
 Nicke Borg med band – Biljardkompaniet,Inget typord i titeln,,,artist_name,none,1,1,music
 Nicke Borg med band spelar Backyard Babies – Carlsson På Kajen - Folkparken vid Mälaren,Inget typord i titeln,,,artist_name,none,1,0,music
 Nicko McBrain @ Göta Lejon,Inget typord i titeln,,,artist_name,none,1,1,music
-"Nicko McBrain Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Nicko McBrain Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Night of Famous Musicals - The greatest musical hits of our time,Scen & föreställning,Night of Famous Musicals,musikal,type_in_title,llm,1,1,music
 Night of Famous Musicals – Kalmarsalen,Scen & föreställning,Night of Famous Musicals,musikal,type_in_title,llm,1,1,music
 Night of Famous Musicals – Växjö Konserthus,Scen & föreställning,Night of Famous Musicals,musikal,type_in_title,llm,1,1,music
@@ -5250,12 +5250,12 @@ Niklas Strömstedt - Tyck OM mig,Inget typord i titeln,,,artist_name,none,1,1,co
 "Niklas Strömstedt - Tyck OM mig – Hebeteatern, Folkets Hus Kulturhuset",Inget typord i titeln,,,artist_name,none,1,1,music
 Niklas Strömstedt - Tyck OM mig – Växjö Konserthus,Inget typord i titeln,,,artist_name,none,1,1,music
 Niklas Strömstedt - Tyck OM mig Culturum 2026-11-19 19:00,Inget typord i titeln,,,artist_name,none,1,1,pop
-Niklas Strömstedt - Tyck OM mig Halmstads Teater 2026-12-03 19:00,Scen & föreställning,teater,teater,artist_name,rules,1,1,pop
-Niklas Strömstedt - Tyck OM mig Jarl Kulle Teatern 2026-11-28 19:00,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,pop
+Niklas Strömstedt - Tyck OM mig Halmstads Teater 2026-12-03 19:00,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,pop
+Niklas Strömstedt - Tyck OM mig Jarl Kulle Teatern 2026-11-28 19:00,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,pop
 Niklas Strömstedt - Tyck OM mig Kulturens Hus 2026-10-24 19:00,Inget typord i titeln,,,artist_name,none,1,0,pop
 Niklas Strömstedt - Tyck OM mig Sara Kulturhus 2026-10-25 16:00,Inget typord i titeln,,,artist_name,none,1,0,pop
 Niklas Strömstedt - Tyck OM mig Stadsteatern 2026-11-29 18:00,Inget typord i titeln,,,artist_name,none,1,1,community
-Niklas Strömstedt - Tyck OM mig Uppsala Konsert & Kongress 2026-11-22 16:00,Konsert & musikframträdande,konsert,konsert,artist_name,rules,1,1,pop
+Niklas Strömstedt - Tyck OM mig Uppsala Konsert & Kongress 2026-11-22 16:00,Konsert & musikframträdande,Konsert,Konsert,artist_name,rules,1,1,pop
 Niklas Strömstedt - Tyck OM mig Vara Konserthus 2026-11-27 19:00,Inget typord i titeln,,,artist_name,none,1,1,pop
 Niklas Strömstedt - Tyck OM mig Västerås Konserthus 2026-11-21 19:00,Inget typord i titeln,,,artist_name,none,1,1,pop
 Niklas Strömstedt - Tyck OM mig Växjö Konserthus 2026-12-04 19:00,Inget typord i titeln,,,artist_name,none,1,1,pop
@@ -5268,7 +5268,7 @@ Nils Petter Löfstedt,Inget typord i titeln,,,artist_name,none,1,1,community
 Nils Petter Löfstedt: The Unmeasurable - The Photos,Inget typord i titeln,,,artist_name,none,1,1,community
 Nina Varumo möter Mikael Niemi,Föreläsning & samtal,möter,samtal,type_in_title,llm,1,1,exhibition
 Nina Varumo visar I väntan på Himmelriket,Inget typord i titeln,,,show_title,none,1,1,community
-Niño Fantasma + Diva Cruz  I Selam Festival Stockholm,Mässa & marknad,festival,festival,artist_name,rules,1,1,community
+Niño Fantasma + Diva Cruz  I Selam Festival Stockholm,Mässa & marknad,Festival,Festival,artist_name,rules,1,1,community
 NIPSTER - Hur långt är du beredd att gå?,Inget typord i titeln,,,show_title,none,1,0,film
 NISSE HALLBERG - 8 ÅR SENARE,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
 Nisse Hallberg - 8 years later,Inget typord i titeln,,,show_title,none,1,1,music
@@ -5353,9 +5353,9 @@ Norwegian trio The Bausa,Inget typord i titeln,,,artist_name,none,1,1,community
 Nostalgicafé med bild och filmvisning,Film & bio,Nostalgicafé,övrigt,type_in_title,llm,1,1,community
 NOSTALGIKLUBBEN ✰ 00-TALETS STÖRSTA HITS,Inget typord i titeln,,,other,none,1,1,community
 NOSTALGIMÅNDAG – Tribute to Bruce Springsteen – Musikhuset Scenen Nere,Konsert & musikframträdande,Tribute to Bruce Springsteen,konsert,type_in_title,llm,1,0,music
-Nötknäpparen - Klassisk julbalett med stråkkvartett,Scen & föreställning,julbalett,balett,show_title,rules,1,1,music
-Nötknäpparen – klassisk julbalett med stråkkvartett,Scen & föreställning,julbalett,balett,show_title,rules,1,1,music
-"Nötknäpparen Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,show_title,rules,1,1,music
+Nötknäpparen - Klassisk julbalett med stråkkvartett,Scen & föreställning,julbalett,julbalett,show_title,rules,1,1,music
+Nötknäpparen – klassisk julbalett med stråkkvartett,Scen & föreställning,julbalett,julbalett,show_title,rules,1,1,music
+"Nötknäpparen Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,show_title,rules,1,1,music
 Nour El Refai - Glows in the dark,Inget typord i titeln,,,show_title,none,1,1,music
 Nour El Refai – Glows In The Dark 2026 – Magasinet,Inget typord i titeln,,,show_title,none,1,1,music
 "Novemberskölden - Sveriges största rally, 31 oktober",Sport & tävling,rally,sport,type_in_title,llm,1,1,community
@@ -5405,7 +5405,7 @@ Oktoberfest 24/10,Inget typord i titeln,,,show_title,none,1,1,community
 Oktoberfest Inre Hamn,Inget typord i titeln,,,show_title,none,1,1,community
 Oktoberfest på Saluhallen – Saluhallen,Inget typord i titeln,,,show_title,none,1,0,music
 Oktoberstämman 2026,Inget typord i titeln,,,show_title,none,1,1,community
-Oktoberstämman 2026 • 31/10 • Uppsala Konsert & Kongress,Konsert & musikframträdande,konsert,konsert,show_title,rules,1,1,community
+Oktoberstämman 2026 • 31/10 • Uppsala Konsert & Kongress,Konsert & musikframträdande,Konsert,Konsert,show_title,rules,1,1,community
 Ola Aurell,Inget typord i titeln,,,artist_name,none,1,1,community
 Ólafur Arnalds - Falling Apart Together,Inget typord i titeln,,,artist_name,none,1,1,music
 Ólafur Arnalds | Stockholm,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5423,7 +5423,7 @@ Omah Lay @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 ÖMK Académie konsert,Konsert & musikframträdande,konsert,konsert,type_in_title,llm,1,1,music
 One Day,Inget typord i titeln,,,other,none,1,0,theatre-drama
 One Last Toast of 2026 at The Corner Bar 🍸🎶🥂,Mat & dryck,Toast,mat,type_in_title,llm,1,1,community
-One Magic Night – Kulturhuset tio14,Scen & föreställning,magic,magic,show_title,rules,1,1,music
+One Magic Night – Kulturhuset tio14,Scen & föreställning,Magic,Magic,show_title,rules,1,1,music
 ONE OF THESE NIGHTS - Eagles tribute – Kulturhuset tio14,Konsert & musikframträdande,tribute,konsert,type_in_title,llm,1,1,music
 ONE OF THESE NIGHTS - Eagles-tribute – Eskilstuna Teater,Konsert & musikframträdande,tribute,konsert,type_in_title,llm,1,1,music
 ONE OF THESE NIGHTS Eagles- tribute – Växjö Teater,Konsert & musikframträdande,tribute,konsert,type_in_title,llm,1,1,music
@@ -5546,23 +5546,23 @@ Per Persson &amp; Nya Packet | Höst &amp; Vinterturné,Inget typord i titeln,,,
 Performed Concerts: Østen x Rosa Birkedal,Konsert & musikframträdande,Performed Concerts,konsert,type_in_title,llm,1,0,community
 Pernilla Andersson,Inget typord i titeln,,,artist_name,none,1,1,community
 Pernilla Andersson - Vintersånger från Garbo,Inget typord i titeln,,,show_title,none,1,1,music
-Pernilla Andersson - Vintersånger från Garbo – Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Pernilla Andersson - Vintersånger från Garbo – Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 "Pernilla Andersson - Vintersånger från Garbo – Hebeteatern, Folkets Hus Kulturhuset",Inget typord i titeln,,,show_title,none,1,1,music
 Pernilla Andersson 2026 – Magasinet,Inget typord i titeln,,,artist_name,none,1,1,music
 Pernilla Andersson Vintersånger från Garbo” på Söderhamns Teater – Söderhamns Teater,Scen & föreställning,Vintersånger från Garbo,musikal,type_in_title,llm,1,1,music
 Pete Roth Trio (UK),Inget typord i titeln,,,artist_name,none,1,1,community
 PETER AND THE CHIEFS | LÖR 7/11 – Saluhallen,Inget typord i titeln,,,artist_name,none,1,1,music
 Peter Asplund – The Christmas feeling,Inget typord i titeln,,,show_title,none,1,1,music
-Peter Asplund Big Band – The Christmas Feeling – Café Mosaic,Språk & läsning,cafe,cafe,show_title,rules,1,1,music
+Peter Asplund Big Band – The Christmas Feeling – Café Mosaic,Språk & läsning,Café,Café,show_title,rules,1,1,music
 Peter Carlsson & Grå Grodorna- Skåpmat,Mat & dryck,Skåpmat,mat,type_in_title,llm,1,1,music
 Peter Englund om att misslyckas,Föreläsning & samtal,om att misslyckas,föreläsning,type_in_title,llm,1,1,community
 "Peter Hägerås – “Album Covers, Watercolors & Flying Saucers”",Utställning & konst,"Album Covers, Watercolors & Flying Saucers",utställning,type_in_title,llm,1,0,community
 "Peter Jablonski, piano – Kalmar Slott Gröna salen",Konsert & musikframträdande,piano,konsert,type_in_title,llm,1,1,music
-Peter Jezewski från Boppers-ända hit – Lilla Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,0,music
+Peter Jezewski från Boppers-ända hit – Lilla Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,0,music
 Peter Jöback,Inget typord i titeln,,,artist_name,none,1,1,community
 Petras prick - höst 26,Inget typord i titeln,,,show_title,none,1,1,community
 Petras prick - Tensta höst 26,Inget typord i titeln,,,show_title,none,1,1,community
-Petter - Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,music
+Petter - Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,music
 Phoebe Bridgers @ Avicii Arena,Inget typord i titeln,,,artist_name,none,1,1,music
 "Phoebe Bridgers | Avicii Arena, Stockholm",Inget typord i titeln,,,artist_name,none,1,1,music
 "Photographing at Skogskyrkogården, Stockholm",Inget typord i titeln,,,other,none,1,1,community
@@ -5588,9 +5588,9 @@ Pink Floyd´s Dark Side of the Moon - LIVE Konsert – Åhaga,Konsert & musikfra
 "Pink Floyd´s Dark Side of the Moon – Hebeteatern, Folkets Hus Kulturhuset",Inget typord i titeln,,,show_title,none,1,1,music
 Pink Floyd´s The Dark Side Of The Moon,Inget typord i titeln,,,show_title,none,1,1,music
 Pink Floyd´s The Wall - LIVE Konsert – Åhaga,Konsert & musikframträdande,LIVE Konsert,konsert,type_in_title,llm,1,1,music
-Pink Turns Blue @ Reimersholme Hotel,Konsert & musikframträdande,blue,blue,artist_name,rules,1,1,music
+Pink Turns Blue @ Reimersholme Hotel,Konsert & musikframträdande,Blue,Blue,artist_name,rules,1,1,music
 Pink-182 @ Kollektivet Livet,Inget typord i titeln,,,artist_name,none,1,1,music
-Pink.White.Blue.,Konsert & musikframträdande,blue,blue,artist_name,rules,1,0,community
+Pink.White.Blue.,Konsert & musikframträdande,Blue,Blue,artist_name,rules,1,0,community
 Pippi på fåglar -en utställning,Utställning & konst,utställning,utställning,type_in_title,llm,1,0,community
 Pippis jul,Inget typord i titeln,,,show_title,none,1,1,community
 PISCHA x PROPUD / LETS WÖRKOUT !,Workshops & kurser,WÖRKOUT,träning,type_in_title,llm,1,1,community
@@ -5692,7 +5692,7 @@ Quiztime &#8211; Lumber &#038; Karle Kvänum,Spel & social tävling,Quiztime,tip
 R&#xF6;rbys Stockholm: Bagarmossen,Inget typord i titeln,,,show_title,none,1,1,talks-lectures
 RÅ – Sofiehof Underjord,Inget typord i titeln,,,show_title,none,1,0,music
 Rachmaninov och Pintscher,Inget typord i titeln,,,other,none,1,0,music
-"RACHMANINOV SYMFONI NR 3  - Kungliga Filharmonikerna, Matthias Pintscher, dirigent - Leila Josefowicz, violin",Konsert & musikframträdande,symfoni,symfoni,type_in_title,rules,1,0,music
+"RACHMANINOV SYMFONI NR 3  - Kungliga Filharmonikerna, Matthias Pintscher, dirigent - Leila Josefowicz, violin",Konsert & musikframträdande,SYMFONI,SYMFONI,type_in_title,rules,1,0,music
 Rachmaninovs tredje symfoni,Konsert & musikframträdande,symfoni,symfoni,other,rules,1,0,music
 Räddslan - Underjorden - Brännbart,Inget typord i titeln,,,show_title,none,1,1,music
 Rådgivning i pris- och marknadsfrågor,Attraktion med oklassad typ,Rådgivning,övrigt,type_in_title,llm,1,0,community
@@ -5776,7 +5776,7 @@ Ritual i hemmet – Jag är because we somosGRATIS,Attraktion med oklassad typ,R
 RnB Yin Yoga 24 Okt kl.18:00,Bad & välbefinnande,RnB Yin Yoga,yoga,type_in_title,llm,1,0,community
 Robert Wells - 40 år vid flygeln,Konsert & musikframträdande,40 år vid flygeln,konsert,type_in_title,llm,1,0,community
 "Robert Wells ""40 år vid flygeln"" – Falkenbergs Stadsteater",Konsert & musikframträdande,40 år vid flygeln,konsert,type_in_title,llm,1,0,music
-Robin Winther @ Kägelbanan Södra Teatern,Scen & föreställning,teatern,teatern,artist_name,rules,1,1,music
+Robin Winther @ Kägelbanan Södra Teatern,Scen & föreställning,Teatern,Teatern,artist_name,rules,1,1,music
 Robotic Manipulation of Deformable Objects across Object Variations and Human Feedback,Inget typord i titeln,,,other,none,1,1,talks-lectures
 Robotklubben Connect to Learn 1 med LEGO Spike,Workshops & kurser,Robotklubben Connect to Learn 1,workshop,type_in_title,llm,1,1,community
 Robyn Hitchcock | Debaser Strand,Inget typord i titeln,,,artist_name,none,1,0,music
@@ -5809,7 +5809,7 @@ Ron Pope | Slaktkyrkan,Inget typord i titeln,,,artist_name,none,1,1,community
 Ronnie Romero &amp; Gus G,Inget typord i titeln,,,artist_name,none,1,1,music
 Roof of Reflection på Tekniska museet,Utställning & konst,Roof of Reflection,utställning,type_in_title,llm,1,0,community
 ROOTS,Inget typord i titeln,,,artist_name,none,1,1,community
-Roots in Motion ° urban edition Stockholm,Sport & tävling,motion,motion,show_title,rules,1,0,dance
+Roots in Motion ° urban edition Stockholm,Sport & tävling,Motion,Motion,show_title,rules,1,0,dance
 Ropa Tendida - Sagostund och workshop på spanska,Workshops & kurser,workshop på spanska,workshop,type_in_title,llm,1,1,kids
 Rörligt papper: Skapa med pappersingenjörskonst,Workshops & kurser,pappersingenjörskonst,verkstan,type_in_title,llm,1,0,community
 Rosanne Cash with John Leventhal,Inget typord i titeln,,,artist_name,none,1,1,community
@@ -5854,9 +5854,9 @@ Sagan om konungens återkomst FEL VERSION,Inget typord i titeln,,,show_title,non
 "Sagan om Ringen, Hobbit och Maktens Ringar – Live in Concert – Motala Folkets Hus",Konsert & musikframträdande,Live in Concert,konsert,type_in_title,llm,1,1,music
 "Sagan om Ringen, Hobbit och Maktens Ringar – Livekonsert",Konsert & musikframträdande,Livekonsert,konsert,type_in_title,llm,1,1,music
 Sagan om ringen: Härskarringen - Extended version,Inget typord i titeln,,,show_title,none,1,1,film
-Sagodans med Dansmuseet,Utställning & konst,Dansmuseet,museet,other,rules,1,1,community
-Sagor & Swing och Pocket Size,Barn & familj,sagor,sagor,show_title,rules,1,1,music
-Sagor och sång på somaliska med Iman Elmi,Barn & familj,sagor,sagor,show_title,rules,1,1,community
+Sagodans med Dansmuseet,Utställning & konst,Dansmuseet,Dansmuseet,other,rules,1,1,community
+Sagor & Swing och Pocket Size,Barn & familj,Sagor,Sagor,show_title,rules,1,1,music
+Sagor och sång på somaliska med Iman Elmi,Barn & familj,Sagor,Sagor,show_title,rules,1,1,community
 Sagostund - lagom läskig spökhistoria,Barn & familj,Sagostund,barn,type_in_title,llm,1,0,community
 Sagostund för barn 3-5 år,Barn & familj,Sagostund,barn,type_in_title,llm,1,0,community
 Sagostund med Isol ¡Una tarde de cuentos con Isol!,Språk & läsning,Sagostund,läsning,type_in_title,llm,1,1,kids
@@ -5888,7 +5888,7 @@ SALSA - GRATIS PROVA PÅ,Workshops & kurser,PROVA PÅ,övrigt,type_in_title,llm,
 Saltstänk & Smuggelsprit turné,Inget typord i titeln,,,show_title,none,1,1,music
 Sam Gendel @ Fasching,Inget typord i titeln,,,artist_name,none,1,1,music
 Sam Gendel &amp; Sam Wilkes,Inget typord i titeln,,,artist_name,none,1,1,music
-Sam Newbould Quintet – Café Mosaic,Språk & läsning,cafe,cafe,artist_name,rules,1,1,music
+Sam Newbould Quintet – Café Mosaic,Språk & läsning,Café,Café,artist_name,rules,1,1,music
 Sam Newbould Quintet (GB/NL/ES/IL) – Dunkers kulturhus,Inget typord i titeln,,,artist_name,none,1,1,music
 SAMHAIN SÉANCE: Ancestral Collaboration with Pam Grossman & Janaka Stucky,Attraktion med oklassad typ,SAMHAIN SÉANCE,övrigt,type_in_title,llm,1,1,community
 Samlarkortfestivalen Västerås 2027,Inget typord i titeln,,,type_in_title,none,1,1,community
@@ -5902,7 +5902,7 @@ Samtal om Ellen Key. Med Malin Haawind och Anneli Jordahl,Föreläsning & samtal
 Samtal på Dramaten,Föreläsning & samtal,Samtal,samtal,type_in_title,llm,1,1,talks-lectures
 Samtal: Ungernrevolten 1956 – 70 år senare,Föreläsning & samtal,Samtal,samtal,type_in_title,llm,1,1,talks-lectures
 Samtalsgrupp om tro och liv,Föreläsning & samtal,Samtalsgrupp,samtal,type_in_title,llm,1,0,community
-Samuel Ljungblahd & Bodekull Gospel & Jazz Orchestra - Karlshamns Stadsteater – Karlshamns Stadsteater,Konsert & musikframträdande,jazz,jazz,artist_name,rules,1,1,music
+Samuel Ljungblahd & Bodekull Gospel & Jazz Orchestra - Karlshamns Stadsteater – Karlshamns Stadsteater,Konsert & musikframträdande,Jazz,Jazz,artist_name,rules,1,1,music
 Samuel Sander,Inget typord i titeln,,,artist_name,none,1,1,community
 Sång om stjärnorna med Radiokören  - i Storkyrkan,Konsert & musikframträdande,Sång om stjärnorna,konsert,type_in_title,llm,1,1,music
 Sånger i Allhelgonatid - I himlen är jag väntad,Konsert & musikframträdande,Sånger i Allhelgonatid,konsert,type_in_title,llm,1,1,community
@@ -5915,7 +5915,7 @@ SARA PARKMAN,Inget typord i titeln,,,artist_name,none,1,1,music
 Sara Parkman – Huskvarna Folkets Park,Inget typord i titeln,,,artist_name,none,1,0,music
 Sara Parkman (+ Support: Småland),Inget typord i titeln,,,artist_name,none,1,1,community
 "Sara Parkman | Frimis, Örebro",Inget typord i titeln,,,artist_name,none,1,1,music
-"Sarah Dawn Finer: The Soul of Christmas 2026 Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Sarah Dawn Finer: The Soul of Christmas 2026 Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Sarcator + Zadism,Inget typord i titeln,,,artist_name,none,1,1,music
 Sari Schorr,Inget typord i titeln,,,artist_name,none,1,1,music
 SARI SCHORR,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -5965,8 +5965,8 @@ Seinabo Sey – Stage 1,Inget typord i titeln,,,artist_name,none,1,1,music
 Seinabo Sey – Vävenscenen,Inget typord i titeln,,,artist_name,none,1,0,music
 Seinabo Sey (+ Support: Jelly Crystal) | Konserthuset Stockholm,Inget typord i titeln,,,artist_name,none,1,1,music
 Seinabo Sey & Demekech | Uppsala UKK,Inget typord i titeln,,,artist_name,none,1,1,music
-"Seinabo Sey + demekech | Slagthusets Teater, Malmö",Scen & föreställning,teater,teater,artist_name,rules,1,1,music
-Seinabo Sey + Fanny Avonne | Halmstads Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
+"Seinabo Sey + demekech | Slagthusets Teater, Malmö",Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
+Seinabo Sey + Fanny Avonne | Halmstads Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
 Seinabo Sey + Support: Fanny Avonne - Skövde Kulturhus,Inget typord i titeln,,,artist_name,none,1,1,music
 Seinabo Sey | Magasinet Falun,Inget typord i titeln,,,artist_name,none,1,1,music
 Seinabo Sey in Stockholm,Inget typord i titeln,,,artist_name,none,1,0,community
@@ -5994,7 +5994,7 @@ Shine On You - In the flesh. A journey into Pink Floyd. – Lokomotivet,Konsert 
 Shinedown @ Annexet,Inget typord i titeln,,,artist_name,none,1,1,music
 "Shinedown: DANCE, KID, DANCE ACT II",Konsert & musikframträdande,"DANCE, KID, DANCE ACT II",konsert,type_in_title,llm,1,1,community
 Shttl + Q&A (Yiddish Film Festival),Film & bio,Shttl + Q&A,film,type_in_title,llm,1,1,film
-Sibille Attar - AMOR FATI ZINE RELEASE - vol 1 the love issue,Konsert & musikframträdande,release,release,show_title,rules,1,1,theatre-drama
+Sibille Attar - AMOR FATI ZINE RELEASE - vol 1 the love issue,Konsert & musikframträdande,RELEASE,RELEASE,show_title,rules,1,1,theatre-drama
 Sichuan Mahjong Night: A Classic Chinese Social Game,Spel & social tävling,Mahjong Night,spel,type_in_title,llm,1,1,community
 Sida för sida - bokklubb,Språk & läsning,bokklubb,bokcirkel,type_in_title,llm,1,1,community
 Sign &#038; Print Scandinavia 2027,Inget typord i titeln,,,type_in_title,none,1,1,exhibition
@@ -6035,7 +6035,7 @@ Skapa & skåla - collage,Workshops & kurser,collage,verkstan,type_in_title,llm,1
 Skapa & skåla – collage,Workshops & kurser,collage,verkstan,type_in_title,llm,1,1,exhibition
 Skapa din egen berättelse – filmworkshop för unga,Workshops & kurser,filmworkshop,workshop,type_in_title,llm,1,1,workshop
 Skapa din egen sugarskull,Workshops & kurser,Skapa din egen sugarskull,verkstan,type_in_title,llm,1,0,community
-Skapa ditt eget brädspel!,Workshops & kurser,skapa,skapa,type_in_title,rules,1,0,community
+Skapa ditt eget brädspel!,Workshops & kurser,Skapa,Skapa,type_in_title,rules,1,0,community
 Skapa ditt eget papper,Workshops & kurser,Skapa ditt eget papper,verkstan,type_in_title,llm,1,1,community
 Skapa ditt egna brädspel,Workshops & kurser,Skapa ditt egna brädspel,verkstan,type_in_title,llm,1,0,community
 Skapa egna bokmärken,Workshops & kurser,Skapa egna bokmärken,verkstan,type_in_title,llm,1,0,community
@@ -6049,7 +6049,7 @@ Skapa spindlar på höstlovet,Workshops & kurser,Skapa spindlar på höstlovet,v
 Skapande verkstad,Workshops & kurser,Skapande verkstad,verkstan,type_in_title,llm,1,0,community
 Skaparverkstad - ett eget spökhus,Workshops & kurser,Skaparverkstad,verkstan,type_in_title,llm,1,0,community
 Skärgårdens Bokmässa 2026,Mässa & marknad,Bokmässa,mässa,type_in_title,llm,1,1,exhibition
-Skellefteå Symfoniorkester: Queen at the Opera,Scen & föreställning,opera,opera,show_title,rules,1,0,music
+Skellefteå Symfoniorkester: Queen at the Opera,Scen & föreställning,Opera,Opera,show_title,rules,1,0,music
 Skellefteå Symfoniorkester: Queen at the Opera – Stage 1,Scen & föreställning,Stage 1,teater,type_in_title,llm,1,0,music
 Sketching Club: Collaborative Comic Strips,Workshops & kurser,Sketching Club,verkstan,type_in_title,llm,1,1,community
 Sketching Club: Drawing the Weather,Workshops & kurser,Sketching Club,verkstan,type_in_title,llm,1,1,community
@@ -6059,7 +6059,7 @@ Skivmässa Hultsfred Kulturhuset Valhall 2026,Mässa & marknad,Skivmässa,mässa
 Skivmässa i Förslöv 2026,Mässa & marknad,Skivmässa,mässa,type_in_title,llm,1,1,flea-market
 Skivmässan i Nyköping 2027,Mässa & marknad,Skivmässan,mässa,type_in_title,llm,1,1,exhibition
 Skogen – Scenkonstverkstan - Estrad Norr,Workshops & kurser,Scenkonstverkstan,verkstan,type_in_title,llm,1,1,music
-Skogen – Sundsvalls Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+Skogen – Sundsvalls Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 Skördefest 15 November,Fest & nattliv,Skördefest,fest,type_in_title,llm,1,1,community
 Skov/Roar/Rifbjerg Trio,Inget typord i titeln,,,artist_name,none,1,1,community
 Skrämmande skapar-workshop,Workshops & kurser,skapar-workshop,workshop,type_in_title,llm,1,0,workshop
@@ -6152,12 +6152,12 @@ SOPPKONSERT  - med Sjostakovitj och Piazolla,Konsert & musikframträdande,SOPPKO
 "Soppteater -  Pianomagi - David Carbe – Clio, Folkets Hus Kulturhuset",Scen & föreställning,Pianomagi,musikal,type_in_title,llm,1,1,music
 SOS – En Hyllning till ABBA – Folkets Hus,Inget typord i titeln,,,show_title,none,1,0,music
 SOS – En hyllning till ABBA – Kulturhuset,Inget typord i titeln,,,show_title,none,1,0,music
-SOS – En hyllning till ABBA – Teatern,Scen & föreställning,teatern,teatern,show_title,rules,1,1,music
+SOS – En hyllning till ABBA – Teatern,Scen & föreställning,Teatern,Teatern,show_title,rules,1,1,music
 Soul Patrol (Stockholms filmfestival),Film & bio,Soul Patrol,film,type_in_title,llm,1,1,film
 Sound Healing Concert with Harmonic Sounds & Guests,Konsert & musikframträdande,Sound Healing Concert,konsert,type_in_title,llm,1,0,music
 Sound the Trumpet!,Konsert & musikframträdande,Sound the Trumpet!,konsert,type_in_title,llm,1,1,music
 Soweto Gospel Choir – JOY – Helsingborgs Konserthus,Inget typord i titeln,,,show_title,none,1,1,music
-Soweto Gospel Choir @ Nya Cirkus,Scen & föreställning,cirkus,cirkus,artist_name,rules,1,1,music
+Soweto Gospel Choir @ Nya Cirkus,Scen & föreställning,Cirkus,Cirkus,artist_name,rules,1,1,music
 SOWETO GOSPEL CHOIR &#8211; JOY,Inget typord i titeln,,,show_title,none,1,1,community
 Soweto Gospel Choir in Stockholm,Inget typord i titeln,,,artist_name,none,1,1,community
 Spåra spöken i mörkret – vinnaren i Barnens val,Inget typord i titeln,,,show_title,none,1,0,community
@@ -6255,8 +6255,8 @@ Stephen Wilson Jr. @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 "Stephen Wilson Jr. | Fållan, Stockholm",Inget typord i titeln,,,artist_name,none,1,1,music
 "Steven Mayer Pianomania Nordica, presented by Niklas Sivelöv",Konsert & musikframträdande,Pianomania Nordica,konsert,type_in_title,llm,1,1,music
 Stevie Wonder: Songs In The Key of Life Performances - 50th Anniversary Tour,Inget typord i titeln,,,artist_name,none,1,1,community
-STHLM Blue Tide – Katrine Gislinge,Konsert & musikframträdande,blue,blue,show_title,rules,1,1,music
-STHLM Blue Tide – Speak All Voices,Konsert & musikframträdande,blue,blue,show_title,rules,1,0,music
+STHLM Blue Tide – Katrine Gislinge,Konsert & musikframträdande,Blue,Blue,show_title,rules,1,1,music
+STHLM Blue Tide – Speak All Voices,Konsert & musikframträdande,Blue,Blue,show_title,rules,1,0,music
 Sthlm Food & Wine 2026,Mat & dryck,Food & Wine,mat,type_in_title,llm,1,1,community
 Sthlm Food &#038; Wine,Inget typord i titeln,,,type_in_title,none,1,1,food
 Sthlm Food &#038; Wine 2026,Inget typord i titeln,,,type_in_title,none,1,1,community
@@ -6373,7 +6373,7 @@ SUS HALLOWEEN PARTY,Fest & nattliv,HALLOWEEN PARTY,fest,type_in_title,llm,1,1,ni
 Svängstalanet 2026 Höst,Inget typord i titeln,,,show_title,none,1,1,community
 Svansjön,Inget typord i titeln,,,show_title,none,1,1,dance
 SVANSJÖN,Inget typord i titeln,,,show_title,none,1,1,theatre-comedy
-"Svansjön Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,artist_name,rules,1,1,music
+"Svansjön Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,artist_name,rules,1,1,music
 Svart Ridå,Inget typord i titeln,,,show_title,none,1,1,community
 Svart Tulpan + Urban Hane,Inget typord i titeln,,,artist_name,none,1,0,music
 Svartskalle Standup Säsongsavslutning!!!,Scen & föreställning,Standup,standup,type_in_title,llm,1,1,community
@@ -6386,7 +6386,7 @@ Sven Ingvars - Igår. Idag. Imorgon. 70 år. – Växjö Konserthus,Inget typord
 "Sven Ingvars – Igår. Idag. Imorgon. 70 år. – Idun, Umeå Folkets Hus",Inget typord i titeln,,,artist_name,none,1,1,music
 Sven Ingvars – Yesterday. Today. Tomorrow. 70 years.,Inget typord i titeln,,,artist_name,none,1,0,music
 Sven Ingvars – Yesterday. Today. Tomorrow. 70 years. – Stage 1,Inget typord i titeln,,,artist_name,none,1,0,music
-Sven-Harrys Konstmuseum,Utställning & konst,Konstmuseum,museum,venue_only,rules,1,1,community
+Sven-Harrys Konstmuseum,Utställning & konst,Konstmuseum,Konstmuseum,venue_only,rules,1,1,community
 "Sven-Ingvars - Igår, idag, imorgon 70-årsjubileum",Inget typord i titeln,,,artist_name,none,1,1,music
 Svensk Kortfilm c/o Folkets Bio,Film & bio,Svensk Kortfilm,film,type_in_title,llm,1,0,community
 Svensk-kinesiskt språkkafé! | 瑞典语-中文咖啡角!,Språk & läsning,språkkafé,språk,type_in_title,llm,1,0,community
@@ -6446,7 +6446,7 @@ Taysta's Beer Tour,Mat & dryck,Beer Tour,dryck,type_in_title,llm,1,1,community
 Taysta's Wine Tour,Mat & dryck,Wine Tour,dryck,type_in_title,llm,1,1,community
 "Tease Easy: Open Stage ""Spooky Edition""",Konsert & musikframträdande,Open Stage,show,type_in_title,llm,1,1,theatre-drama
 Teater - Blåst på julkonfekten,Scen & föreställning,Teater,teater,type_in_title,llm,1,1,community
-Teater Tre Årskort,Scen & föreställning,teater,teater,other,rules,1,1,community
+Teater Tre Årskort,Scen & föreställning,Teater,Teater,other,rules,1,1,community
 Teater: Kvinnor och äppelträd,Scen & föreställning,Teater,teater,type_in_title,llm,1,0,community
 Teater: Pippi flyttar in,Scen & föreställning,Teater,teater,type_in_title,llm,1,0,community
 Teaterimprovisation för barn och ungdom,Scen & föreställning,Teaterimprovisation,teater,type_in_title,llm,1,1,community
@@ -6464,7 +6464,7 @@ TEDDYBEARS @ LOKOMOTIVET – Lokomotivet,Inget typord i titeln,,,artist_name,non
 Teddybears | Magasinet Falun,Inget typord i titeln,,,artist_name,none,1,0,music
 TEDxStockholm - HUMAN AFTER ALL - Finding authenticity. Reclaiming connection in a digital world.,Inget typord i titeln,,,show_title,none,1,1,community
 TEDxStockholm: Human After All,Inget typord i titeln,,,show_title,none,1,1,circus
-Tegs SK Hockey Ungdom – Njurunda SK (U20),Barn & familj,ungdom,ungdom,type_in_title,rules,1,1,community
+Tegs SK Hockey Ungdom – Njurunda SK (U20),Barn & familj,Ungdom,Ungdom,type_in_title,rules,1,1,community
 Teknikhjälp,Workshops & kurser,Teknikhjälp,verkstan,type_in_title,llm,1,0,community
 Teknikhjälpen,Workshops & kurser,Teknikhjälpen,verkstan,type_in_title,llm,1,1,community
 TELEFONPLAN COMEDY CLUB - Özz Nujen,Scen & föreställning,COMEDY CLUB,standup,type_in_title,llm,1,0,community
@@ -6508,7 +6508,7 @@ THE BAUSA,Inget typord i titeln,,,artist_name,none,1,1,music
 The Best music from Studio Ghibli,Inget typord i titeln,,,show_title,none,1,0,music
 The Best Music from Studio Ghibli,Inget typord i titeln,,,show_title,none,1,0,community
 The best of Christer Sjögren,Inget typord i titeln,,,show_title,none,1,1,music
-THE BEST OF CHRISTER SJÖGREN – Halmstads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+THE BEST OF CHRISTER SJÖGREN – Halmstads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 The Best Of Christer Sjögren – Härnösands teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
 THE BEST OF CHRISTER SJÖGREN – Lunds stadsteater,Inget typord i titeln,,,show_title,none,1,0,music
 THE BEST OF CHRISTER SJÖGREN – Scalateatern,Inget typord i titeln,,,show_title,none,1,1,music
@@ -6584,7 +6584,7 @@ The Mission,Inget typord i titeln,,,show_title,none,1,1,community
 The Music of Hans Zimmer,Inget typord i titeln,,,type_in_title,none,1,1,music
 The Music of Hans Zimmer - Lords of the Sound,Inget typord i titeln,,,type_in_title,none,1,1,music
 The Music of Hans Zimmer & more,Inget typord i titeln,,,type_in_title,none,1,1,music
-The Music of Hans Zimmer & More – Ystads Teater,Scen & föreställning,teater,teater,type_in_title,rules,1,1,music
+The Music of Hans Zimmer & More – Ystads Teater,Scen & föreställning,Teater,Teater,type_in_title,rules,1,1,music
 The music of Hans Zimmer vs John Wi...,Konsert & musikframträdande,The music of Hans Zimmer vs John Wi...,konsert,type_in_title,llm,1,0,community
 The music of Hans Zimmer vs John Williams,Konsert & musikframträdande,The music of Hans Zimmer vs John Williams,konsert,type_in_title,llm,1,0,music
 The music of Hans Zimmer vs John Williams – Palladium,Konsert & musikframträdande,The music of Hans Zimmer vs John Williams – Palladium,konsert,type_in_title,llm,1,0,music
@@ -6614,12 +6614,12 @@ The Radio Dept. @ Hus 7,Inget typord i titeln,,,artist_name,none,1,0,music
 The Radio Dept. | Hus 7,Inget typord i titeln,,,artist_name,none,1,0,music
 The Rat Pack at Christmas,Inget typord i titeln,,,artist_name,none,1,1,community
 THE REAL GROUP – EN SPRAKANDE JUL,Inget typord i titeln,,,artist_name,none,1,1,music
-The Refreshments - Rock ‘n’ Roll X-mas – Eskilstuna Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+The Refreshments - Rock ‘n’ Roll X-mas – Eskilstuna Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 The Refreshments - Rock ‘n’ Roll X-mas – Karlshamns Stadsteater,Inget typord i titeln,,,show_title,none,1,1,music
 The Refreshments - Rock ‘n’ Roll X-mas – Kulturhuset tio14,Inget typord i titeln,,,show_title,none,1,1,music
 The Refreshments - Rock ‘n’ Roll X-mas – Motala Folkets Hus Teatersalongen,Inget typord i titeln,,,show_title,none,1,1,music
 The Refreshments - Rock ‘n’ Roll X-mas – Slottescenen,Inget typord i titeln,,,show_title,none,1,1,music
-The Refreshments - Rock 'n' Roll X-mas – Ystads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+The Refreshments - Rock 'n' Roll X-mas – Ystads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 "The Refreshments - Rock ´n´ Roll X-mas – Hebeteatern, Folkets Hus Kulturhuset",Konsert & musikframträdande,Rock ´n´ Roll X-mas,konsert,type_in_title,llm,1,1,music
 The Road to God Knows Where,Inget typord i titeln,,,show_title,none,1,1,film
 The Robfest,Inget typord i titeln,,,show_title,none,1,1,community
@@ -6632,8 +6632,8 @@ THE SIMON & GARFUNKEL STORY,Inget typord i titeln,,,show_title,none,1,1,music
 THE SIMON & GARFUNKEL STORY – Scalateatern,Inget typord i titeln,,,show_title,none,1,1,music
 The Simon & Garfunkel Story – Stora salen,Inget typord i titeln,,,show_title,none,1,1,music
 THE SIMON & GARFUNKEL STORY 2026,Inget typord i titeln,,,show_title,none,1,1,music
-THE SIMON & GARFUNKEL STORY 2026 – Linköping Konsert & Kongress,Konsert & musikframträdande,konsert,konsert,show_title,rules,1,1,music
-The Simon and Garfunkel Story @ Nya Cirkus,Scen & föreställning,cirkus,cirkus,show_title,rules,1,1,music
+THE SIMON & GARFUNKEL STORY 2026 – Linköping Konsert & Kongress,Konsert & musikframträdande,Konsert,Konsert,show_title,rules,1,1,music
+The Simon and Garfunkel Story @ Nya Cirkus,Scen & föreställning,Cirkus,Cirkus,show_title,rules,1,1,music
 The Sisters of Mercy [UK],Inget typord i titeln,,,artist_name,none,1,1,community
 The Sisters Of Mercy @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 The Sisters of Mercy | Stockholm,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -6644,7 +6644,7 @@ The Soul of Christmas – PB-Hallen,Inget typord i titeln,,,show_title,none,1,1,
 The Soul Of Christmas – Pingstkyrkan,Inget typord i titeln,,,show_title,none,1,1,music
 The Soul of Christmas – Stage 1,Inget typord i titeln,,,show_title,none,1,1,music
 The Soul of Christmas 2026 @ Göta Lejon,Inget typord i titeln,,,show_title,none,1,1,music
-"The Soul of Christmas Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,concert,concert,show_title,rules,1,1,music
+"The Soul of Christmas Tickets, Tour and Concert Dates – www.gotalejon.se",Konsert & musikframträdande,Concert,Concert,show_title,rules,1,1,music
 THE SPIRIT IN THE GLASS: 2026,Inget typord i titeln,,,show_title,none,1,1,community
 The Spy Bar-New Year's Eve 2026,Inget typord i titeln,,,artist_name,none,1,1,nightlife
 The Streets - A Grand Don’t Come for Free,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -6660,13 +6660,13 @@ The Vigil + Five Gefilte + samtal (Yiddish Film Festival),Föreläsning & samtal
 THE WALL - IN CONCERT,Konsert & musikframträdande,IN CONCERT,konsert,type_in_title,llm,1,1,music
 THE WALL - live in Concert,Konsert & musikframträdande,live in Concert,konsert,type_in_title,llm,1,1,music
 THE WALL - Live in Concert,Konsert & musikframträdande,Live in Concert,konsert,type_in_title,llm,1,1,music
-THE WALL - live in Concert – Lokomotivet,Konsert & musikframträdande,concert,concert,type_in_title,rules,1,1,music
+THE WALL - live in Concert – Lokomotivet,Konsert & musikframträdande,Concert,Concert,type_in_title,rules,1,1,music
 THE WALL - Livekonsert,Konsert & musikframträdande,Livekonsert,konsert,type_in_title,llm,1,1,music
 THE WALL – livekonsert – PB-Hallen,Konsert & musikframträdande,livekonsert,konsert,type_in_title,llm,1,1,music
 "The Wall In Concert – Hebeteatern, Folkets Hus Kulturhuset",Konsert & musikframträdande,In Concert,konsert,type_in_title,llm,1,1,music
 The Wallflowers @ Fållan,Inget typord i titeln,,,artist_name,none,1,1,music
 The Walrus Talks at Home: Canada After America,Föreläsning & samtal,Talks at Home,föreläsning,type_in_title,llm,1,1,community
-The White Bird Marked with Black (Ukranian Film Festival),Mässa & marknad,festival,festival,show_title,rules,1,1,film
+The White Bird Marked with Black (Ukranian Film Festival),Mässa & marknad,Festival,Festival,show_title,rules,1,1,film
 The Witcher @ Annexet,Inget typord i titeln,,,show_title,none,1,1,music
 The Witcher in Concert,Konsert & musikframträdande,In Concert,konsert,type_in_title,llm,1,1,music
 The Witcher In Concert,Konsert & musikframträdande,In Concert,konsert,type_in_title,llm,1,1,music
@@ -6725,7 +6725,7 @@ tis 6 april 2027KonsertKEO,Inget typord i titeln,,,type_in_title,none,1,1,commun
 Tisdag,Inget typord i titeln,,,other,none,1,1,community
 Tisdagscirkeln,Scen & föreställning,Tisdagscirkeln,cirkus,type_in_title,llm,1,1,community
 Tisdagsklubben lovspecial,Inget typord i titeln,,,other,none,1,0,community
-Tisdagspyssel: Läslovsspecial,Barn & familj,Tisdagspyssel,pyssel,other,rules,1,0,community
+Tisdagspyssel: Läslovsspecial,Barn & familj,Tisdagspyssel,Tisdagspyssel,other,rules,1,0,community
 Tisdagstankar i Hedvig! Om förbjudna tankar – samtal med Erik Andersson,Föreläsning & samtal,samtal,samtal,type_in_title,llm,1,1,talks-lectures
 TIX,Inget typord i titeln,,,other,none,1,1,community
 Tjänstemannens sånger,Inget typord i titeln,,,show_title,none,1,1,music
@@ -6757,7 +6757,7 @@ Tonsättarfestival med Betsy Jolas – Side Roads,Mässa & marknad,Tonsättarfes
 "TONSÄTTARFESTIVAL-SIDE ROADS  - Norrköpings Symfoniorkester, Emilia Hoving, dirigent - Anssi Karttunen, cello",Mässa & marknad,TONSÄTTARFESTIVAL,festival,type_in_title,llm,1,1,music
 Too Many Zooz,Inget typord i titeln,,,artist_name,none,1,1,music
 Too Much Sugar (Stockholms filmfestival),Mässa & marknad,filmfestival,festival,type_in_title,llm,1,1,film
-"TOP CLASS YOUNGSTERS, BLUE BENDERS – Orangeriet",Konsert & musikframträdande,blue,blue,artist_name,rules,1,1,music
+"TOP CLASS YOUNGSTERS, BLUE BENDERS – Orangeriet",Konsert & musikframträdande,BLUE,BLUE,artist_name,rules,1,1,music
 Tophouse (US) support: Raynes (US/UK) – Tryckhallen i Hwitans Trädgård,Konsert & musikframträdande,support,konsert,type_in_title,llm,1,1,music
 Tophouse @ Debaser Nova,Inget typord i titeln,,,artist_name,none,1,1,music
 Topic Table #3: Where Culture x Tech x Business Meet for Impact,Föreläsning & samtal,Topic Table,samtal,type_in_title,llm,1,1,community
@@ -6784,12 +6784,12 @@ Träden + Homegrown,Inget typord i titeln,,,artist_name,none,1,1,music
 Trädgårdsmässan Göteborg 2027,Mässa & marknad,Trädgårdsmässan,mässa,type_in_title,llm,1,1,exhibition
 Trädgårdsmässan Nordiska Trädgårdar,Mässa & marknad,Trädgårdsmässan,mässa,type_in_title,llm,1,1,exhibition
 Traditional Reiki Healing Course - Level 1 (Shoden),Workshops & kurser,Traditional Reiki Healing Course - Level 1 (Shoden),kurs,type_in_title,llm,1,1,community
-Träff för daglediga: Odla tillsammansGRATIS,Promenad & friluftsliv,traff,traff,type_in_title,rules,1,0,community
+Träff för daglediga: Odla tillsammansGRATIS,Promenad & friluftsliv,Träff,Träff,type_in_title,rules,1,0,community
 Träffpunkt Idrott 2027,Sport & tävling,Träffpunkt,sport,type_in_title,llm,1,1,sports
 Trafikkunskap på lätt svenska,Språk & läsning,Trafikkunskap på lätt svenska,språk,type_in_title,llm,1,0,community
 Trafiknostalgisk Hjulmarknad,Mässa & marknad,Hjulmarknad,marknad,type_in_title,llm,1,1,community
 Trailer Trucking Festival 2027,Mässa & marknad,Trailer Trucking Festival,festival,type_in_title,llm,1,1,community
-Trakktor + Mass Murder Agenda,Mässa & marknad,mass,mass,artist_name,rules,1,1,music
+Trakktor + Mass Murder Agenda,Mässa & marknad,Mass,Mass,artist_name,rules,1,1,music
 Tramhaus (support: Drakenberg),Inget typord i titeln,,,artist_name,none,1,1,music
 Träningsmatch Hammarby // Dam &#8211; AIK,Workshops & kurser,Träningsmatch,träning,type_in_title,llm,1,1,community
 Transportforum Linköping 2027,Samhälle & möte,Transportforum,samhälle,type_in_title,llm,1,1,community
@@ -6838,7 +6838,7 @@ Turboteater 12-13 år - Höstlovskurs,Workshops & kurser,Höstlovskurs,kurs,type
 Turné,Inget typord i titeln,,,other,none,1,1,community
 Tv-spelshäng!,Inget typord i titeln,,,show_title,none,1,0,community
 Två & en Steinway,Inget typord i titeln,,,show_title,none,1,1,music
-"Två besökare, sedda bakifrån, tittar upp på en vägg med affischer i utställningen Harder Better Faster Stronger – Are Men OK?",Utställning & konst,utstallningen,utstallningen,show_title,rules,1,0,community
+"Två besökare, sedda bakifrån, tittar upp på en vägg med affischer i utställningen Harder Better Faster Stronger – Are Men OK?",Utställning & konst,utställningen,utställningen,show_title,rules,1,0,community
 "Två fotografier, ett av en man och ett av ett öga.",Inget typord i titeln,,,show_title,none,1,1,community
 Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne,Workshops & kurser,skånskt yllebroderi,verkstan,type_in_title,llm,1,1,workshop
 Tvådagarskurs: Lär dig väva i bandgrind,Workshops & kurser,väva i bandgrind,verkstan,type_in_title,llm,1,1,workshop
@@ -6859,7 +6859,7 @@ TYSKE LUDDER at Debaser Nova,Inget typord i titeln,,,artist_name,none,1,1,commun
 Uddevalla Dryck &#038; Deli 2027 – Mat- och dryckesmässa,Mässa & marknad,Mat- och dryckesmässa,mässa,type_in_title,llm,1,1,community
 UK Pink Floyd Experience – Arbis,Inget typord i titeln,,,show_title,none,1,0,music
 UK Pink Floyd Experience – inställt,Inget typord i titeln,,,show_title,none,1,0,community
-UK PINK FLOYD EXPERIENCE – Salongen - Gamla Teatern,Scen & föreställning,teatern,teatern,show_title,rules,1,0,music
+UK PINK FLOYD EXPERIENCE – Salongen - Gamla Teatern,Scen & föreställning,Teatern,Teatern,show_title,rules,1,0,music
 UK Pink Floyd Experience &#8211; inställt,Inget typord i titeln,,,artist_name,none,1,0,community
 "UK Pink Floyd Experience | Kägelbanan, Stockholm",Inget typord i titeln,,,artist_name,none,1,0,music
 UK Subs,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -6900,7 +6900,7 @@ Vacum,Inget typord i titeln,,,other,none,1,1,community
 Vad är en vuxen och var är de?,Inget typord i titeln,,,other,none,1,1,theatre-drama
 Vad händer i Stockholm imorgon,Inget typord i titeln,,,other,none,1,0,community
 Vad händer nu..,Inget typord i titeln,,,other,none,1,1,community
-Vad handlar Enterprise Design egentligen om?,Utställning & konst,design,design,other,rules,1,1,community
+Vad handlar Enterprise Design egentligen om?,Utställning & konst,Design,Design,other,rules,1,1,community
 Vad passar bättre en söndag i mitten av augusti,Inget typord i titeln,,,other,none,1,0,community
 Vad vill den moderna konsten säga oss?,Utställning & konst,konsten,konst,type_in_title,llm,1,1,community
 Vad vill du lära dig mer om?,Inget typord i titeln,,,other,none,1,0,community
@@ -7054,17 +7054,17 @@ Weeping Willows – Östersund Arena,Inget typord i titeln,,,artist_name,none,1,
 Weeping Willows Christmas – Lokomotivet,Inget typord i titeln,,,artist_name,none,1,1,music
 Weezer @ Hovet,Inget typord i titeln,,,artist_name,none,1,1,music
 Wehbba (Brazil) I Dual Drive I Triara I Molothav,Inget typord i titeln,,,artist_name,none,1,1,community
-Welcome to Yiddishland (Yiddish Film Festival),Mässa & marknad,festival,festival,show_title,rules,1,1,film
-"Werner Borgs Orkester – Kulturbaren, Folkets Hus Kulturhuset",Konsert & musikframträdande,orkester,orkester,artist_name,rules,1,1,music
+Welcome to Yiddishland (Yiddish Film Festival),Mässa & marknad,Festival,Festival,show_title,rules,1,1,film
+"Werner Borgs Orkester – Kulturbaren, Folkets Hus Kulturhuset",Konsert & musikframträdande,Orkester,Orkester,artist_name,rules,1,1,music
 West of Eden - ”The best of contemporary folk” (Irish Music Magazine) – Kyrkskolan,Inget typord i titeln,,,artist_name,none,1,0,music
 "West Of Eden - Celtic Christmas – Hebeteatern, Folkets Hus Kulturhuset",Inget typord i titeln,,,artist_name,none,1,1,music
 West of Eden – Celtic Christmas – Borås – Sagateatern,Inget typord i titeln,,,artist_name,none,1,1,music
-West of Eden – Celtic Christmas – Eskilstuna – Eskilstuna Teater,Scen & föreställning,teater,teater,artist_name,rules,1,1,music
-West of Eden – Celtic Christmas – Söderhamn – Söderhamns Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+West of Eden – Celtic Christmas – Eskilstuna – Eskilstuna Teater,Scen & föreställning,Teater,Teater,artist_name,rules,1,1,music
+West of Eden – Celtic Christmas – Söderhamn – Söderhamns Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 West of Eden – Celtic Christmas – Stockholm,Inget typord i titeln,,,show_title,none,1,1,music
 West Of Eden – Celtic Christmas • 26/11 • Enköping,Inget typord i titeln,,,show_title,none,1,1,music
 West Of Eden – Celtic Christmas • 27/11 • Gävle,Inget typord i titeln,,,show_title,none,1,1,music
-West of Eden — Celtic Christmas – Ystads Teater,Scen & föreställning,teater,teater,show_title,rules,1,1,music
+West of Eden — Celtic Christmas – Ystads Teater,Scen & föreställning,Teater,Teater,show_title,rules,1,1,music
 West Side Comedy - Catrin Martinsson mfl,Scen & föreställning,West Side Comedy,standup,type_in_title,llm,1,0,theatre-comedy
 West Side Comedy - Diyari Mahmoud mfl,Scen & föreställning,West Side Comedy,standup,type_in_title,llm,1,1,theatre-comedy
 West Side Comedy - Felicia Tomala mfl,Scen & föreställning,West Side Comedy,standup,type_in_title,llm,1,1,theatre-comedy
@@ -7085,7 +7085,7 @@ What is Nobel Week Lights?+,Inget typord i titeln,,,other,none,1,1,community
 "What set your confidence in motion? - For founders, powered by MoMo",Sport & tävling,motion,motion,other,rules,1,1,community
 What’s on,Inget typord i titeln,,,other,none,1,1,community
 When details count,Inget typord i titeln,,,other,none,1,1,talks-lectures
-Who The Fuck Likes Opera?,Scen & föreställning,opera,opera,show_title,rules,1,1,opera
+Who The Fuck Likes Opera?,Scen & föreställning,Opera,Opera,show_title,rules,1,1,opera
 Who will control the intelligence of the future? Breakfast talk with Silvija Seres - STHLM,Föreläsning & samtal,Breakfast talk,samtal,type_in_title,llm,1,1,community
 Widowspeak @ Hus 7,Inget typord i titeln,,,artist_name,none,1,1,music
 William Sundman Sääf,Inget typord i titeln,,,artist_name,none,1,1,music
@@ -7148,8 +7148,8 @@ Yrkesmässa Conventum Örebro 2026,Mässa & marknad,Yrkesmässa,mässa,type_in_t
 Yrkesmässa i Hjo 2027 &#8211; Jobbmässa på Lilla Park,Mässa & marknad,Yrkesmässa,mässa,type_in_title,llm,1,1,community
 Yrkesmässa på Malmömässan 2027,Mässa & marknad,Yrkesmässa,mässa,type_in_title,llm,1,1,exhibition
 Ytskyddsdagarna 2027 – Konferens och mässa i Göteborg,Mässa & marknad,Ytskyddsdagarna,mässa,type_in_title,llm,1,1,community
-Yttling Jazz - Illegal Hit Tour 2026,Konsert & musikframträdande,jazz,jazz,artist_name,rules,1,1,music
-YTTLING JAZZ - ILLEGAL HIT TOUR 2026,Konsert & musikframträdande,jazz,jazz,artist_name,rules,1,1,music
+Yttling Jazz - Illegal Hit Tour 2026,Konsert & musikframträdande,Jazz,Jazz,artist_name,rules,1,1,music
+YTTLING JAZZ - ILLEGAL HIT TOUR 2026,Konsert & musikframträdande,JAZZ,JAZZ,artist_name,rules,1,1,music
 Yttling Jazz – Peter Stormaresalen,Konsert & musikframträdande,Yttling Jazz,konsert,type_in_title,llm,1,1,music
 YTTLING JAZZ @ RIO – Rio,Konsert & musikframträdande,YTTLING JAZZ,konsert,type_in_title,llm,1,1,music
 "Yttling Jazz | Fasching, Stockholm",Konsert & musikframträdande,Yttling Jazz,konsert,type_in_title,llm,1,1,jazz
