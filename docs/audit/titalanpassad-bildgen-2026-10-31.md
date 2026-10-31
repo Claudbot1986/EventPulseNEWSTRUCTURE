@@ -34,20 +34,27 @@ knappen är en kopia på ordnivå: enheten är ett ord, inte kategori × kluster
 | Mått | Värde |
 |---|---|
 | Ord med ≥2 events (ordlistan) | 1 057 |
-| Ord med verifierad bild i biblioteket | **893** (efter slutgiltig gaten + städning) |
-| Ord i topp-1 000 som täcks | **885** (89,5 % av evenemangstäckningen i topp-1 000) |
-| Bilder i karantän (underkända) | 340 nycklar — laddas aldrig upp |
-| Slutgiltig gaten | **894/987 ord klarade båda testerna** (93 underkända) |
+| Ord med verifierad bild i biblioteket | **885** |
+| Ord i topp-1 000 som täcks | **875** (88,6 % av evenemangstäckningen i topp-1 000) |
+| Bilder i karantän (underkända) | 343 nycklar — laddas aldrig upp |
+| Slutgiltig gaten | **885/901 ord klarade båda testerna** |
+
+**Gaten kräver två underkännanden i rad.** M3-vision är inte deterministisk:
+mätt på två identiska körningar (18:34 och 19:23) flippade **40 av 893 bilder**
+(4,5 %) sitt omdöme. En enstaka underkänning är därför inget bevis för att
+bilden är trasig. Gaten kör därför ett **bekräftelsepass**: de underkända
+granskas om en gång till, och bara de som underkänds igen flyttas till
+karantän. I slutomgången räddades **26 bilder** (underkända → godkända vid
+bekräftelse) och **16 underkännanden bekräftades**.
 
 ### 2.2 Underkännanden — varför?
 
-| Orsak | Antal |
+| Orsak | Antal (första passet) |
 |---|---|
-| Läsbar text i bilden (reklamtavlor, rinkbräden, skyltar) | 58 |
-| Bilden visar fel sak | 28 |
+| Läsbar text i bilden (reklamtavlor, rinkbräden, skyltar) | 19 |
+| Bilden visar fel sak | 17 |
 | Förvansad text | 5 |
-| Ordet fanns inte i exempletitlarna | 1 |
-| Olämplig (kläder) | 1 |
+| Ansikte i förgrunden | 1 |
 
 Detta är ett **medvetet val**, inte en bugg: en evenemangskort-bild med
 "ÅSHÖR" på rinken ser trasig ut. Ord som *Match*, *Hockey*, *Dam*, *EXPO* och
@@ -58,18 +65,24 @@ scenerna. De får hellre ingen bild än en trasig.
 
 | Mått | Värde |
 |---|---|
-| Körning | `assign-mvwrathg` (startad via dashboardens knapp) |
-| Bilder uppladdade | 896 — **0 fel** |
-| Events uppdaterade | **7 238** — 0 fel |
-| Event i `events_public` med ordbild | 6 230 |
-| Test 3 (titel ↔ bild) | **6 230/6 230 OK** |
-| HTTP-kontroll av bilder | 40/40 → `200 image/webp` |
+| Körning | `assign-mvwsmq6c` (startad via dashboardens knapp) |
+| Bilder uppladdade | 885 — **0 fel** |
+| Events matchade | 7 190 (50 uppdaterade + 7 140 redan samma) — 0 fel |
+| Event i `events_public` med ordbild | 6 187 |
+| Test 3 (titel ↔ bild) | **6 187/6 187 OK, 0 problem** |
+| HTTP-kontroll av bilder | 15/15 → `200 image/webp` (tidigare 30/30 och 40/40) |
+| `image_library` | 885 rader med `category_slug='word'` — **0 läckor** till fallback-poolerna |
 
 **Vad som faktiskt byttes:** alla befintliga bilder i `events` var våra egna
 biblioteksbilder (`import-stamped/community/…`, dvs. generiska
 kategori-zoombilder) — **noll pressfoton** från källorna. Kopplingen byter alltså
 en generisk bild mot en bild som visar det ord titeln innehåller. Det är
 precis vad "titalanpassad" betyder.
+
+**Reparation:** 52 event pekade fortfarande på bilder som karantänen flyttat ut
+efter sista gaten. `scripts/word_image_repair.ts` satte tillbaka en generisk
+biblioteksbild på dem (samma pool som appens fallback) — hellre en generisk
+bild än en underkänd.
 
 ---
 
@@ -122,6 +135,17 @@ Verifierat: "Ludwig Hart" → *unplugged*, "Svart Samtid" → ingen bild,
    — Storage avkodar nyckeln innan den valideras. Fix: ASCII-vikning + kort
    hash av originalnyckeln (`handarbetscafé` → `handarbetscafe--26d54dda.webp`).
    Hashen är nödvändig: `cafe`/`café` och `spoken`/`spöken` slår annars ihop.
+10. **Gatens `--recheck` var meningslöst.** Villkoret var
+    `verdict.verified_at === undefined`, men tidsstämpeln ligger i sidecaren,
+    inte i verdict-objektet → gaten granskade om ALLA bilder varje gång.
+    Fix: läs tidsstämpeln ur sidecaren.
+11. **En underkänning räcker inte.** M3-vision flippade 4,5 % av omdömena
+    mellan två identiska körningar. Gaten kräver nu två underkännanden i rad
+    (bekräftelsepass) — annars kastades 26 riktiga bilder.
+12. **Event kunde peka på karantänbilder.** När gaten flyttade en bild till
+    karantän efter att den redan tilldelats stod eventen kvar med den bilden.
+    Fix: `scripts/word_image_repair.ts` sätter tillbaka en generisk
+    biblioteksbild (52 event reparerade).
 
 ---
 

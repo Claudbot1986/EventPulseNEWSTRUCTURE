@@ -53,6 +53,27 @@ function env(name: string): string | undefined {
 }
 const KEY = env('MINIMAX_API_KEY');
 
+/** En rad i gaterapporten. */
+interface GateResultRow {
+  ord: string;
+  key: string;
+  file: string;
+  test1_title: boolean;
+  test1_in_inventory: boolean;
+  is_name: boolean;
+  test2_match: boolean;
+  test2_appropriate: boolean;
+  confidence: number;
+  shows: string;
+  reason: string;
+  text: string;
+  foreground_face: boolean;
+  ok: boolean;
+  /** Underkänd i pass 1 men godkänd i bekräftelsepasset. */
+  flaky?: boolean;
+  confirmed_ok?: boolean;
+}
+
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let row: string[] = [], field = '', inQ = false;
@@ -95,7 +116,7 @@ async function main() {
         return ord.toLowerCase() === WORD_ARG;
       })
     : allFiles;
-  const results: Record<string, unknown>[] = [];
+  const results: GateResultRow[] = [];
   let fail = 0;
   let cursor = 0;
 
@@ -121,8 +142,16 @@ async function main() {
     const isName = nameWords.has(ord.toLowerCase());
 
     // ── TEST 2: visar bilden ordet? (M3 vision) ─────────────────────────
+    // Granskningen återanvänds från sidecaren om den redan finns.
+    //
+    // BUGG (rättat 2026-10-31): villkoret var `verdict.verified_at ===
+    // undefined`, men `WordVerdict` har ingen `verified_at` — fältet ligger i
+    // SIDECAREN. Villkoret var därför alltid sant och gaten granskade om
+    // ALLA bilder varje gång, även utan `--recheck` (901 bilder ≈ 15 min).
+    // Nu läses tidsstämpeln ur sidecaren, som skriptet faktiskt skriver.
     let verdict = j.verify ?? null;
-    if (RECHECK || !verdict || verdict.verified_at === undefined) {
+    const hasStamp = !!(j.reverified_at ?? j.verified_at ?? j.created_at);
+    if (RECHECK || !verdict || !hasStamp) {
       if (!KEY) { console.error('FEL: MINIMAX_API_KEY saknas'); process.exit(1); }
       verdict = await verifyImageFile(path.join(WORD_DIR, f), ord, meaning, KEY!, titles);
       j.verify = verdict;
@@ -169,6 +198,56 @@ async function main() {
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+
+  // ── BEKÄFTELSEPASS: en bild underkänns först när den underkänts TVÅ gånger ──
+  //
+  // M3-vision är inte deterministisk. Mätt 2026-10-31 på två identiska
+  // körningar (18:34 och 19:23): 40 av 893 bilder fick ett annat omdöme
+  // andra gången — 4,5 % flippade (19 på "text", 5 på "förvansad text",
+  // 17 på "fel motiv"). En enstaka underkänning är därför inte bevis för
+  // att bilden är trasig; två underkännanden i rad är det.
+  //
+  // Bilder som underkänns i första passet granskas om en gång till. Den som
+  // då klarar gaten behålls (och sidecarens granskning uppdateras).
+  const failedOnce = results.filter((r) => !(r as GateResultRow).ok) as GateResultRow[];
+  let confirmed = 0, recovered = 0;
+  if (failedOnce.length) {
+    console.log(`\n[gate] bekräftelsepass: ${failedOnce.length} underkända granskas om en gång till…`);
+    let cursor2 = 0;
+    const confirmWorker = async (): Promise<void> => {
+      for (;;) {
+        const row = failedOnce[cursor2++];
+        if (!row) return;
+        const sidecar = path.join(WORD_DIR, `${row.file}.json`);
+        const j = existsSync(sidecar) ? JSON.parse(readFileSync(sidecar, 'utf8')) : {};
+        const verdict = await verifyImageFile(path.join(WORD_DIR, row.file), row.ord, j.meaning ?? row.ord, KEY!, j.exempel_titlar ?? []);
+        if (verdict && verdictPasses(verdict)) {
+          j.verify = verdict;
+          j.verified_ok = true;
+          j.verified_match = verdict.match;
+          j.verified_appropriate = verdict.appropriate;
+          j.verified_text = verdict.text;
+          j.verified_foreground_face = verdict.foreground_face;
+          j.reverified_at = new Date().toISOString();
+          j.gate_flaky = true;   // underkänd i pass 1, godkänd i pass 2
+          writeFileSync(sidecar, JSON.stringify(j, null, 2));
+          row.ok = true;
+          row.flaky = true;
+          row.confirmed_ok = true;
+          recovered++;
+          console.log(`  ↻ ${row.ord.padEnd(14)} klarar gaten vid bekräftelse → behålls`);
+        } else {
+          row.confirmed_ok = false;
+          confirmed++;
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: CONCURRENCY }, () => confirmWorker()));
+    // fail räknar om: de som bekräftade underkännanden är de enda som flyttas
+    // till karantän.
+    fail = results.filter((r) => !(r as GateResultRow).ok).length;
+    console.log(`[gate] bekräftelsepass klart: ${recovered} behålls, ${confirmed} underkända bekräftade`);
+  }
 
   mkdirSync(REPORT_DIR, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
