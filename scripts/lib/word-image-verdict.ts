@@ -40,6 +40,12 @@ Regler för "match":
   • "mässa" → bås och besökare i en hall ÄR en bild av en mässa.
   • "klädkammare" → en garderob med rockar ÄR en bild av klädkammare.
   • "väder" (om man ser himmel och moln) osv.
+- TITLARNA ÄR FACIT. De är hämtade från den riktiga källan och de visar vad
+  evenemangen faktiskt är. Om ordets betydelse i dessa titlar skiljer sig från
+  den vanliga betydelsen av ordet, gäller TITLARNA. Exempel: är titeln
+  "Så tuktas en argbigga" ska bilden visa en trut/fågel — inte en person som
+  bråkar. En bild som stämmer med ordets vanliga betydelse men INTE med
+  titlarna är fel (match=false).
 - match=false endast om bilden visar en HELT ANNAN aktivitet, sak eller
   situation — inte bara en variant, en miljö eller ett tillfälle av ordet.
   En närbild av en fotbollsmatch ÄR match=true för ordet "match".
@@ -104,9 +110,13 @@ export async function verifyImageFile(
   word: string,
   meaning: string,
   apiKey: string,
+  titles: string[] = [],
 ): Promise<WordVerdict | null> {
   const buf = readFileSync(file);
   const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`;
+  const titleBlock = titles.length
+    ? `\nTitlar som innehåller ordet (FACIT — de visar vad evenemangen faktiskt är):\n${titles.slice(0, 4).map((t) => `- ${t}`).join('\n')}\n`
+    : '';
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(`${MINIMAX_BASE}/chat/completions`, {
@@ -119,7 +129,7 @@ export async function verifyImageFile(
             { role: 'user', content: [
               {
                 type: 'text',
-                text: `Efterfrågat ord: "${word}"\nBetydelse: ${meaning}\n\n`
+                text: `Efterfrågat ord: "${word}"\nBetydelse: ${meaning}\n${titleBlock}\n`
                   + '1) Visar bilden detta?\n2) Är bilden lämplig för ett offentligt evenemangskort?\n'
                   + '3) Finns det text i bilden?\n4) Står det ett ansikte i förgrunden?',
               },

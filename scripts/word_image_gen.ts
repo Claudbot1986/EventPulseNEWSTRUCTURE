@@ -298,6 +298,12 @@ Läs ordet I EVENTKONTEXTEN, inte i isolation:
 - "tip" i "tipspromenad" = betting/tips
 Ordets stamord finns separat — använd det för att tolka prefixet.
 
+TITLARNA ÄR DET VIKTIGASTE — de visar vad ordet betyder i praktiken just här.
+En titel som "Så tuktas en argbigga" visar att argbigga är en FÅGEL (en arg trut),
+inte en argsint person. Om ordet är ovanligt, gammalt, dialektalt eller fackligt,
+sag det UTTRYCKLIGEN i förklaringen ("argbigga = en arg trut (sjöfågel)"). Välj den
+betydelse som passar TITLARNA — inte den vanligaste betydelsen av ordet i isolation.
+
 Svara ENDAST med en kort förklaring (max 18 ord) på svenska, formulerad så att någon som bara läser förklaringen kan avgöra om en bild visar rätt sak. Beskriv det man SER, inte kategorin.`;
 
 async function wordMeaning(w: WordRow): Promise<string> {
@@ -387,7 +393,7 @@ async function main() {
         let j: Record<string, unknown> = {};
         if (existsSync(sidecar)) j = JSON.parse(readFileSync(sidecar, 'utf8'));
         const meaning = (j.meaning as string) || (await wordMeaning(w));
-        const verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!);
+        const verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!, w.exempel ?? []);
         const passes = verdictPasses(verdict);
         const ok = verdict?.match === true;
         const appropriate = verdict?.appropriate === true;
@@ -473,7 +479,7 @@ async function main() {
         writeFileSync(file, webp);
 
         // 4. verifiera (M3 vision läser av bilden)
-        verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!);
+        verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!, w.exempel ?? []);
         passes = verdictPasses(verdict);
         const ok = verdict?.match === true;
         const appropriate = verdict?.appropriate === true;

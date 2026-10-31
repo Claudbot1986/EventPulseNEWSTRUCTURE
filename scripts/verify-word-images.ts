@@ -106,7 +106,7 @@ async function main() {
     let verdict = j.verify ?? null;
     if (RECHECK || !verdict || verdict.verified_at === undefined) {
       if (!KEY) { console.error('FEL: MINIMAX_API_KEY saknas'); process.exit(1); }
-      verdict = await verifyImageFile(path.join(WORD_DIR, f), ord, meaning, KEY!);
+      verdict = await verifyImageFile(path.join(WORD_DIR, f), ord, meaning, KEY!, titles);
       j.verify = verdict;
       j.verified_match = verdict.match;
       j.verified_appropriate = verdict.appropriate;

@@ -108,7 +108,7 @@ async function main() {
       // överflödig. Den lämnas i karantän (som bevis) och räknas inte.
       if (takenKeys.has(key)) { superseded.push(ord); continue; }
 
-      const verdict = await verifyImageFile(qFile, ord, meaning, KEY!);
+      const verdict = await verifyImageFile(qFile, ord, meaning, KEY!, (j.exempel_titlar as string[]) ?? []);
       if (!verdict) { stillFailing.push({ ord, why: 'ingen granskning' }); continue; }
 
       if (!verdictPasses(verdict)) {
