@@ -54,6 +54,10 @@ node --env-file=.env --import tsx scripts/verify-word-images.ts --recheck
 
 # Test 3: UI-parning
 node scripts/check-word-image-pairing.mjs --word=bastu
+
+# Ge karantänbilderna en andra chans (efter att granskningsreglerna ändrats)
+node --env-file=.env --import tsx scripts/word_image_promote.ts --dry-run
+node --env-file=.env --import tsx scripts/word_image_promote.ts
 ```
 
 **Generera bilder (om inga finns):**
@@ -63,6 +67,7 @@ node scripts/check-word-image-pairing.mjs --word=bastu
 # Från CLI:
 node --env-file=.env --import tsx scripts/word_image_gen.ts --word=bastu --limit=5
 node --env-file=.env --import tsx scripts/word_image_gen.ts --limit=20          # 20 första orden
+node --env-file=.env --import tsx scripts/word_image_gen.ts --concurrency=3    # ord i parallellt
 node --env-file=.env --import tsx scripts/word_image_gen.ts --dry-run          # bara visa plan
 node --env-file=.env --import tsx scripts/word_image_gen.ts --word=bastu --verify-only   # granska utan att generera
 ```
@@ -83,22 +88,30 @@ node --env-file=.env --import tsx scripts/word_image_assign.ts --word=bastu --ap
 | `scripts/check-word-image-pairing.mjs` | test 3: titel ↔ bild via `events_public` | 0/1 |
 | `scripts/word_image_gen.ts` | generera ordbilder + M3-granskning | 0/1 |
 | `scripts/word_image_assign.ts` | ladda upp + registrera + tilldela till events | 0/1 |
+| `scripts/word_image_promote.ts` | granska om karantänen, släppa in det som klarar | 0/1 |
 
 ## Viktiga fällor (upptäckta 2026-10-31)
 
 - **MiniMax ignorerar `enable_thinking: false`.** Modellen bränner `max_tokens` på resonemang och svarar **aldrig** ut JSON. Rätt sätt är `thinking: { type: "disabled" }`. Utan det tystar varje batch.
 - **MiniMax innehållsfilter är inkonsekvent.** Det blockerade den *mildare* "bastu"-prompten men släppte igenom en "mixbastu"-bild med nakna bröst. Scriptet skriver därför om prompten med ett klädkrav och försöker igen vid "content safety" — men det räcker inte ensamt, det finns en separat `appropriate`-granskning.
+- **Granskningen ska fråga om INNEBÖRDEN, inte om ordet.** En bild av en skridskobana ÄR en bild av "is"; en turnébuss med publik ÄR en bild av "tour". Frågar man "visar bilden ordet?" underkänns riktiga bilder. Se `scripts/lib/word-image-verdict.ts` — frågan och exemplen ligger där.
+- **Exemplens tillfälliga tema läcker in i bilden.** Ordets exempeltitel "Spännande tipspromenad om Halloween!" fick M3 att måla in Halloween-kostymer i tipspromenad-bilden. Promptregeln säger nu att exemplens tema inte ska kopplas — bara sådant som hör till ordets innebörd.
+- **Läsbar text är den vanligaste orsaken till underkännande.** MiniMax sätter reklamtavlor, rinkbräden och skyltar i scener som mässa, pub och hockey. Promptens no-text-regel räknar upp varje yta som normalt bär skrift och kräver att de är tomma.
 - **Supabase-JS tar sökvägen INOM bunken.** Upload ska vara `import-stamped/word/x.webp`, medan `image_library.storage_path` ska vara `event-posters/import-stamped/word/x.webp`. Blandar man ihop blir public-URL:en HTTP 400 på alla bilder.
-- **PostgREST's standardgräns är 1 000 rader.** `word_image_assign.ts` filtrerar i DB:t på ord och använder `.range()` — annars syns bara de första 1 000 eventsen.
+- **Supabase-projektet har ett eget radtak på 1 000 rader.** `.range(0, 19999)` bryter INTE det taket — frågan returnerar 1 000 rader ändå. Endast sidnumrering fungerar. Detta dolde halva eventen i tilldelningen (806 istället för 1 550).
+- **Ett `.or()`-filter med många ord blir ett URL på tiotals kilo.** Med 1 000 ord riskerar frågan att överlåta. Matchningen sker i JS — hämta alla events och filtrera lokalt.
 - **`events.image_generation_status` har en check-constraint:** `pending|completed|failed|no_credits|library_fallback`. Okänt värde → hela uppdateringen faller.
 - **Ord-bilder tilldelas via `events.image_url`, inte via biblioteksfallback.** `image_library.category_slug` sätts till den reserverade pseudo-kategorin `'word'`, som ingen riktig event har — annars hamnar ordbilderna i den generiska fallback-poolen och en bastubild kan visas på ett orelaterat event.
+- **Generatorns `--apply` togs bort (2026-10-31).** Den satte `category_slug=null` och en lokal absolut sökväg → trasiga biblioteksrader och ordbilder i fallback-poolerna. `word_image_assign.ts` är den enda vägen som skriver till DB.
 
 ## Stoppregler
 
 - **Generera inte bilder för ord som är klassade som namn.** Gaten returnerar röd om ett ord i `namn`-listan har en bild.
 - **Lämna inte en bild kvar som inte klarar `appropriate`**, även om `match` är sant. En offentlig app kan inte visa nakna bröst på ett evenemangskort.
-- **Skriv inte `events.image_url` utan `--apply`-flaggan på `word_image_assign.ts`.** Utan den är det en förhandsvisning.
+- **Skriv inte `events.image_url` utan `--apply`-flaggan på `word_image_assign.ts`.** Utan den är det en förhandsvisning. Från dashboarden kräver knappen "Koppla ordbilder till event" `apply=true`.
+- **Släpp inte in två bilder för samma ord.** `word_image_promote.ts` hoppar över ord som redan har en godkänd bild — annars plockar tilldelningen godtyckligt mellan dem.
 - **Rör inte `scripts/adaptive_image_gen.ts`** (den orange knappen). Den här gaten gäller bara ordpipelinen.
+- **Kör inte två bildgenereringar samtidigt.** Spärren i dashboarden täcker båda generatorerna (MiniMax-taket är per API-nyckel, inte per knapp).
 
 ## Bevis
 
