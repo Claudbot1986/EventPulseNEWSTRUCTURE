@@ -3347,14 +3347,14 @@ if (req.method === 'POST' && url === '/api/bfl/word-run') {
       res.end(JSON.stringify({ ok: false, error: 'limit saknas — ange hur många ord som ska få en bild (1–200)' }));
       return true;
     }
-    const limit = clampInt(parsed.limit, 1, 200, 0);
+    const limit = clampInt(parsed.limit, 1, 1000, 0);
     if (limit < 1) {
       res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ ok: false, error: `ogiltigt limit-värde: ${JSON.stringify(parsed.limit)} (måste vara ett heltal 1–200)` }));
+      res.end(JSON.stringify({ ok: false, error: `ogiltigt limit-värde: ${JSON.stringify(parsed.limit)} (måste vara ett heltal 1–1000)` }));
       return true;
     }
     const word = (parsed.word ?? '').trim().slice(0, 60);
-    const apply = parsed.apply === true;
+    const concurrency = clampInt(parsed.concurrency, 1, 6, 3);
 
     // Ingen parallell körning — MiniMax-taket är 10 bilder/min och delas
     // mellan BÅDA generatorerna (orange knapp + titalanpassad).
@@ -3389,10 +3389,12 @@ if (req.method === 'POST' && url === '/api/bfl/word-run') {
       'tsx',
       'scripts/word_image_gen.ts',
       `--limit=${limit}`,
+      `--concurrency=${concurrency}`,
       `--state-dir=${runDir}`,
     ];
     if (word) args.push(`--word=${word}`);
-    if (apply) args.push('--apply');
+    // Ingen --apply: generatorn skriver inte till DB. Kopplingen till
+    // events görs av scripts/word_image_assign.ts via /api/bfl/word-assign.
 
     const child = spawn(process.execPath, args, {
       cwd: PROJECT_ROOT,
@@ -3408,14 +3410,160 @@ if (req.method === 'POST' && url === '/api/bfl/word-run') {
       pid: child.pid ?? null,
       limit,
       word,
-      apply,
+      concurrency,
       startedAt: new Date().toISOString(),
       runDir,
       logPath,
     }, null, 2));
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ ok: true, runId, pid: child.pid ?? null, limit, word, apply, runDir }));
+    res.end(JSON.stringify({ ok: true, runId, pid: child.pid ?? null, limit, word, concurrency, runDir }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+  }
+  return true;
+}
+
+/** Pågående kopplingar (word_image_assign.ts) — pid från run.json. */
+function findLiveAssignRuns(): number[] {
+  try {
+    if (!existsSync(WORD_ASSIGN_RUNS_DIR)) return [];
+    const out: number[] = [];
+    for (const dir of readdirSync(WORD_ASSIGN_RUNS_DIR)) {
+      const p = join(WORD_ASSIGN_RUNS_DIR, dir, 'run.json');
+      if (!existsSync(p)) continue;
+      try {
+        const meta = JSON.parse(readFileSync(p, 'utf8')) as { pid?: number };
+        const pid = Number(meta?.pid ?? 0);
+        if (!pid) continue;
+        process.kill(pid, 0);
+        out.push(pid);
+      } catch { /* död process eller trasig run.json → hoppa över */ }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+// ─── Koppla ordbilder till event (2026-10-31) ─────────────────────────────
+// POST /api/bfl/word-assign        — ladda upp + registrera + tilldela
+// GET  /api/bfl/word-assign/status — status för en pågående koppling
+//
+// Detta är den enda vägen som skriver till image_library och events.image_url
+// för ordbilder: category_slug='word' (reserverad pseudo-kategori) och
+// korrekt storage_path. Generatorns egen --apply-sökväg togs bort 2026-10-31
+// eftersom den satte category_slug=null och en lokal absolut sökväg.
+
+const WORD_ASSIGN_RUNS_DIR = join(PROJECT_ROOT, 'runtime', 'word-image-gen', 'assign');
+
+/** GET /api/bfl/word-assign/status — senaste kopplingens state. */
+if (url === '/api/bfl/word-assign/status' && req.method === 'GET') {
+  try {
+    if (!existsSync(WORD_ASSIGN_RUNS_DIR)) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, result: null }));
+      return true;
+    }
+    const dirs = readdirSync(WORD_ASSIGN_RUNS_DIR).sort();
+    const latest = dirs.length ? join(WORD_ASSIGN_RUNS_DIR, dirs[dirs.length - 1]) : '';
+    const metaPath = latest ? join(latest, 'run.json') : '';
+    if (!metaPath || !existsSync(metaPath)) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, result: null }));
+      return true;
+    }
+    const meta = JSON.parse(readFileSync(metaPath, 'utf8')) as {
+      runId: string; pid: number | null; word?: string; startedAt: string; logPath: string;
+    };
+    const alive = pidAlive(meta.pid ?? null);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(JSON.stringify({
+      ok: true,
+      result: {
+        runId: meta.runId,
+        status: alive ? 'running' : 'success',
+        pid: meta.pid ?? null,
+        word: meta.word ?? '',
+        startedAt: meta.startedAt,
+        done: !alive,
+        logTail: meta.logPath ? tailFile(meta.logPath, 20) : [],
+      },
+    }));
+    return true;
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    return true;
+  }
+}
+
+/** POST /api/bfl/word-assign — starta kopplingen av ordbilder till events. */
+if (req.method === 'POST' && url === '/api/bfl/word-assign') {
+  try {
+    const body = await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (c: Buffer) => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      req.on('error', reject);
+    });
+    const parsed = JSON.parse(body || '{}') as { word?: string; apply?: boolean };
+
+    // Utan --apply (true) kopplas ingenting — bara en förhandsvisning.
+    if (parsed.apply !== true) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, error: 'kopplingen kräver apply=true — utan det ändras inget i databasen' }));
+      return true;
+    }
+    const word = (parsed.word ?? '').trim().slice(0, 60);
+
+    // Ingen parallell koppling — två samtidiga skrivningar mot samma rader.
+    const liveAssign = findLiveAssignRuns();
+    if (liveAssign.length > 0) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        ok: false,
+        error: `en koppling körs redan (pid ${liveAssign.join(', ')}) — vänta tills den är klar`,
+      }));
+      return true;
+    }
+
+    const runId = `assign-${Date.now().toString(36)}`;
+    const runDir = join(WORD_ASSIGN_RUNS_DIR, runId);
+    mkdirSync(runDir, { recursive: true });
+    const logPath = join(runDir, 'run.log');
+    const fd = openSync(logPath, 'a');
+
+    const args = [
+      '--env-file=.env',
+      '--import',
+      'tsx',
+      'scripts/word_image_assign.ts',
+      '--apply',
+    ];
+    if (word) args.push(`--word=${word}`);
+
+    const child = spawn(process.execPath, args, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env },
+      stdio: ['ignore', fd, fd],
+      detached: true,
+    });
+    child.unref();
+    closeSync(fd);
+
+    writeFileSync(join(runDir, 'run.json'), JSON.stringify({
+      runId,
+      pid: child.pid ?? null,
+      word,
+      startedAt: new Date().toISOString(),
+      runDir,
+      logPath,
+    }, null, 2));
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, runId, pid: child.pid ?? null, word, runDir }));
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));

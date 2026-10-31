@@ -3045,7 +3045,7 @@ async function pollWordRun(runId) {
 async function startWordRun() {
   const inp = document.getElementById('bfl-word-count');
   const filt = document.getElementById('bfl-word-filter');
-  const limit = Math.max(1, Math.min(200, parseInt(inp?.value ?? '10', 10) || 10));
+  const limit = Math.max(1, Math.min(1000, parseInt(inp?.value ?? '10', 10) || 10));
   const word = (filt?.value ?? '').trim();
   setWordButtonsDisabled(true);
   setWordStatus(`startar ${limit} ord${word ? ` (${word})` : ''}…`, 'warn');
@@ -3076,6 +3076,66 @@ function initWordButton() {
     btn.dataset.wired = '1';
     btn.addEventListener('click', startWordRun);
   }
+  const assignBtn = document.getElementById('btn-bfl-word-assign');
+  if (assignBtn && !assignBtn.dataset.wired) {
+    assignBtn.dataset.wired = '1';
+    assignBtn.addEventListener('click', startWordAssign);
+  }
+}
+
+// ─── Koppla ordbilder till event ───────────────────────────────────────────
+
+function setWordAssignStatus(text, kind) {
+  const el = document.getElementById('bfl-word-assign-status');
+  const txt = document.getElementById('bfl-word-assign-status-text');
+  if (!el || !txt) return;
+  txt.textContent = text;
+  el.classList.remove('bfl-ingestion-status--hidden');
+  el.classList.toggle('bfl-ingestion-status--warn', kind === 'warn');
+  el.classList.toggle('bfl-ingestion-status--error', kind === 'error');
+  el.classList.toggle('bfl-ingestion-status--ok', kind === 'ok');
+}
+
+async function startWordAssign() {
+  const filt = document.getElementById('bfl-word-filter');
+  const word = (filt?.value ?? '').trim();
+  setWordAssignStatus(`kopplar ${word || 'alla ordbilder'} till event…`, 'warn');
+  try {
+    const r = await fetch('/api/bfl/word-assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word, apply: true }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setWordAssignStatus(`✗ ${j.error || 'okänt fel'}`, 'error');
+      return;
+    }
+    setWordAssignStatus('kopplar…', 'warn');
+    pollWordAssign(j.runId);
+  } catch (err) {
+    setWordAssignStatus(`✗ ${err.message}`, 'error');
+  }
+}
+
+function pollWordAssign(runId) {
+  const tick = async () => {
+    try {
+      const r = await fetch(`/api/bfl/word-assign/status`);
+      if (!r.ok) return;
+      const j = await r.json();
+      const s = j.result;
+      if (!s) { setWordAssignStatus('ingen koppling igång', 'warn'); return; }
+      if (s.status === 'running') {
+        setWordAssignStatus('kopplar…', 'warn');
+        setTimeout(tick, 2500);
+        return;
+      }
+      const last = (s.logTail || []).filter((l) => l.trim()).slice(-3).join(' · ');
+      setWordAssignStatus(`✓ koppling klar${last ? ` — ${last}` : ''}`, 'ok');
+    } catch { /* ignore poll-fel */ }
+  };
+  setTimeout(tick, 1500);
 }
 
 /** Efter sidladdning: häng med i en körning som redan pågår. */

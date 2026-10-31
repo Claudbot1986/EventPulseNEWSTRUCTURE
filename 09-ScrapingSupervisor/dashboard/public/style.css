@@ -1732,6 +1732,22 @@ body:not(.sidebar-open) .sidebar {
   opacity: 0.55;
   cursor: wait;
 }
+/* Kopplingsknappen — samma familj, annan nyans (blå) så den inte
+   förväxlas med genereringen. */
+.bfl-generate-btn--word-assign {
+  background: linear-gradient(135deg, #12243d, #1d3a5f);
+  border-color: #4a86c8;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+.bfl-generate-btn--word-assign:hover {
+  background: linear-gradient(135deg, #1d3a5f, #2b5480);
+  box-shadow: 0 4px 12px rgba(74, 134, 200, 0.4);
+}
+.bfl-generate-btn--word-assign:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
 .bfl-word-wrap {
   display: inline-flex;
   align-items: center;

@@ -14,22 +14,24 @@
  *   3. AI Act-stämpel (samma applyAiComplianceToWebp som orange knappen).
  *   4. M3 VISION läser av bilden och svarar: visar bilden ordet?
  *      (detta är verifieringsteg 2 i uppdraget)
- *   5. Bild + sidecar sparas. Med --apply går ordet även in i image_library
- *      och tilldelas de event vars titel innehåller ordet.
+ *   5. Bild + sidecar sparas i local_image_library_stamped_v2/word/.
+ *      Underkända bilder karantänsas utanför biblioteksmappen.
  *
  * Ord med ordets BETYDELSE genereras INTE (artistnamn, pjästitel, lokal) —
  * de finns i ord-inventeringen som typ=namn och hoppas över.
  *
+ * Uppladdning, registrering i image_library och tilldelning till events görs
+ * av scripts/word_image_assign.ts --apply — generatorn skriver inte till DB.
+ *
  * Kör:
  *   node --env-file=.env --import tsx scripts/word_image_gen.ts --limit=5
- *   node --env-file=.env --import tsx scripts/word_image_gen.ts --word=bastu --apply
+ *   node --env-file=.env --import tsx scripts/word_image_gen.ts --concurrency=3
  *   node --env-file=.env --import tsx scripts/word_image_gen.ts --dry-run
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, appendFileSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createClient } from '@supabase/supabase-js';
 import { applyAiComplianceToWebp } from '../08-Agent/tools/ai_compliance.js';
 import {
   verifyImageFile, verdictPasses, verdictReason,
@@ -49,6 +51,20 @@ const IMG_H = 832;
 const IMG_ASPECT = '3:2';
 const RPM_LIMIT = 10;
 const RPM_SAFE = 9;
+
+/**
+ * Antal ord som bearbetas samtidigt.
+ *
+ * Bildgenereringen + M3-granskningen tar ~28 s per ord i serie, vilket blev
+ * ~8 h för 1 000 ord. Tre arbetare ger ~3 h. Mer än tre hjälper inte:
+ * RpmGuard delas mellan arbetarna, så MiniMax-taket (9/min) är taket
+ * oavsett hur många som kör parallellt.
+ */
+const CONCURRENCY = (() => {
+  const raw = argValue('--concurrency');
+  const n = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(n) ? Math.max(1, Math.min(6, n)) : 3;
+})();
 
 // ── Args ──────────────────────────────────────────────────────────────────
 function argValue(name: string): string | null {
@@ -194,6 +210,7 @@ Skriv EN bildprompt på engelska (max 60 ord) som visar UTTRYCKLIGT det ordet be
 Krav:
 - Beskriv vad det FAKISKT är (plats, aktivitet, situation). Var specifik: "wooden sauna cabin with steam, hot stones and wooden benches", inte "spa scene".
 - Beakta nyansen i ordet: "dambastu" ska visa kvinnor, inte män. "Tipspromenad" ska visa folk som går och tittar på en telefon/spelblad. "Julmässa" ska visa julbock, lys, marknadsstånd.
+- ANVÄND EXEMPLEN FÖR ATT FÖRSTÅ VAD ORDET BETYDER — kopiera INTE deras tillfälliga tema. En exempeltitel som "Spännande tipspromenad om Halloween! Tävla om priser" betyder INTE att bilden ska visa Halloween-kostymer, pumpkins eller masker — temat hör till just den evenemangsttiteln. Ta bara med sådant som hör till själva ordets innebörd (t.ex. "julmässa" → julmarknad, "dambastu" → kvinnor). Om exemplen har ett gemensamt tillfälligt tema, försumma det.
 - MILJÖ: typisk svensk/Stockholm-kontext, tid på dygnet, stämning.
 - BRETT GREPP: miljön och handlingen är motivet. Ingen enskild person ska fylla bilden — inga porträtt, inga närbilder av ansikten. Om aktiviteten sker i grupp (promenad, tävling, marknad, mässa, utställning, möte): visa GRUPPEN och platsen.
 - Redaktionell fotostil, varm men inte för polerat.
@@ -315,14 +332,6 @@ async function wordMeaning(w: WordRow): Promise<string> {
   return w.stam || w.ord;
 }
 
-// ── Supabase: library + event-tilldelning ────────────────────────────────
-function supabase() {
-  const url = env('SUPABASE_URL') ?? env('EXPO_PUBLIC_SUPABASE_URL');
-  const key = env('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
@@ -345,46 +354,65 @@ async function main() {
     ? JSON.parse(readFileSync(PROMPT_CACHE, 'utf8')) : {};
 
   const guard = new RpmGuard();
-  const db = supabase();
-  let generated = 0;
+  let generated = 0;   // ord bearbetade (slutsumma)
+  let claimed = 0;    // ord som tagits i arbete (begränsar LIMIT)
+  let fileSeq = 0;     // unikt suffix i filnamnet
+  let cursor = 0;      // nästa ord i listan
   const results: WordRow[] = [];
 
-  for (const w of words) {
-    if (generated >= LIMIT) break;
-    const key = imageKey(w.ord, w.stam);
+  console.log(`[word-image-gen] arbetare: ${CONCURRENCY} (MiniMax-taket ${RPM_SAFE}/min styr bildflödet)`);
 
-    // ── verify-only: granska en redan genererad bild på nytt ────────────
-    if (IS_VERIFY_ONLY) {
-      const dir = OUT_DIR;
-      if (!existsSync(dir)) { console.log(`  [fel] ${dir} saknas`); continue; }
-      const existing = readdirSync(dir).filter((f) => f.endsWith('.webp') && f.startsWith(key + '__'));
-      if (!existing.length) { console.log(`  [skip] ${w.ord} — ingen bild att granska`); continue; }
-      const file = path.join(dir, existing[0]);
-      const sidecar = `${file}.json`;
-      let j: Record<string, unknown> = {};
-      if (existsSync(sidecar)) j = JSON.parse(readFileSync(sidecar, 'utf8'));
-      const meaning = (j.meaning as string) || (await wordMeaning(w));
-      const verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!);
-      const passes = verdictPasses(verdict);
-      const ok = verdict?.match === true;
-      const appropriate = verdict?.appropriate === true;
-      j.verify = verdict;
-      j.verified_ok = passes;
-      j.verified_match = ok;
-      j.verified_appropriate = appropriate;
-      j.verified_text = verdict?.text ?? 'none';
-      j.verified_foreground_face = verdict?.foreground_face === true;
-      j.reverified_at = new Date().toISOString();
-      writeFileSync(sidecar, JSON.stringify(j, null, 2));
-      appendFileSync(VERIFY_CSV,
-        `"${w.ord}","${key}","${ok}","${appropriate}","${verdict?.confidence ?? 0}","${(verdict?.shows ?? '').replace(/"/g, "'")}","${(verdict?.reason ?? '').replace(/"/g, "'")}","${(verdict?.appropriateness_note ?? '').replace(/"/g, "'")}","${path.basename(file)}"\n`);
-      const tag = passes ? 'OK ' : 'FEL';
-      console.log(`  [${tag}] ${w.ord.padEnd(18)} ${verdictReason(verdict)}`);
-      generated++;
-      continue;
-    }
+  /**
+   * En arbetare drar ord ur listan tills den är tom eller LIMIT är nådd.
+   * Flera arbetare delar samma RpmGuard, så MiniMax-taket (9/min) gäller för
+   * hela körningen — inte per arbetare. Sekventiell körning tog ~28 s per ord
+   * (bildgenerering + M3-granskning i serie), vilket blevir ~8 h för 1 000 ord.
+   * Med tre arbetare blir det ~3 h, samtidigt som taket ändå begränsar.
+   */
+  async function worker(): Promise<void> {
+    for (;;) {
+      const w = words[cursor++];
+      if (!w) return;
+      const key = imageKey(w.ord, w.stam);
 
-    if (done.has(key)) { console.log(`  [skip] ${w.ord} (finns redan)`); continue; }
+      // ── verify-only: granska en redan genererad bild på nytt ────────────
+      if (IS_VERIFY_ONLY) {
+        if (generated >= LIMIT) return;
+        const dir = OUT_DIR;
+        if (!existsSync(dir)) { console.log(`  [fel] ${dir} saknas`); continue; }
+        const existing = readdirSync(dir).filter((f) => f.endsWith('.webp') && f.startsWith(key + '__'));
+        if (!existing.length) { console.log(`  [skip] ${w.ord} — ingen bild att granska`); continue; }
+        const file = path.join(dir, existing[0]);
+        const sidecar = `${file}.json`;
+        let j: Record<string, unknown> = {};
+        if (existsSync(sidecar)) j = JSON.parse(readFileSync(sidecar, 'utf8'));
+        const meaning = (j.meaning as string) || (await wordMeaning(w));
+        const verdict = await verifyImageFile(file, w.ord, meaning, MINIMAX_KEY!);
+        const passes = verdictPasses(verdict);
+        const ok = verdict?.match === true;
+        const appropriate = verdict?.appropriate === true;
+        j.verify = verdict;
+        j.verified_ok = passes;
+        j.verified_match = ok;
+        j.verified_appropriate = appropriate;
+        j.verified_text = verdict?.text ?? 'none';
+        j.verified_foreground_face = verdict?.foreground_face === true;
+        j.reverified_at = new Date().toISOString();
+        writeFileSync(sidecar, JSON.stringify(j, null, 2));
+        appendFileSync(VERIFY_CSV,
+          `"${w.ord}","${key}","${ok}","${appropriate}","${verdict?.confidence ?? 0}","${(verdict?.shows ?? '').replace(/"/g, "'")}","${(verdict?.reason ?? '').replace(/"/g, "'")}","${(verdict?.appropriateness_note ?? '').replace(/"/g, "'")}","${path.basename(file)}"\n`);
+        const tag = passes ? 'OK ' : 'FEL';
+        console.log(`  [${tag}] ${w.ord.padEnd(18)} ${verdictReason(verdict)}`);
+        generated++;
+        continue;
+      }
+
+      if (done.has(key)) { console.log(`  [skip] ${w.ord} (finns redan)`); continue; }
+
+      // LIMIT räknar ord som faktiskt bearbetas — redan genererade ord
+      // (skipp) tar inte en plats i budgeten, som innan.
+      if (claimed >= LIMIT) return;
+      claimed++;
 
     // 1. betydelse
     const meaning = await wordMeaning(w);
@@ -441,7 +469,7 @@ async function main() {
         const webp = await applyAiComplianceToWebp({
           buffer: buf, prompt: promptUsed, model: IMAGE_MODEL, position: 'bottom-left',
         });
-        file = path.join(OUT_DIR, `${key}__${String(generated).padStart(3, '0')}.webp`);
+        file = path.join(OUT_DIR, `${key}__${String(fileSeq++).padStart(3, '0')}.webp`);
         writeFileSync(file, webp);
 
         // 4. verifiera (M3 vision läser av bilden)
@@ -501,28 +529,25 @@ async function main() {
         }
       }
 
-      // 5. library + event-tilldelning (bara vid --apply)
-      if (IS_APPLY && passes && db) {
-        const ins = await db.from('image_library').insert({
-          storage_path: file,
-          public_url: url,
-          category_slug: null,
-          venue_pattern: null,
-          tags: [key, w.stam].filter(Boolean),
-          cluster_tags: [w.ord.toLowerCase(), w.stam].filter(Boolean),
-          rating: 5,
-          approved_by: 'word-image-gen',
-        }).select('id').single();
-        if (ins.error) console.log(`    library-fel: ${ins.error.message}`);
-        else console.log(`    library-id: ${ins.data.id}`);
-      }
+      // 5. Ingen biblioteksinsättning här.
+      //
+      //    Uppladdning, registrering i image_library och tilldelning till
+      //    events görs av scripts/word_image_assign.ts --apply — det är den
+      //    ENDA vägen som sätter category_slug='word' (reserverad
+      //    pseudo-kategori) och korrekt storage_path. Generatorns gamla
+      //    --apply-sökväg satte category_slug=null och en lokal absolut
+      //    sökväg, vilket lade bilderna i de generiska fallback-poolerna
+      //    och gav trasiga rader i image_library. (Rättad 2026-10-31.)
 
       generated++;
       results.push(w);
     } catch (e) {
       console.log(`  [ERR] ${w.ord}: ${(e as Error).message}`);
     }
+    }
   }
+
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
   console.log(`\n[word-image-gen] klart: ${generated} ord bearbetade.`);
   console.log(`[word-image-gen] bilder: ${OUT_DIR}`);

@@ -210,21 +210,28 @@ async function main() {
   }
 
   // 2) Hämta events och matcha titel mot ord.
-  //    OBS: PostgREST's standardgräns är 1 000 rader — utan .range() skulle
-  //    bara de första 1 000 eventsen (gamla, sorterade på id) hämtas.
-  //    Vi filtrerar i DB:t på de ord vi faktiskt bryr oss om.
-  const orClause = candidates
-    .flatMap((c) => matchForms(c))
-    .filter((w) => w.length >= 3)
-    .map((w) => `title_sv.ilike.%${w}%,title_en.ilike.%${w}%`)
-    .join(',');
-  const { data: events, error: evErr } = await db
-    .from('events')
-    .select('id, title_sv, title_en, image_url')
-    .or(orClause)
-    .range(0, 19999);
-  if (evErr) { console.error(evErr.message); process.exit(1); }
-  console.log(`[assign] eventrader med relevanta ord i titeln: ${events?.length ?? 0}`);
+  //
+  //    TVÅ FALLOR (upptäckta 2026-10-31):
+  //    (a) PostgREST/S Supabase-projektet har ett eget radtak på 1 000 rader.
+  //        .range(0, 19999) bryter INTE det taket — en fråga med .or()-filter
+  //        gav 1 000 av 2 016 matchande rader. Hela hälften av eventen var
+  //        osynliga för tilldelningen. Lösning: sidnumrering.
+  //    (b) Ett .or()-filter med 1 000 ord blir ett URL på tiotals kilo —
+  //        det riskerar att överlåta. Eftersom matchningen sker i JS
+  //        (tokenize + längsta ordet vinner) behövs ingen DB-filtrering
+  //        alls: vi hämtar alla events och matchar lokalt.
+  const events: Array<{ id: string; title_sv: string | null; title_en: string | null; image_url: string | null }> = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error: evErr } = await db
+      .from('events')
+      .select('id, title_sv, title_en, image_url')
+      .range(from, from + 999);
+    if (evErr) { console.error(evErr.message); process.exit(1); }
+    if (!data || data.length === 0) break;
+    events.push(...(data as typeof events));
+    if (data.length < 1000) break;
+  }
+  console.log(`[assign] events hämtade: ${events.length}`);
 
   const tokenize = (s: string) => s.toLowerCase()
     .split(/[^a-z0-9åäöéüæøèáàíóúñç]+/i)
@@ -233,7 +240,7 @@ async function main() {
   const rows: string[] = ['event_id,titel,ord,bildfil,image_url_fbefore,image_url_fafter,status'];
   let assigned = 0, unmatched = 0, skipped = 0;
 
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const title = ev.title_sv || ev.title_en || '';
     if (!title) continue;
     const toks = tokenize(title);

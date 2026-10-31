@@ -80,13 +80,23 @@
             <span class="bfl-generate-btn-sub" id="bfl-word-sub">ett ord i taget · ord-inventering</span>
           </span>
         </button>
-        <input type="number" id="bfl-word-count" class="bfl-adaptive-count" min="1" max="200" step="1" value="10" title="Antal ord som ska få en egen bild" aria-label="Antal ord" />
+        <input type="number" id="bfl-word-count" class="bfl-adaptive-count" min="1" max="1000" step="1" value="10" title="Antal ord som ska få en egen bild (1–1000)" aria-label="Antal ord" />
         <input type="text" id="bfl-word-filter" class="bfl-word-filter" placeholder="ord (tomt = alla)" title="Filtrera på ett enskilt ord, t.ex. bastu" aria-label="Filtrera på ord" />
         <div id="bfl-word-progress" class="bfl-adaptive-progress" hidden>
           <div class="bfl-adaptive-progress-track" id="bfl-word-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Genereringsframsteg">
             <div class="bfl-adaptive-progress-fill" id="bfl-word-progress-fill"></div>
           </div>
           <span class="bfl-adaptive-progress-text" id="bfl-word-progress-text">0 / 0</span>
+        </div>
+        <button type="button" id="btn-bfl-word-assign" class="bfl-generate-btn bfl-generate-btn--word-assign" aria-label="Koppla genererade ordbilder till eventen vars titel innehåller ordet">
+          <span class="bfl-generate-btn-icon" aria-hidden="true">🔗</span>
+          <span class="bfl-generate-btn-text">
+            <span class="bfl-generate-btn-title">Koppla ordbilder till event</span>
+            <span class="bfl-generate-btn-sub" id="bfl-word-assign-sub">laddar upp + tilldelar till titlarna</span>
+          </span>
+        </button>
+        <div id="bfl-word-assign-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
+          <span id="bfl-word-assign-status-text">redo</span>
         </div>
       </div>
       <div id="bfl-word-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
