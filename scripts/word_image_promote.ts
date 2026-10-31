@@ -33,7 +33,19 @@ const QUAR_DIR = path.join(PROJECT_ROOT, 'local_image_library_stamped_v2_word_qu
 const REPORT_DIR = path.join(PROJECT_ROOT, 'runtime', 'verification-reports');
 
 const IS_DRY = process.argv.includes('--dry-run');
-const CONCURRENCY = 3;
+/**
+ * Parallell granskning.
+ *
+ * MiniMax `chat/completions` (M3-vision) har ingen egen radgräns som slår 429
+ * — 6 samtidiga anrop är säkert (bildgenereringen har däremot 10 RPM, och den
+ * körs i ett annat skript). Samma värde som gaten använder.
+ */
+const CONCURRENCY = (() => {
+  const i = process.argv.indexOf('--concurrency');
+  const raw = i >= 0 ? process.argv[i + 1] : undefined;
+  const n = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(n) ? Math.max(1, Math.min(6, n)) : 6;
+})();
 
 function env(name: string): string | undefined {
   const raw = process.env[name];

@@ -32,7 +32,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { verdictPasses } from './lib/word-image-verdict.js';
-import { buildWordIndex, matchKeysInTitle, matchForms as matchFormsOf } from './lib/word-image-match.js';
+import { buildWordIndex, matchKeysInTitle, matchForms as matchFormsOf, storageFileName } from './lib/word-image-match.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WORD_DIR = path.join(PROJECT_ROOT, 'local_image_library_stamped_v2', 'word');
@@ -112,11 +112,19 @@ function loadWordImages(): WordImage[] {
     const sidecar = path.join(WORD_DIR, `${f}.json`);
     if (!existsSync(sidecar)) continue;
     const j = JSON.parse(readFileSync(sidecar, 'utf8'));
+    // Filen kan ha flyttats till karantän mellan ls och läs (generatorn kör
+    // parallellt) → hoppa över den i stället för att krascha.
+    let buffer: Buffer;
+    try {
+      buffer = readFileSync(path.join(WORD_DIR, f));
+    } catch {
+      continue;
+    }
     out.push({
       ord: j.ord,
       key: j.image_key ?? f.split('__')[0],
       file: path.join(WORD_DIR, f),
-      buffer: readFileSync(path.join(WORD_DIR, f)),
+      buffer,
       prompt: j.prompt ?? '',
       model: j.model ?? 'image-01',
       meaning: j.meaning ?? '',
@@ -173,7 +181,13 @@ async function main() {
     // DB-kolumnen image_library.storage_path däremot är "event-posters/import-stamped/word/x.webp"
     // (med bunknamnet), och det är den som public_url byggs från.
     // (Blandar man ihop ger uppladdningen HTTP 400 på alla public-URL:er.)
-    const relPath = `${STORAGE_PREFIX}/${WORD_CATEGORY}/${path.basename(img.file)}`;
+    //
+    // Filnamnet måste vara ASCII: Storage avvisar "handarbetscafé__086.webp"
+    // med "Invalid key" (212 av 896 bilder hade å/ä/ö/é). Se
+    // storageSafeName() i lib/word-image-match.ts — ASCII-vikning + kort hash
+    // av originalnyckeln (annars slår "cafe"/"café" ihop).
+    const fileName = storageFileName(img.key);
+    const relPath = `${STORAGE_PREFIX}/${WORD_CATEGORY}/${fileName}`;
     const uploadPath = relPath;
     const storagePath = `${BUCKET}/${relPath}`;
     const publicUrl = `${SB_URL}/storage/v1/object/public/${storagePath}`;
@@ -228,6 +242,8 @@ async function main() {
 
   const rows: string[] = ['event_id,titel,ord,bildfil,image_url_fbefore,image_url_fafter,status'];
   let assigned = 0, unmatched = 0, skipped = 0;
+  // Ord → de event som ska få just den bilden (grupperas för batch-skrivning).
+  const buckets = new Map<string, { hit: WordImage; meta: { storage_path: string; public_url: string }; events: typeof events }>();
 
   for (const ev of events) {
     const title = ev.title_sv || ev.title_en || '';
@@ -245,7 +261,7 @@ async function main() {
     // slår "bastu" (5) på titeln "Dambastu lördagmorgon Inre Bastu".
     const hits = candidates
       .filter((c) => titleKeys.has(c.key)
-        || matchForms(c.key, c.ord).some((f) => titleKeys.has(f)))
+        || matchForms(c).some((f) => titleKeys.has(f)))
       .sort((a, b) => b.key.length - a.key.length || b.ord.length - a.ord.length);
     if (!hits.length) continue;
     const hit = hits[0];
@@ -258,19 +274,43 @@ async function main() {
       continue;
     }
 
-    const changed = ev.image_url !== meta.public_url;
-    const { error } = await db.from('events').update({
-      image_url: meta.public_url,
-      image_ai_generated: true,
-      image_model: hit.model,
-      image_prompt: hit.prompt.slice(0, 500),
-      image_generated_at: new Date().toISOString(),
-      image_generation_status: 'completed',   // check-constraint: pending|completed|failed|no_credits|library_fallback
-      image_license: 'ai-generated',
-    }).eq('id', ev.id);
-    if (error) { console.log(`  [update-fel] ${ev.id}: ${error.message}`); unmatched++; continue; }
-    rows.push(`"${ev.id}","${title.replace(/"/g, "'")}","${hit.ord}","${path.basename(hit.file)}","${(ev.image_url ?? '').replace(/"/g, "'")}","${meta.public_url}","${changed ? 'uppdaterad' : 'redan satt'}"`);
-    if (changed) assigned++; else skipped++;
+    // Tilldelningen grupperas per ord INNAN skrivningen: alla event som ska
+    // få samma bild skrivs med EN uppdatering (.in('id', [...])) i stället för
+    // en uppdatering per event. 7 238 event blev ~900 anrop i stället för
+    // 7 238 — samma effekt, men snabbare och färre felchanser.
+    const bucket = buckets.get(hit.key) ?? { hit, meta, events: [] as typeof events };
+    bucket.events.push(ev);
+    buckets.set(hit.key, bucket);
+  }
+
+  if (IS_APPLY) {
+    const CHUNK = 100;
+    for (const [key, bucket] of buckets) {
+      const payload = {
+        image_url: bucket.meta.public_url,
+        image_ai_generated: true,
+        image_model: bucket.hit.model,
+        image_prompt: bucket.hit.prompt.slice(0, 500),
+        image_generated_at: new Date().toISOString(),
+        image_generation_status: 'completed',   // check-constraint: pending|completed|failed|no_credits|library_fallback
+        image_license: 'ai-generated',
+      };
+      for (let i = 0; i < bucket.events.length; i += CHUNK) {
+        const chunk = bucket.events.slice(i, i + CHUNK);
+        const { error } = await db.from('events').update(payload).in('id', chunk.map((e) => e.id));
+        if (error) {
+          console.log(`  [update-fel] "${key}" (${chunk.length} event): ${error.message}`);
+          unmatched += chunk.length;
+          continue;
+        }
+        for (const ev of chunk) {
+          const title = ev.title_sv || ev.title_en || '';
+          const changed = ev.image_url !== bucket.meta.public_url;
+          rows.push(`"${ev.id}","${title.replace(/"/g, "'")}","${bucket.hit.ord}","${path.basename(bucket.hit.file)}","${(ev.image_url ?? '').replace(/"/g, "'")}","${bucket.meta.public_url}","${changed ? 'uppdaterad' : 'redan satt'}"`);
+          if (changed) assigned++; else skipped++;
+        }
+      }
+    }
   }
 
   if (IS_APPLY) {

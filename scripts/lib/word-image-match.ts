@@ -29,6 +29,8 @@
  * token som inte finns i ordlistan matchar ingenting. Ingen gissning.
  */
 
+import { createHash } from 'node:crypto';
+
 /** Bestända former som är samma sak som stammen. */
 const INFL = ['n', 'en', 'ar', 'er', 'or', 'et', 's', 'na', 'orna', 'arna'];
 
@@ -103,6 +105,44 @@ export function matchKeysInTitle(title: string, index: WordIndex): Set<string> {
  * en ny titel som kom in efter att inventeringen gjordes). Här används
  * EXAKT matchning — aldrig suffix.
  */
-export function matchForms(key: string, ord: string): string[] {
-  return [...new Set([key.toLowerCase(), ord.toLowerCase()].filter(Boolean))];
+export function matchForms(key: string, ord?: string): string[] {
+  return [...new Set(
+    [key, ord]
+      .filter((s): s is string => typeof s === 'string' && s.length > 0)
+      .map((s) => s.toLowerCase()),
+  )];
+}
+
+/**
+ * Filnamn för en ordbild i Supabase Storage.
+ *
+ * ── Varför inte ordet rakt av? ─────────────────────────────────────────────
+ * Supabase Storage avvisar icke-ASCII-tecken i objektnycklar:
+ *   "Invalid key: import-stamped/word/handarbetscafé__086.webp"
+ * 212 av 896 biblioteksbilder har å/ä/ö/é i nyckeln och skulle aldrig
+ * laddas upp. Percent-encoding hjälper inte heller — Storage avkodar
+ * nyckeln innan den valideras ("probe_caf%C3%A9" → "probe_café" → FEL).
+ *
+ * Lösningen är ASCII + en kort hash av originalnyckeln:
+ *   "handarbetscafé" → "handarbetscafe--3f2a1b9c.webp"
+ *
+ * Hashen är nödvändig, inte kosmetik: ASCII-vikningen slår ihop ord som
+ * skiljer sig bara på diakritik ("cafe"/"café", "spoken"/"spöken",
+ * "jubileumsturnè"/"jubileumsturné"). Utan hash skulle deras bilder skriva
+ * över varandra i storage.
+ */
+export function storageSafeName(key: string): string {
+  const ascii = key
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')   // ta bort kombinationstecken
+    .replace(/[^a-z0-9]+/g, '-')      // allt annat → bindestreck
+    .replace(/^-+|-+$/g, '') || 'word';
+  const hash = createHash('sha1').update(key.toLowerCase()).digest('hex').slice(0, 8);
+  return `${ascii}--${hash}`;
+}
+
+/** Fullt filnamn (med ändelse) för en ordbild i storage. */
+export function storageFileName(key: string): string {
+  return `${storageSafeName(key)}.webp`;
 }
