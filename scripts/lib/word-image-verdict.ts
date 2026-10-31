@@ -30,8 +30,21 @@ Svara ENDAST med ett JSON-objekt i exakt denna form:
 {"match":<true|false>,"confidence":<0.0-1.0>,"shows":"<vad bilden faktiskt visar, max 12 ord>","reason":"<max 15 ord>","appropriate":<true|false>,"appropriateness_note":"<max 12 ord>","text":"<none|garbled|readable>","foreground_face":<true|false>}
 
 Regler för "match":
-- match=true endast om bilden tydligt visar DET efterfrågade ordets innebörd.
-- Om bilden visar något annat, eller bara en generisk scen utan koppling → match=false.
+- match=true endast om bilden tydligt visar DET efterfrågade ordets INNEBÖRD.
+- TOLKA ORDET SOM BETYDELSE, INTE SOM TEXT. Du ska inte leta efter bokstävernas
+  form i bilden — ingen bild har något ord tryckt på sig. Fråga "skulle en
+  svensk förstå att det här är en bild av DET?" Så gäller:
+  • "is" (ishockey) → en isbana med skridskor ÄR en bild av is.
+  • "tour" → en turnébuss med människor, eller en scenväntande publik ÄR en
+    bild av en turné.
+  • "mässa" → bås och besökare i en hall ÄR en bild av en mässa.
+  • "klädkammare" → en garderob med rockar ÄR en bild av klädkammare.
+  • "väder" (om man ser himmel och moln) osv.
+- match=false endast om bilden visar en HELT ANNAN aktivitet, sak eller
+  situation — inte bara en variant, en miljö eller ett tillfälle av ordet.
+  En närbild av en fotbollsmatch ÄR match=true för ordet "match".
+- match=false också om bilden är för generisk för ordet (t.ex. ett tomt rum
+  för ordet "julbord").
 - confidence = hur säker du är på ditt svar (0.0–1.0).
 - "shows" ska beskriva vad du faktiskt ser, även när match=false.
 

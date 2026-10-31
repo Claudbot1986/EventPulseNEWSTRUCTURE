@@ -213,10 +213,10 @@ Krav:
 - ANVÄND EXEMPLEN FÖR ATT FÖRSTÅ VAD ORDET BETYDER — kopiera INTE deras tillfälliga tema. En exempeltitel som "Spännande tipspromenad om Halloween! Tävla om priser" betyder INTE att bilden ska visa Halloween-kostymer, pumpkins eller masker — temat hör till just den evenemangsttiteln. Ta bara med sådant som hör till själva ordets innebörd (t.ex. "julmässa" → julmarknad, "dambastu" → kvinnor). Om exemplen har ett gemensamt tillfälligt tema, försumma det.
 - MILJÖ: typisk svensk/Stockholm-kontext, tid på dygnet, stämning.
 - BRETT GREPP: miljön och handlingen är motivet. Ingen enskild person ska fylla bilden — inga porträtt, inga närbilder av ansikten. Om aktiviteten sker i grupp (promenad, tävling, marknad, mässa, utställning, möte): visa GRUPPEN och platsen.
-- Redaktionell fotostil, varm men inte för polerat.
+- REDaktionell fotostil, varm men inte för polerat.
 - KLÄDER: människor i bilden har badrock eller badkläder och är fullt klädda — ingen nakenhet, inga blotta bröst, inga badkläder som visar för mycket. Om aktiviteten i sig är badkar/bastu: visa bastun med träpanel, vedeld, ånga och personer med handdukar om kroppen.
 - Inga ansikten i förgrunden.
-- Ingen läsbar text, inga skyltar, inga logotyper, inga baner, inga affischer. Skriv uttryckligen ut orden "no text, no signage, no logos, no banners" i prompten.
+- ABSOLUTET INGEN TEXT. Ingen läsbar text, ingen förvansad text, ingen logotyp, inget varumärke — inte på kläder, inte i bakgrunden, inte på ytor. Inte heller SKYLT, NEON, REKLAMTAVLOR, BANNER, FLAGGOR, AFFISCHER, MENYER, SPELRESULTAT, RINKBRÄDDEN eller STALLSKYLT. Varje yta som normalt skulle bära skrift ska vara TOM och OMRÄKAD. Skriv uttryckligen ut orden "no text, no signage, no logos, no banners, no advertising boards, no posters, all surfaces blank and unmarked" i prompten. En bild med läsbar text är trasig på ett evenemangskort och underkänns.
 - Avsluta med en mood-sättning ("..., Editorial style, warm tungsten tones").
 
 Svara BARA med prompttexten. Inget annat.`;
@@ -520,7 +520,7 @@ async function main() {
         if (attempt < MAX_ATTEMPTS) {
           // Skärp prompten utifrån fynden
           const fixes: string[] = [];
-          if (verdict?.text !== 'none') fixes.push('absolutely no text, no neon signs, no shop signs, no posters anywhere');
+          if (verdict?.text !== 'none') fixes.push('absolutely no text of any kind anywhere: no signs, no neon signs, no shop signs, no advertising boards, no banners, no flags, no posters, no logos, no brand names on clothing, no scoreboards, no rink boards, no stall signs; every surface that would normally carry writing must be blank and unmarked');
           if (verdict?.foreground_face) fixes.push('wide establishing shot, small figures, environment is the subject, no close-up of any face');
           if (!verdict?.match) fixes.push(`make "${w.ord}" unmistakably visible: ${meaning}`);
           if (!verdict?.appropriate) fixes.push('fully clothed people, no nudity, no bare chests');
