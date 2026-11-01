@@ -159,3 +159,44 @@ och E är ett naturligt komplement. C är förkastad på mätning, inte på åsi
 2. att informationen är **sann** — att raderna som landar är evenemang,
 3. att gaten **blockerar** artikelkällor och **släpper igenom** riktiga,
 4. att inga regressioner skapas i resten av kedjan.
+
+---
+
+## Utfall efter implementering (2026-11-01, mätt)
+
+Det här avsnittet är tillagt efter att lösningen byggts och mätts. Siffrorna
+ovan är från **före** implementeringen (mätning på rubriker ensamma) och
+beskriver förväntningen, inte resultatet.
+
+**Alternativ A (valt) blev implementerat och mätt:**
+
+| Vad | Förväntat (mätning före) | Utfall (mätt efter) |
+|---|---|---|
+| Tröskel på rubriker | "minst 2 artiklar OCH minst 30 %" → fångar `kulturfestivalenstockholmse` + `kollaborationse` | Fångar `kulturfestivalenstockholmse` (4/4) + `kollaborationse` (4/8) |
+| `thatsupse` (4 av 65) | skulle **släppas igenom** | **Blockeras** — sidans egna deklarationer (`newsarticle` på 5/5 detaljsidor) är ett starkare bevis än rubriken |
+| `wwwmynewsdeskcom` (1 rad) | skulle fångas | Fångas INTE — en rad når aldrig tröskeln "minst 2". Medveten falsknegativ |
+| Antal blockerade källor | okänt | **3 av 45** (thatsupse 65 rader, kollaborationse 8, kulturfestivalenstockholmse 4), **0 falsklarm** |
+
+**Det som ändrade utfallet var sidbeviset.** Rubrikmönstren är en indikation;
+sidans egen JSON-LD-deklaration (`Article`/`NewsArticle`) är bevis. Det är
+också där signalen är **ensidig**: `og:type=article` ensamt bevisar ingenting
+(royaldjurgarden.se är ett riktigt evenemang), och frånvaro av `Event`-typ
+bevisar inte heller att något är en artikel.
+
+**Tre buggar hittades under verifieringen och är rättade**
+(`86dda688`, `27409934`, `80d75f7b`) — se `02-Operations/06-Verification-Status.md`.
+Den viktigaste var en falsklarm: gaten läste *listningssidor* som om de vore
+evenemangssidor, och blockerade därför musikaliskase.se — en källa med 30
+riktiga evenemang. Av detta följer den generella regeln för den här gaten:
+
+> Sidbeviset får bara komma från en rad som pekar på en **egen sida**
+> (`url ≠ sourceUrl`). Annars beskriver sidan listan, inte raden.
+
+**Alternativ C (normalizer-confidence) är förkastad på mätning**, inte på
+argument — radfälten (plats, datum, biljett-URL, kategori, confidence) skiljer
+inte mellan artikelkällor och eventkällor. Endast titeln och sidans egen
+deklaration gör det.
+
+**Alternativ D (karantän som audit, ej automatisk radering) är vald.** De tre
+källorna ovan ligger kvar i grafen tills användaren bestämmer. Radering är ett
+eget beslut, och gaten raderar aldrig.
