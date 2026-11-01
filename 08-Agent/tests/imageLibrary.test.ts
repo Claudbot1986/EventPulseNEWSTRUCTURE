@@ -26,11 +26,23 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// Ordbanken (steg 0) mockas: dess egen DB-hämtning testar separat i
+// wordImageBank.test.ts. Här testar vi att steg 0 ligger FÖRE den gamla
+// heuristiken och att rätt flaggor sätts.
+vi.mock('../utils/wordImageBank', () => ({
+  pickWordImage: vi.fn(async () => null),
+  loadWordFormIndex: vi.fn(async () => new Map()),
+  resetWordFormIndexCache: vi.fn(),
+  buildWordFormIndex: vi.fn(() => new Map()),
+  pickWordImageFromTitle: vi.fn(() => null),
+}));
+
 import {
   pickLibraryFallback,
   addToLibrary,
   markEventWithLibraryFallback,
 } from '../utils/imageLibrary';
+import { pickWordImage } from '../utils/wordImageBank';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -46,23 +58,40 @@ interface MockQuery {
   upsert: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
   in: ReturnType<typeof vi.fn>;
+  then: (onfulfilled: (value: unknown) => unknown, onrejected?: (reason: unknown) => unknown) => Promise<unknown>;
 }
 
+/**
+ * Query-mock som klarar KEDJADE filter.
+ *
+ * 2026-11-01: implementationen använder `.not(...).not(...)` (tomma
+ * cluster_tags utesluts, 2026-10-14) och `.not(...)` som AVSLUTAR venue-
+ * steget. Den gamla mocken gjorde `.not()` till en Promise → kedjan
+ * kraschade med "not is not a function" och 6 tester var röda sedan
+ * dessember 2025. Nu är queryn en "thenable": await på den ger resultatet,
+ * samtidigt som kedjade anrop fungerar.
+ */
 function makeQuery(result: { data: unknown; error: unknown }): MockQuery {
   const q: MockQuery = {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    // `.not()` avslutar venue-steget (ingen .single()) → resolve:a direkt.
-    not: vi.fn().mockResolvedValue(result),
-    order: vi.fn().mockReturnThis(),
-    is: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue(result),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-    upsert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
+    select: vi.fn(),
+    eq: vi.fn(),
+    not: vi.fn(),
+    order: vi.fn(),
+    is: vi.fn(),
+    limit: vi.fn(),
+    single: vi.fn(),
+    maybeSingle: vi.fn(),
+    upsert: vi.fn(),
+    update: vi.fn(),
+    in: vi.fn(),
+    then: (onfulfilled, onrejected) =>
+      Promise.resolve(result).then(onfulfilled, onrejected),
   };
+  for (const method of ['select', 'eq', 'not', 'order', 'is', 'limit', 'upsert', 'update', 'in'] as const) {
+    q[method].mockReturnValue(q);
+  }
+  q.single.mockResolvedValue(result);
+  q.maybeSingle.mockResolvedValue(result);
   return q;
 }
 
@@ -252,6 +281,111 @@ describe('pickLibraryFallback', () => {
     // 2 queries: nullDefaultImage + genericFallbackImage (båda mot image_library)
     expect(fromMock).toHaveBeenCalledTimes(2);
     expect(fromMock).toHaveBeenCalledWith('image_library');
+  });
+});
+
+// ── Steg 0: ordbanken (2026-11-01, användarens prioritering) ────────────────
+
+describe('pickLibraryFallback — ordbanken först', () => {
+  beforeEach(() => {
+    const wordMock = pickWordImage as ReturnType<typeof vi.fn>;
+    wordMock.mockReset();
+    wordMock.mockResolvedValue(null);
+  });
+
+  test('ordbilden vinner över den gamla heuristiken', async () => {
+    (pickWordImage as ReturnType<typeof vi.fn>).mockResolvedValue({
+      key: 'bastu',
+      id: 'lib-word-1',
+      public_url: 'https://storage.example.com/event-posters/import-stamped/word/bastu--8bdaa416.webp',
+      storage_path: 'event-posters/import-stamped/word/bastu--8bdaa416.webp',
+    });
+    rpcMock.mockResolvedValue({ error: null });
+
+    const result = await pickLibraryFallback({
+      category_slug: 'community',
+      title_sv: 'Bastu i Riksgränsen',
+    });
+
+    expect(result.match_type).toBe('word');
+    expect(result.library_id).toBe('lib-word-1');
+    expect(result.url).toContain('/word/bastu--8bdaa416.webp');
+    // Ingen annan fråga ställdes — steg 0 avbryter den gamla vägen.
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  test('saknas ord i titellen → gammal heuristik (kedjan går vidare)', async () => {
+    (pickWordImage as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const categoryQuery = makeQuery({
+      data: {
+        id: 'lib-1',
+        storage_path: 'import-stamped/music.png',
+        public_url: 'https://storage.example.com/import-stamped/music.png',
+      },
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(categoryQuery);
+    rpcMock.mockResolvedValue({ error: null });
+
+    const result = await pickLibraryFallback({
+      category_slug: 'music',
+      title_sv: 'Fanny Avonne',
+    });
+
+    expect(result.match_type).toBe('category');
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('utan titel krockar inte ordbanken alls', async () => {
+    const categoryQuery = makeQuery({
+      data: {
+        id: 'lib-1',
+        storage_path: 'import-stamped/music.png',
+        public_url: 'https://storage.example.com/import-stamped/music.png',
+      },
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(categoryQuery);
+    rpcMock.mockResolvedValue({ error: null });
+
+    await pickLibraryFallback({ category_slug: 'music' });
+
+    expect(pickWordImage).not.toHaveBeenCalled();
+  });
+});
+
+describe('markEventWithLibraryFallback — ordbild', () => {
+  test('ordbild markeras som AI-genererad (stämpel ska synas)', async () => {
+    const updateQuery = makeQuery({ data: null, error: null });
+    fromMock.mockReturnValue(updateQuery);
+
+    await markEventWithLibraryFallback('ev-1', {
+      url: 'https://storage.example.com/event-posters/import-stamped/word/bastu--8bdaa416.webp',
+      library_id: 'lib-word-1',
+      match_type: 'word',
+    });
+
+    const patch = updateQuery.update.mock.calls[0][0] as Record<string, unknown>;
+    expect(patch.image_ai_generated).toBe(true);
+    expect(patch.image_generation_status).toBe('completed');
+    expect(patch.image_license).toBe('ai-generated');
+    expect(patch.image_attribution).toContain('AI Act');
+  });
+
+  test('biblioteksbild markeras som fallback (oförändrat)', async () => {
+    const updateQuery = makeQuery({ data: null, error: null });
+    fromMock.mockReturnValue(updateQuery);
+
+    await markEventWithLibraryFallback('ev-2', {
+      url: 'https://storage.example.com/import-stamped/music.png',
+      library_id: 'lib-1',
+      match_type: 'category',
+    });
+
+    const patch = updateQuery.update.mock.calls[0][0] as Record<string, unknown>;
+    expect(patch.image_ai_generated).toBe(false);
+    expect(patch.image_generation_status).toBe('library_fallback');
+    expect(patch.image_license).toBe('library-fallback');
   });
 });
 

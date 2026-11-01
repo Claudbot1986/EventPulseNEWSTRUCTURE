@@ -22,7 +22,7 @@
  */
 import fs from 'fs';
 
-import { buildWordIndex, matchKeysInTitle, matchForms, storageFileName } from './lib/word-image-match.js';
+import { buildWordIndex, matchKeysInTitle, matchForms, storageFileName, compareWordHits } from './lib/word-image-match.js';
 
 const env = fs.readFileSync('.env', 'utf8');
 const url = env.match(/^DATABASE_URL=(.*)$/m)[1].trim().replace(/^["']|["']$/g, '');
@@ -84,8 +84,7 @@ function expectedKey(title) {
   const hits = sidecars
     .filter((s) => titleKeys.has(s.image_key)
       || matchForms(s.image_key, s.ord).some((f) => titleKeys.has(f)))
-    .sort((a, b) => (b.image_key?.length ?? 0) - (a.image_key?.length ?? 0)
-      || (b.ord?.length ?? 0) - (a.ord?.length ?? 0));
+    .sort((a, b) => compareWordHits({ key: a.image_key ?? '' }, { key: b.image_key ?? '' }));
   return hits[0]?.image_key ?? null;
 }
 

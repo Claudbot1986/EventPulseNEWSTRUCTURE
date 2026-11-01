@@ -29,6 +29,16 @@ vi.mock('../services/imageGen.js', () => ({
   generateBatch: (...args: unknown[]) => generateBatchMock(...args),
 }));
 
+// 2b. Mock ordbanken (steg 0, 2026-11-01). Den har egen testfil
+//     (wordImageBank.test.ts); här ska vi testa matchLibraryFirst-vägen.
+vi.mock('../utils/wordImageBank.js', () => ({
+  pickWordImage: vi.fn(async () => null),
+  loadWordFormIndex: vi.fn(async () => new Map()),
+  resetWordFormIndexCache: vi.fn(),
+  buildWordFormIndex: vi.fn(() => new Map()),
+  pickWordImageFromTitle: vi.fn(() => null),
+}));
+
 // 3. Importera EFTER alla mocks.
 const { matchLibraryFirst } = await import('../services/imageGen.matchLibraryFirst.js');
 

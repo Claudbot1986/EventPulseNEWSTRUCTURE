@@ -114,6 +114,30 @@ export function matchForms(key: string, ord?: string): string[] {
 }
 
 /**
+ * Ordning mellan flera ordträffar i SAMMA titel.
+ *
+ * 1. Längsta bildnyckeln vinner — den är mest specifika ("dambastu" slår
+ *    "bastu").
+ * 2. Lika långa nycklar: alfabetiskt först. Utan denna tie-break blev
+ *    resultatet beroende av filordningen i biblioteksmappen — 85 av 5 874
+ *    event fick olika bild beroende på vilken väg som kördes först.
+ *
+ * Ordningen är deterministisk och används BÅDE av tilldelningen
+ * (`scripts/word_image_assign.ts`) och av ingestion
+ * (`08-Agent/utils/wordImageBank.ts`), så de kan inte glida isär.
+ */
+export function compareWordHits(a: { key: string }, b: { key: string }): number {
+  const byLength = b.key.length - a.key.length;
+  if (byLength !== 0) return byLength;
+  // KODPUNKTjämförelse, inte localeCompare: localeCompare är språkberoende
+  // ("öva" sorteras före "tal" i svensk locale men efter i en-US) — det gav
+  // olika bilder beroende på maskinens språkinställning.
+  if (a.key < b.key) return -1;
+  if (a.key > b.key) return 1;
+  return 0;
+}
+
+/**
  * Filnamn för en ordbild i Supabase Storage.
  *
  * ── Varför inte ordet rakt av? ─────────────────────────────────────────────

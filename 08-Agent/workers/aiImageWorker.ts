@@ -226,6 +226,47 @@ async function markEvents(
 }
 
 /**
+ * Tilldela ORDBILD till en grupp events om titeln innehåller ett ord som har
+ * en ordbild.
+ *
+ * 2026-11-01 (användarens prioritering): ordbanken (image_library med
+ * category_slug='word') ska provas FÖRE BFL. Bilden visar ordet i titeln —
+ * en genererad BFL-bild gör det inte, och BFL kostar dessutom credits.
+ *
+ * Endast match_type='word' godtas här. Den gamla heuristiken
+ * (cluster/venue/category/default) är kvar som fallback NÄR BFL misslyckas,
+ * precis som förut.
+ *
+ * Returnerar antal events som fick en ordbild.
+ */
+async function assignWordImageForGroup(group: DedupGroup): Promise<number> {
+  const match = await pickLibraryFallback({
+    category_slug: group.representative.category_slug,
+    title_sv: group.representative.title_sv,
+    title_en: group.representative.title_en,
+  });
+  if (match.match_type !== 'word' || !match.url || !match.library_id) return 0;
+
+  let assigned = 0;
+  for (const evId of group.ids) {
+    try {
+      await markEventWithLibraryFallback(evId, match);
+      assigned++;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      console.warn(`[ai-image-worker] ordbild failed for ${evId}: ${msg}`);
+    }
+  }
+  if (assigned > 0) {
+    console.log(
+      `[ai-image-worker]   🔤 ${assigned} event(s) i grupp "${group.key}" ` +
+        `fick ORDBILD (match_type=word) — ingen BFL-bild behövdes`,
+    );
+  }
+  return assigned;
+}
+
+/**
  * Tilldela biblioteks-bild till en grupp events. Används vid BFL-failure
  * (no_credits / transient error) som fallback så användaren aldrig ser en
  * tom bild.
@@ -238,6 +279,10 @@ async function assignLibraryFallbackForGroup(
 ): Promise<number> {
   const match = await pickLibraryFallback({
     category_slug: group.representative.category_slug,
+    // 2026-11-01: titeln styr steg 0 — ordbanken ger en bild som visar ordet
+    // i titeln. Utan titel gäller den gamla kedjan (cluster/venue/category).
+    title_sv: group.representative.title_sv,
+    title_en: group.representative.title_en,
   });
   if (!match.url || !match.library_id) return 0;
   let assigned = 0;
@@ -402,8 +447,33 @@ async function processJob(job: Job<AiImageJob>): Promise<void> {
   const group = groupByDedup(await fetchGroupMembers(eventId));
   console.log(`[ai-image-worker] event=${eventId} group has ${group.length} unique(s), ${group.reduce((n, g) => n + g.ids.length, 0)} events total`);
 
+  // ── ORDBANKEN FÖRE BFL (2026-11-01) ──────────────────────────────────────
+  // Titeln innehåller ett ord som har en ordbild? Då är DEN bilden rätt —
+  // och vi slipper både en BFL-generering och dess credits.
+  //
+  // Grupper utan ordträff går vidare till BFL som förut. Den gamla
+  // heuristiken (cluster/venue/category/default) ligger kvar som fallback
+  // när BFL misslyckas.
+  const groupsForBfl: DedupGroup[] = [];
+  let wordAssigned = 0;
+  for (const grp of group) {
+    const n = await assignWordImageForGroup(grp);
+    wordAssigned += n;
+    if (n === 0) groupsForBfl.push(grp);
+  }
+  if (wordAssigned > 0) {
+    console.log(
+      `[ai-image-worker] 🔤 ${wordAssigned} event(s) fick ordbild — ` +
+        `${groupsForBfl.length}/${group.length} grupp(er) går vidare till BFL`,
+    );
+  }
+  if (groupsForBfl.length === 0) {
+    console.log(`[ai-image-worker] alla grupper fick ordbild — hoppar över BFL`);
+    return;
+  }
+
   // Anropa autoGen (EN bild per dedup-grupp)
-  const batchResult = await callAutoGenBatch(group.map((g) => g.representative));
+  const batchResult = await callAutoGenBatch(groupsForBfl.map((g) => g.representative));
   recordSpend(batchResult.okCount * 0.025); // ~$0.025/bild
 
   // No-credits detection (2026-08-27): BFL slut på credits → märk alla som
@@ -450,7 +520,11 @@ async function processJob(job: Job<AiImageJob>): Promise<void> {
     for (const r of failedGroups) {
       const grp = group.find((g) => g.key === r.key);
       if (!grp) continue;
-      const match = await pickLibraryFallback({ category_slug: grp.representative.category_slug });
+      const match = await pickLibraryFallback({
+        category_slug: grp.representative.category_slug,
+        title_sv: grp.representative.title_sv,
+        title_en: grp.representative.title_en,
+      });
       if (match.url) {
         for (const id of grp.ids) libCoveredIds.add(id);
       }

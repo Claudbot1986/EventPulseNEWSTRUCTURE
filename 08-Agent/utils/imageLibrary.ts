@@ -25,6 +25,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { findImageForEvent } from '../../BFL-generator/lib/match.js';
+import { pickWordImage } from './wordImageBank.js';
 
 let _supabase: SupabaseClient | null = null;
 function db(): SupabaseClient {
@@ -149,12 +150,18 @@ export interface FallbackInput {
   event_id?: string | null;
   /** Event-beskrivning (raw, som M3 ska läsa och generera taggar från) */
   raw_description?: string | null;
+  // 2026-11-01 — steg 0: ordbilden. Titeln slås upp i ordbanken
+  // (image_library.category_slug='word') INNAN någon annan matchning.
+  /** Eventtitel (svenska) — används för ordbanksmatchning. */
+  title_sv?: string | null;
+  /** Eventtitel (engelska) — fallback om title_sv saknas. */
+  title_en?: string | null;
 }
 
 export interface FallbackResult {
   url: string | null;
   library_id: string | null;
-  match_type: 'cluster_match' | 'venue+category' | 'category' | 'kind' | 'default' | 'none';
+  match_type: 'word' | 'cluster_match' | 'venue+category' | 'category' | 'kind' | 'default' | 'none';
 }
 
 /**
@@ -163,11 +170,44 @@ export interface FallbackResult {
  * Returnerar null om biblioteket är tomt (då måste BFL-anrop köras).
  *
  * Bump:ar times_used vid lyckad match så vi kan identifiera mest använda bilder.
+ *
+ * ── Prioritering (2026-11-01, användarens beslut) ──────────────────────────
+ *
+ *   0. ORDBILD — finns ett unikt ord i titeln som har en ordbild?
+ *      → den bilden. Den visar ordet, så den slår allt annat.
+ *   1. Cluster-tags-matchning (M3) — beskrivningen matchar ett bildkluster.
+ *   2. Venue + kategori.
+ *   3. Kategori (+ alias).
+ *   4. Default (NULL-kategori) → generisk community/culture-bild.
+ *   5. 'none' → anroparen genererar en ny bild (BFL).
+ *
+ * Steg 0 är ett TILLÄGG, inte en ersättning: om titeln saknar ord med bild
+ * (eller ordbanken inte kan läsas) faller kedjan vidare till steg 1–4
+ * exakt som förut. Den gamla heuristiken är orörd.
  */
 export async function pickLibraryFallback(input: FallbackInput): Promise<FallbackResult> {
   // 0. Default-bild alltid finns (om biblioteket är populerat)
   //    Vi returnerar default som fallback om allt annat misslyckas.
   const emptyResult: FallbackResult = { url: null, library_id: null, match_type: 'none' };
+
+  // ── STEG 0: ORDBANKEN (2026-11-01) ────────────────────────────────────────
+  //    Finns ett ord i titeln som har en ordbild? Då är den bilden rätt —
+  //    den visar ordet. Högst prioritet enligt användarens beslut.
+  //
+  //    Tyst fel: pickWordImage ger null om DB/ordbanken inte svarar → kedjan
+  //    går vidare till steg 1. Ingestion får aldrig stanna för detta.
+  const title = (input.title_sv || input.title_en || '').trim();
+  if (title) {
+    const word = await pickWordImage(title);
+    if (word) {
+      await bumpUsage(word.id);
+      return {
+        url: word.public_url,
+        library_id: word.id,
+        match_type: 'word',
+      };
+    }
+  }
 
   // 1. Cluster-tags-matchning (2026-10-14, steg 4) — smartast alternativ.
   //    M3 läser event-beskrivning → genererar 3-5 sök-taggar → matchar mot
@@ -424,23 +464,43 @@ export async function addToLibrary(input: AddToLibraryInput): Promise<LibraryIma
  * Tilldela ett event en biblioteks-bild. Markerar eventet så UI vet att det
  * inte är AI-genererat utan ett fallback-val (image_ai_generated = false).
  * Kastar vid DB-fel så anroparen kan logga korrekt.
+ *
+ * UNDANTAG — match_type='word' (2026-11-01): en ordbild ÄR AI-genererad
+ * (MiniMax image-01) och har EU AI Act-stämpeln inbränd i bilden. Den ska därför
+ * markeras som 'completed' + 'ai-generated' — EXAKT som
+ * `scripts/word_image_assign.ts` gör — annars skulle appen visa en AI-bild
+ * utan stämpel (useAiImageUrl: stampVisible är bara sant för 'pre-baked').
  */
 export async function markEventWithLibraryFallback(
   eventId: string,
   libraryResult: FallbackResult,
 ): Promise<void> {
   if (!libraryResult.url || !libraryResult.library_id) return;
+
+  const isWordImage = libraryResult.match_type === 'word';
+  const patch = isWordImage
+    ? {
+        image_url: libraryResult.url,
+        image_ai_generated: true,
+        image_license: 'ai-generated',
+        image_attribution: 'AI-generated image (EU AI Act Art. 50)',
+        image_generation_status: 'completed',
+        image_generation_error: null,
+        image_generation_attempts: 0,
+      }
+    : {
+        image_url: libraryResult.url,
+        image_ai_generated: false,
+        image_license: 'library-fallback',
+        image_attribution: `Library fallback (${libraryResult.match_type})`,
+        image_generation_status: 'library_fallback',
+        image_generation_error: null,
+        image_generation_attempts: 0,
+      };
+
   const { error } = await db()
     .from('events')
-    .update({
-      image_url: libraryResult.url,
-      image_ai_generated: false,
-      image_license: 'library-fallback',
-      image_attribution: `Library fallback (${libraryResult.match_type})`,
-      image_generation_status: 'library_fallback',
-      image_generation_error: null,
-      image_generation_attempts: 0,
-    })
+    .update(patch)
     .eq('id', eventId);
   if (error) {
     throw new Error(`markEventWithLibraryFallback update failed for ${eventId}: ${error.message}`);

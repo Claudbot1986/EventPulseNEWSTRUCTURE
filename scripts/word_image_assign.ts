@@ -32,7 +32,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { verdictPasses } from './lib/word-image-verdict.js';
-import { buildWordIndex, matchKeysInTitle, matchForms as matchFormsOf, storageFileName } from './lib/word-image-match.js';
+import { buildWordIndex, matchKeysInTitle, matchForms as matchFormsOf, storageFileName, compareWordHits } from './lib/word-image-match.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WORD_DIR = path.join(PROJECT_ROOT, 'local_image_library_stamped_v2', 'word');
@@ -163,6 +163,23 @@ async function main() {
   // Ordlistan är facit: varje ord -> dess bildnyckel (stam + beständ form).
   const wordIndex = buildWordIndex(invRows.map((r) => ({ ord: r.ord ?? '', stam: r.stam ?? '' })));
 
+  // 2026-11-01: nyckel → alla ordformer som pekar på den. Detta skrivs som
+  // cluster_tags i image_library och är indexet som ingestion använder för
+  // att hitta ordbilden i en ny titel ("Julen är här" → jul-bilden).
+  //
+  // Ordformerna är de ord som FAKTISKT finns i ordlistan. Nyckeln läggs inte
+  // in automatiskt: om nyckeln "dag" bara finns via formen "dagen" ska token
+  // "dag" inte matcha (ordlistan är facit).
+  const formsForKey = new Map<string, string[]>();
+  for (const [ord, key] of wordIndex) {
+    const list = formsForKey.get(key) ?? [];
+    list.push(ord);
+    formsForKey.set(key, list);
+  }
+  for (const [key, list] of formsForKey) {
+    formsForKey.set(key, [...new Set(list)].sort());
+  }
+
   // Ord med en verifierad bild, filtrerat på ordfilen.
   let candidates = usable;
   if (wordArg) {
@@ -205,7 +222,12 @@ async function main() {
         category_slug: WORD_CATEGORY,
         venue_pattern: null,
         tags: [img.key, img.stam].filter(Boolean),
-        cluster_tags: [img.ord.toLowerCase(), img.stam].filter(Boolean),
+        // 2026-11-01: cluster_tags = ALLA ordformer som bilden gäller (t.ex.
+        // "jul", "julen"). Det är indexet som ingestion använder för att hitta
+        // ordbilden i en ny titel (08-Agent/utils/wordImageBank.ts). Tidigare
+        // stod bara den ordform som råade genereras här — då missades t.ex.
+        // "Julen är här" (bara "jul" matchade).
+        cluster_tags: formsForKey.get(img.key) ?? [img.ord.toLowerCase(), img.stam].filter(Boolean),
         rating: 5,
         approved_by: 'word-image-gen',
       }, { onConflict: 'storage_path' });
@@ -259,10 +281,12 @@ async function main() {
     const titleKeys = matchKeysInTitle(title, wordIndex);
     // Ordmatchning: längsta ordet vinner (mest specifikt). "Dambastu" (8)
     // slår "bastu" (5) på titeln "Dambastu lördagmorgon Inre Bastu".
+    // Lika långa nycklar: alfabetiskt (compareWordHits) — samma regel som
+    // ingestion använder, så båda vägarna ger samma bild.
     const hits = candidates
       .filter((c) => titleKeys.has(c.key)
         || matchForms(c).some((f) => titleKeys.has(f)))
-      .sort((a, b) => b.key.length - a.key.length || b.ord.length - a.ord.length);
+      .sort(compareWordHits);
     if (!hits.length) continue;
     const hit = hits[0];
     const meta = byKey.get(hit.key);

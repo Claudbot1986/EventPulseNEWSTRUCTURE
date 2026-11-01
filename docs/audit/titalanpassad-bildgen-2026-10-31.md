@@ -149,6 +149,62 @@ Verifierat: "Ludwig Hart" → *unplugged*, "Svart Samtid" → ingen bild,
 
 ---
 
+## 4b. Ordbanken i ingestion-kedjan (2026-11-01)
+
+**Beställning:** *"1. kolla om några unika ord finns i titeln – använd bildbanken
+word, 2. speciella ord saknas – använd gammal heuristik. Denna kedja får inte
+vara bruten."*
+
+### Kedjan nu
+
+| Steg | Väljer | Kod |
+|---|---|---|
+| **0** | **Ordbilden** — finns ett ord i titeln som har en bild? | `08-Agent/utils/wordImageBank.ts` → `pickLibraryFallback` (första steget) |
+| 1 | Cluster-match (M3 läser beskrivningen) | `findImageForEvent` |
+| 2 | Venue + kategori | `pickLibraryFallback` |
+| 3 | Kategori (+ alias) | `pickLibraryFallback` |
+| 4 | Default (NULL-kategori) → generisk community/culture | `nullDefaultImage` / `genericFallbackImage` |
+| 5 | Ingen match → BFL genererar ny bild | `generateBatch` / `autoGen` |
+
+**Steg 0 är ett tillägg, inte en ersättning.** Saknas ordet i titeln (eller kan
+ordbanken inte läsas) faller kedjan vidare till steg 1–4 precis som förut.
+Ordbanken är isolerad från den gamla vägen: `category_slug='word'` är ingen
+eventkategori, så vare sig kategori-, venue- eller cluster-matcheraren kan
+plocka en ordbild av misstag.
+
+### Varifrån kommer indexet?
+
+`image_library` är facit. För ordbilder är `tags[0]` bildnyckeln och
+`cluster_tags` de **ordformer** bilden gäller ("jul", "julen"). Formerna skrivs
+av `scripts/word_index_sync.ts` från ord-inventeringen — samma facit som
+generatorn, gaten och tilldelningen använder. Utan det skulle "Julen är här"
+inte hitta jul-bilden.
+
+Ordlistan är facit även här: token "dag" matchar **inte**, eftersom "dag" inte
+finns i ordlistan (nyckeln "dag" finns bara via formen "dagen").
+
+### Bevis
+
+- [VERIFIED] **Konsistens:** den nya kedjan ger **samma bild som den manuella
+  tilldelningen på 5 874 av 5 874 event** (0 avvikelser).
+- [VERIFIED] **End-to-end på riktigt event:** ett event med ord i titeln
+  ("The Original Stockholm Pub Crawl") nollställdes (`image_url = NULL`, precis
+  som normalizer sätter för nya event) och kördes genom nattens väg
+  (`matchLibraryFirst`) → fick tillbaka **ordbilden** `crawl--3b8eaaf7.webp`
+  med korrekta flaggor (`image_ai_generated=true`, `image_license=ai-generated`,
+  `image_generation_status=completed`). Kontroll-eventet ("Unrecognized", inga
+  ord med bild) fick den **gamla heuristikens** kategoribild
+  (`image_ai_generated=false`, `status=library_fallback`).
+- [VERIFIED] **Worker-vägen:** `aiImageWorker` provar ordbanken **innan** BFL
+  anropas → en ny bild slipper kosta credits när ordet redan har en bild.
+- [VERIFIED] **Tester:** `08-Agent/tests/wordImageBank.test.ts` (12 nya gröna)
+  + 5 nya tester i `imageLibrary.test.ts` för steg 0 och flaggorna. De 6
+  trasiga testerna i `imageLibrary.test.ts` är också fixade (mocken klarade
+  inte kedjade `.not()`) → hela agent-suiten: 1 046 gröna, 10 kvar (alltså
+  `feed_rank_wire`, en förinställd baslinjefel som inte rör bildkedjan).
+
+---
+
 ## 5. Kvarvarande luckor
 
 - [UNVERIFIED] **Fysisk Expo Go-enhet otestad.** Verifieringen går via

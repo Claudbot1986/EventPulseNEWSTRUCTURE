@@ -116,6 +116,9 @@ export async function matchLibraryFirst(
   } = opts;
 
   const matchTypeBreakdown: Record<FallbackResult['match_type'], number> = {
+    // 2026-11-01: 'word' (ordbanken) är första steget — den måste finnas i
+    // breakdown-anns, annars blir räknaren NaN (undefined++).
+    'word': 0,
     'venue+category': 0,
     'category': 0,
     'kind': 0,
@@ -190,6 +193,11 @@ export async function matchLibraryFirst(
           venue_id: null,
           venue_name: venueName,
           category_slug: ev.category_slug,
+          // 2026-11-01: titeln styr steg 0 — ordbanken (category_slug='word')
+          // ger en bild som visar ordet i titeln. Utan titel faller kedjan
+          // vidare till cluster/venue/category/default som förut.
+          title_sv: ev.title_sv,
+          title_en: ev.title_en,
         });
         matchTypeBreakdown[match.match_type]++;
         if (match.match_type !== 'none' && match.url) {
