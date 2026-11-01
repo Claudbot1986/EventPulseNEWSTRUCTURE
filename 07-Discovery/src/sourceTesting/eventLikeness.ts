@@ -55,7 +55,7 @@ const EVENT_JSONLD_TYPES = new Set(['event', 'musicevent', 'theaterevent', 'spor
  * vilken sajt det är. Det är en *struktur* i texten, inte ett ämnesord, och
  * därför fäller den artiklar som en ämnesordslista inte kan.
  */
-const ARTICLE_TEXT_MARKERS: RegExp[] = [
+export const ARTICLE_TEXT_MARKERS: RegExp[] = [
   /\bläsningstid\s*:/i,
   /\buppdaterat\s*:\s*\d/i,
   /\bpublicerad\s*:\s*\d/i,

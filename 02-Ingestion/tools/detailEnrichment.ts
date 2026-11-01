@@ -57,7 +57,7 @@
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import path from 'path';
-import { decodeEntities } from '../../07-Discovery/src/sourceTesting/eventLikeness.js';
+import { ARTICLE_TEXT_MARKERS, classifyPageSignals, decodeEntities } from '../../07-Discovery/src/sourceTesting/eventLikeness.js';
 
 export interface DetailFacts {
   title: string | null;
@@ -120,17 +120,19 @@ export interface EnrichResult {
   samples: Array<{ sourceId: string; title: string; url: string; filled: string[] }>;
 }
 
-const ARTICLE_JSONLD_TYPES = new Set(['article', 'newsarticle', 'blogposting', 'reportagenewsarticle', 'techarticle']);
-const EVENT_JSONLD_TYPES = new Set(['event', 'musicevent', 'theaterevent', 'sportsevent', 'festival', 'exhibitionevent', 'screeningevent']);
+// 2026-11-01 — de här mängderna låg dubblerade här och i eventLikeness.ts.
+// Nu är eventLikeness.ts den enda definitionen: JSON-LD-typerna
+// och artikelmarkörerna importeras därifrån.
 
-/** Nyhetssidans egen boilerplate — strukturell artikelmarkör. */
-const ARTICLE_TEXT_MARKERS = [
-  /\bläsningstid\s*:/i,
-  /\buppdaterat\s*:\s*\d/i,
-  /\bpublicerad\s*:\s*\d/i,
-  /\bskrivet av\b/i,
-  /\bpublicerad\s+av\b/i,
-];
+/**
+ * Nyhetssidans egen boilerplate — strukturell artikelmarkör.
+ *
+ * 2026-11-01 — mängden låg dubblerad här och i eventLikeness.ts. Två
+ * definitioner av samma sak kan glida isär, och det gjorde det: här räknades
+ * `og:type=article` ensamt som bevis för artikel, medan gaten inte gör det
+ * (mätning: royaldjurgarden.se ÄR ett evenemang och bär `og:type=article`).
+ * Nu är eventLikeness.ts den enda definitionen.
+ */
 
 function readMeta(html: string, name: string): string | null {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -212,26 +214,40 @@ export function extractDetailFacts(html: string): DetailFacts {
     null;
   const image = pickImage(ldImage, ogImage, readMeta(html, 'twitter:image'));
 
-  const hasArticleType = jsonLdTypes.some((t) => ARTICLE_JSONLD_TYPES.has(t));
-  const hasEventType = jsonLdTypes.some((t) => EVENT_JSONLD_TYPES.has(t));
-  const textMarker = ARTICLE_TEXT_MARKERS.some((p) => p.test(description ?? '')) ||
-    ARTICLE_TEXT_MARKERS.some((p) => p.test(html.slice(0, 4000)));
+  const uniqueTypes = [...new Set(jsonLdTypes)];
+  const title = pickLongestRealText([ogTitle]) ?? null;
+
+  // 2026-11-01 — EN regel för "är sidan en artikel".
+  //
+  // Tidigare fanns en egen regel här som räknade `og:type=article` ensamt som
+  // bevis. Den motsägde mätningen på royaldjurgarden.se (ett riktigt evenemang
+  // utan JSON-LD som bär `og:type=article`) och den klassifikator som gaten
+  // använder — så berikningens auditspår kunde säga "artikel" om en sida som
+  // gaten bedömde som evenemang. Nu är `classifyPageSignals` den enda
+  // definitionen, och de två kan inte glida isär.
+  const pageVerdict = classifyPageSignals({
+    jsonLdTypes: uniqueTypes,
+    ogType,
+    description,
+    title,
+  });
+
+  // Extra bevis som gaten inte ser: strukturell markör i själva sidans
+  // början ("Läsningstid: 3 min"). Här har vi HTML:en, gaten bara
+  // beskrivningen.
+  const htmlMarker = ARTICLE_TEXT_MARKERS.some((p) => p.test(html.slice(0, 4000)));
 
   return {
-    title: pickLongestRealText([ogTitle]) ?? null,
+    title,
     description,
     image,
     venue: ldVenue,
     address: ldAddress,
     startDate: ldStartDate,
-    jsonLdTypes: [...new Set(jsonLdTypes)],
+    jsonLdTypes: uniqueTypes,
     ogType,
-    // En strukturell artikelmarkör eller en artikel-JSON-LD = artikel.
-    // "og:type=article" ensamt räcker också (den mätta sidan royaljurgarden
-    // bär og:type=article men ÄR ett evenemang — därför väger JSON-LD
-    // Event högre, se nedan).
-    declaredArticle: hasArticleType || textMarker || (!hasEventType && ogType === 'article'),
-    declaredEvent: hasEventType,
+    declaredArticle: pageVerdict.declaredArticle || htmlMarker,
+    declaredEvent: pageVerdict.declaredEvent,
   };
 }
 
