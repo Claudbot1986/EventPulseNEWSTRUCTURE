@@ -2,11 +2,17 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import path from 'path';
 import { spawnSync } from 'child_process';
 import type {
+  SourceCandidatePageSignal,
   SourceCandidateToolEvidence,
   SourceCandidateToolRunner,
   SourceCandidateToolRunnerInput,
   ToolStageSummary,
 } from './types.js';
+// 2026-11-01 — HTML-parsningen (JSON-LD, og:*, beskrivning) finns i
+// ingestion-lagret, där berikningen också använder den. Samma parsning, två
+// konsumenter — inte två kopior. Samma mönster som sandbox.ts →
+// 02-Ingestion/tools/eventUrls.js.
+import { probeRowPages } from './pageProbe.js';
 
 const OUTPUT_QUEUES = [
   // 2026-10-21 — postA lades till. A-gates träff väg (direkt JSON-LD/API) hamnar
@@ -93,6 +99,10 @@ export class RealAbcdSourceCandidateRunner implements SourceCandidateToolRunner 
     const eventsFoundTotal = reportEvents === null ? queueEvents : Math.max(queueEvents, reportEvents);
     const eventsPersisted = eventsFoundTotal;
 
+    const reportPath = writeReport(input, command, counts, errors, result.stdout);
+    const eventRows = readSandboxEventRows(input.sandboxRoot, input.sandboxSourceId);
+    const eventPageSignals = await readSandboxPageSignals(input.sandboxRoot, input.sandboxSourceId);
+
     return {
       commandsRun: [command],
       toolSummaries,
@@ -101,9 +111,11 @@ export class RealAbcdSourceCandidateRunner implements SourceCandidateToolRunner 
       eventsPersisted,
       winningPath: winningPathFromCounts(counts),
       errors,
-      reportPath: writeReport(input, command, counts, errors, result.stdout),
+      reportPath,
       reportComplete: errors.length === 0 || eventsFoundTotal > 0,
       riskFlags: [],
+      eventTitles: eventRows.map((r) => r.title),
+      eventPageSignals,
     };
   }
 }
@@ -137,6 +149,59 @@ function countRowsForSource(root: string, fileName: string, sourceId: string): n
         return false;
       }
     }).length;
+}
+
+/**
+ * 2026-11-01 — raderna ur sandbox-körningen: rubrik + deras egen URL.
+ *
+ * Utan dem kan beslutet inte skilja ett evenemang från en artikel: "det
+ * persisterats events" är lika sant för kollaboration.se (10 artikelrubrikor)
+ * som för en riktig evenemangssida. Se `eventLikeness.ts`.
+ *
+ * Vi läser de extraherade eventfilerna i sandboxen — samma filer importen
+ * senare läser, så det är exakt de raderna som hade hamnat i grafen.
+ */
+function readSandboxEventRows(root: string, sourceId: string): Array<{ title: string; url: string }> {
+  const base = path.join(root, '03-Queue', '03-extractedevents');
+  const rows: Array<{ title: string; url: string }> = [];
+  const candidates: string[] = [];
+  for (const dir of ['', 'A', 'B', 'C', 'D']) {
+    candidates.push(path.join(base, dir, `${sourceId}.jsonl`));
+  }
+  for (const file of candidates) {
+    if (!existsSync(file)) continue;
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const row = JSON.parse(line) as { title?: string; name?: string; url?: string };
+        const title = typeof row.title === 'string' ? row.title : typeof row.name === 'string' ? row.name : '';
+        const url = typeof row.url === 'string' ? row.url : '';
+        if (title.trim()) rows.push({ title, url });
+      } catch {
+        // Trasig rad — hoppa över.
+      }
+    }
+  }
+  return rows;
+}
+
+/**
+ * 2026-11-01 — hämta DETALJSIDAN för raderna och läs vad sidan själv säger.
+ *
+ * Mätning (2026-11-01) på kollaboration.se: 10 rader, av vilka titelmönstren
+ * fångar 4. Men sidans egen JSON-LD säger `Article` — och det fångar dem
+ * alla. Det är därför gaten läser sidorna, inte bara rubrikerna.
+ *
+ * Budget: 5 sidor per kandidat. Smoke-fasen körs max 8 kandidater per natt,
+ * så det är max 40 extra hämtningar per natt.
+ */
+async function readSandboxPageSignals(
+  root: string,
+  sourceId: string,
+  limit = 5,
+): Promise<SourceCandidatePageSignal[]> {
+  const rows = readSandboxEventRows(root, sourceId);
+  return probeRowPages(rows, { limit });
 }
 
 function countSandboxOutputs(root: string, sourceId: string): Record<string, number> {

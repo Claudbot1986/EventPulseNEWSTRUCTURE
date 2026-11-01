@@ -1,4 +1,5 @@
 import type { SourceCandidateDecision, SourceCandidateDecisionInput } from './types.js';
+import { assessLikeness, shouldBlockPromotion } from './eventLikeness.js';
 
 const LOW_CONFIDENCE = 45;
 const PROMOTE_CONFIDENCE = 90;
@@ -75,6 +76,30 @@ export function decideSourceCandidateOutcome(input: SourceCandidateDecisionInput
   }
 
   if (input.eventsPersisted > 0 && input.eventsAfterNormalization > 0) {
+    // 2026-11-01 — kvalitetsgate. "Det persisterats events" är sant för en
+    // blogg också: kollaborationse lade in 10 artikelrubrikor som events.
+    // Innan promote kontrolleras därför att raderna FÖRSTÅS som evenemang.
+    // Gaten är avsiktligt konservativ: bara en klar majoritet artiklar
+    // blockerar, okända rader blockerar aldrig.
+    //
+    // Prioritet: sidans EGNA deklarationer (JSON-LD) väger tyngre än titeln.
+    // Mätt: titelmönstren fångar 4 av 8 artikelrubriker i kollaborationse,
+    // medan sidans `Article`-deklaration fångar alla.
+    const pageSignals = input.eventPageSignals ?? [];
+    const titles = input.eventTitles ?? [];
+    const rows = pageSignals.length > 0
+      ? pageSignals
+      : titles.map((title) => ({ title }));
+    const assessment = assessLikeness(rows);
+    const gate = shouldBlockPromotion(assessment);
+    if (gate.blocked) {
+      return {
+        ...base,
+        decision: 'reject',
+        reason: `rows look like articles, not events — ${gate.reason}`,
+        confidenceScore: REJECT_CONFIDENCE,
+      };
+    }
     return {
       ...base,
       decision: 'promote',

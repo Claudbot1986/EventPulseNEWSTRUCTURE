@@ -810,6 +810,29 @@ if (!skipImages) {
     args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke || skipBfl} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 
+  // ── enrich-event-details: följ kortets URL → evenemangssidan ────────────
+  // 2026-11-01 — användarens iakttagelse: "info om eventet kan även ligga
+  // utanför självaste biljettkortet på en hemsida". C-gaten extraherar från
+  // en LISTNINGSSIDA: varje kort ger rubrik, datum och en URL, men vi besöker
+  // aldrig den URL:en. Mätt på de 154 rader discovery-källorna lade in:
+  // 18 % hade plats (mot 87 % för övriga källor) och 0 % hade beskrivning.
+  //
+  // Det här steget följer kortets egen URL och läser evenemangssidan, och
+  // fyller BARA saknade fält (beskrivning, plats, bild, starttid). Det hittar
+  // inte på något — varje fält kommer från sidans eget innehåll.
+  //
+  // Placerad EFTER gaterna och FÖRE importen: gaternas beteende är då helt
+  // oförändrat, och bara det som faktiskt ska sparas blir rikare.
+  steps.push({
+    name: 'enrich-event-details',
+    cmd: 'npx',
+    args: [
+      'tsx',
+      'scripts/enrich-event-details.mjs',
+      ...(smoke ? ['--per-source', '2', '--global', '6'] : ['--per-source', '25', '--global', '300']),
+    ],
+  });
+
   // ── import-to-eventpulse: extraherade events → BullMQ ─────────────────
   // 2026-10-23 — samma fel som worker-drain, en helt annan väg.
   //

@@ -62,6 +62,8 @@ export async function runSourceCandidateTest(options: RunSourceCandidateTestOpti
         riskFlags: evidence.riskFlags,
         reportComplete: phaseEvidenceComplete(options.phase, evidence),
         duplicateCanonicalSource: hasCanonicalSourceUrl(promotionRoot, options.candidate.candidateUrl, options.candidate.id),
+        eventTitles: evidence.eventTitles ?? [],
+        eventPageSignals: evidence.eventPageSignals ?? [],
       }),
       evidenceRunId: runId,
     };

@@ -67,6 +67,27 @@ export interface SourceCandidateToolEvidence {
   reportPath?: string | null;
   reportComplete: boolean;
   riskFlags: string[];
+  /**
+   * 2026-11-01 — radernas rubriker från smoke-körningen. Utan dem kan
+   * beslutet inte skilja ett evenemang från en artikel: "det persisterats
+   * events" är sant för en blogg också. Se `eventLikeness.ts`.
+   */
+  eventTitles?: string[];
+  /**
+   * 2026-11-01 — sidornas EGNA deklarationer för raderna (JSON-LD-typ,
+   * og:type, beskrivning). Detta är den pålitliga signalen: mätning visar att
+   * titelmönstren bara fångar 4 av 8 artikelrubriker i kollaborationse, men
+   * att sidans `Article`/`NewsArticle`-deklaration fångar dem alla.
+   */
+  eventPageSignals?: SourceCandidatePageSignal[];
+}
+
+/** 2026-11-01 — vad en radens sida själv säger om sitt innehåll. */
+export interface SourceCandidatePageSignal {
+  title?: string;
+  jsonLdTypes?: string[];
+  ogType?: string | null;
+  description?: string | null;
 }
 
 export interface SourceCandidateTestRun extends SourceCandidateToolEvidence {
@@ -95,6 +116,15 @@ export interface SourceCandidateDecisionInput {
   riskFlags: string[];
   reportComplete: boolean;
   duplicateCanonicalSource: boolean;
+  /**
+   * 2026-11-01 — radernas rubriker. Utan dem kan beslutet inte skilja ett
+   * evenemang från en artikel (se `eventLikeness.ts`).
+   */
+  eventTitles?: string[];
+  /**
+   * 2026-11-01 — sidornas egna deklarationer. Starkare signal än titeln.
+   */
+  eventPageSignals?: SourceCandidatePageSignal[];
 }
 
 export interface SandboxSource {
