@@ -5,8 +5,11 @@
 - **Motorn körs på riktiga data** — Q6 anroar P3D:s faktiska
   `decideSourceCandidateOutcome` med de verkliga raderna från varje
   promote:ad källa. Ingen förenklad kopia.
-- **Falsklarmkontroll** — en källa vars detaljsidor själva deklarerar `Event`
-  får aldrig blockas. Det är kontrollen som gör "gaten biter" begripligt.
+- **Falsklarmkontroll** — en källa vars sidor själva deklarerar ett
+  **evenemang** (alla event-typerna: `event`, `musicEvent`, `theatreEvent`,
+  `festival`, `exhibitionEvent`, …) flaggas om den ändå blockas. Det är en
+  **mätning**, inte en kodgaranti — koden blockerar först och rapporterar
+  sedan. Det är kontrollen som gör "gaten biter" begripligt.
 - **Skuldbank** — de källor gaten skulle blockat, med radantal och skäl.
 
 ## How to get to it (user POV)
@@ -41,12 +44,12 @@ jq '.gates[] | select(.id=="Q6") | {blocked, falseAlarms, evaluated}' \
 
 `blocked[]` innehåller `sourceId`, `rows`, `reason` och exempelrubriker.
 `reason` är beslutets faktiska skäl, t.ex.
-`raderna ser ut att vara artiklar, inte evenemang (json-ld-typ=newsarticle; sidor-deklarerar-artikel=4/5)`.
+`raderna ser ut att vara artiklar, inte evenemang (json-ld-typ=newsarticle; og:type=article; sidor-deklarerar-artikel=5/5)`.
 
-Verifiera en enskild blockerad källa mot verkligheten:
+Verifiera en enskild blockerad källa mot verkligheten — **använd `--deep`**:
 
 ```bash
-npx tsx scripts/audit-source-quality.mjs --source thatsupse,kollaborationse
+npx tsx scripts/audit-source-quality.mjs --source thatsupse,kollaborationse --deep
 ```
 
 ## Gotchas
@@ -64,7 +67,13 @@ npx tsx scripts/audit-source-quality.mjs --source thatsupse,kollaborationse
 - **En källa med noll detaljrader ger inget sidbevis.** Då faller bedömningen
   tillbaka på rubrikerna. Det är medvetet konservativt: en felaktigt
   blockerad bra källa är dyrare än en artikel som slinker igenom.
-- **`wwwmynewsdeskcom` (1 rad) fångas inte.** Sidan deklarerar `newsarticle`,
-  men radens `url` är samma som listningssidan → inget sidbevis → rubriken
-  matchar inte artikelmönstren. Det är en medveten falsknegativ, inte ett
-  fel. Om den ska fångas krävs en annan signal — det är inte denna gats jobb.
+- **`wwwmynewsdeskcom` (1 rad) fångas inte.** Rubriken matchar visserligen ett
+  artikelmönster (`snart släpps …`), men källan har bara **en** rad — och
+  gaten kräver **minst två** artikelrader. Det är tröskeln, inte rubriken,
+  som släpper igenom. Radens `url` är dessutom samma som listningssidan, så
+  sidbeviset är noll. Medveten falsknegativ, inte ett fel.
+- **Auditen utan `--deep` ger ett ANNAT svar än retro-gaten.** I titelläge
+  bedöms 4 av 65 rubriker hos thatsupse som artiklar (6 %) → auditen säger
+  "event" medan retro-gaten säger "artikel". Siffrorna säger olika saker
+  eftersom signalerna är olika. Använd `--deep` för att få samma starka
+  signal som retro-gaten.

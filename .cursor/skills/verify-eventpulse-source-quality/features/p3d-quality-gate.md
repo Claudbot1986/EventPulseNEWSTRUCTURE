@@ -5,8 +5,10 @@
 - **Bedömning av raderna** — `assessLikeness` avgör om en uppsättning rader
   är evenemang, artiklar eller okänt. två nivåer: sidans egna deklarationer
   (bevis) och rubrikens form (indikation).
-- **Beslutsfiltret** — `shouldBlockPromotion` är avsiktligt konservativt:
-  bara en klar majoritet artiklar blockerar, okända rader blockerar aldrig.
+- **Beslutsfiltret** — `shouldBlockPromotion` blockerar vid verdict `article`.
+  Tröskeln är **"minst 2 artikelrader OCH minst 30 % av de bedömda raderna"**
+  — och en rad som sidan deklarerar som artikel räknas i samma täljare som
+  en artikelrubrik. Okända rader blockerar aldrig.
 - **P3D-integreringen** — `decision.ts` anropar bedömningen i promote-grenen,
   och `realToolRunner.ts` hämtar sidorna (max 5 per kandidat).
 - **Skuldbank** — källor som redan är inne och som gaten skulle blockat.
@@ -56,6 +58,13 @@ npx vitest run 07-Discovery/src/sourceTesting/sourceCandidateTesting.test.ts
 # → "does NOT block a mixed candidate (några guider bland många evenemang)" PASS
 ```
 
+Hela gaten — klassifikatorn, detaljradsurvalet och beslutet:
+
+```bash
+npx vitest run 07-Discovery/src/sourceTesting/
+# → 3 filer, 44 tester
+```
+
 ## Gotchas
 
 - **Sidbeviset är ensidigt.** `Article`/`NewsArticle` i JSON-LD bevisar artikel.
@@ -64,6 +73,15 @@ npx vitest run 07-Discovery/src/sourceTesting/sourceCandidateTesting.test.ts
   `og:type=article`.
 - **Rubrikmönstren är en indikation.** Tröskeln är "minst 2 artiklar OCH minst
   30 % av raderna". Enstaka artikelrubriker blockerar inte.
+- **"Raderna" är de BEDÖMDA raderna**, inte alla extraherade. När sidbeviset
+  finns används bara de proberade detaljraderna (max 5 per kandidat) — de
+  oproberade radernas rubriker räknas inte in i andelen.
+- **En rad utan `sourceUrl` räknas som detaljrad.** Urvalet är "url ≠
+  sourceUrl"; saknas `sourceUrl` faller raden in som detaljrad.
+- **"En källa som deklarerar Event blockeras aldrig" gäller PER RAD, inte per
+  källa.** Koden hoppar över Event-rader, men en källa med en Event-rad och två
+  artikelrubriker blockeras ändå. Att ingen deklarerande Event-källa blockas
+  är en **mätning** (retro-gatens falsklarmkontroll), inte en kodgaranti.
 - **Gaten läser bara detaljrader** (`url ≠ sourceUrl`). Se
   [retro-gate.md](retro-gate.md) — det var en verklig falsklarm.
 - **Q5 mäter bara promotes EFTER gaten infördes.** Före det gick källorna

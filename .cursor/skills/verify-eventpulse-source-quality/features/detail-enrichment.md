@@ -2,14 +2,16 @@
 
 ## Sub-features
 
-- **HTML-parsning** — `extractDetailFacts` läser JSON-LD, `og:`-metataggar
-  och brödtext ur evenemangssidan: beskrivning, bild, plats, adress, starttid.
+- **HTML-parsning** — `extractDetailFacts` läser JSON-LD, `og:`/`twitter:`-
+  metataggar och `<meta name="description">` ur evenemangssidan: beskrivning,
+  bild, plats, adress, starttid. **Ingen brödtext läsas** — plats, adress och
+  starttid kommer enbart från JSON-LD.
 - **Sammanslagning** — `mergeEnrichment` fyller **bara saknade fält** och
   skriver aldrig över ett värde som redan finns.
 - **Utval** — `isDetailUrl` väljer de rader som pekar på en egen evenemangssida
   (url ≠ sourceUrl). Listningsrader hoppas över.
-- **Budget** — `--per-source` och `--global` sätter tak, så en natt med
-  tusentals rader inte blir tusentals hämtningar.
+- **Budget** — `--per-source` och `--global` sätter tak på antalet
+  **hämtningar**, så en natt med tusentals rader inte blir tusentals hämtningar.
 - **Kedjesteg** — `enrich-event-details` i `scripts/ingestion-cron.ts`, efter
   gaterna och före importen.
 
@@ -71,12 +73,52 @@ npx tsx -e "
 "
 ```
 
-Verifiera att sammanslagningen fyller saknade och inte skriver över:
+Verifiera att sammanslagningen fyller saknade och inte skriver över — direkt
+mot modulen, utan nätverk och utan att skriva något:
 
 ```bash
-npx vitest run 02-Ingestion/
-# sök efter testerna som täcker mergeEnrichment
+npx tsx -e "
+(async () => {
+  const m = await import('./02-Ingestion/tools/detailEnrichment.ts');
+  const facts = {
+    title: null,
+    description: 'Beskrivning från evenemangssidan som är längre än fyrtio tecken',
+    image: 'https://ex.se/media/real.jpg',
+    venue: 'Stora Teatern',
+    address: 'Götgatan 4, Stockholm',
+    startDate: '2026-11-02T19:00:00Z',
+    jsonLdTypes: ['event'], ogType: 'website',
+    declaredArticle: false, declaredEvent: true,
+  };
+  const saknad = {
+    title: 'X', url: 'https://ex.se/e/1', sourceUrl: 'https://ex.se/listing',
+    description: 'kort', imageUrl: 'https://ex.se/media/og-image.jpg', venue: '', venue_name: '',
+  };
+  console.log('missing(saknad rad):', m.missingEnrichableFields(saknad));
+  const a = m.mergeEnrichment(saknad, facts);
+  console.log('filled:', a.filled);
+  console.log('audit:', JSON.stringify(a.row.raw_payload.enrichment));
+
+  const har = { ...saknad,
+    description: 'En redan färdig beskrivning som är längre än fyrtio tecken',
+    venue: 'Kungliga Operan', imageUrl: 'https://ex.se/media/keep.jpg' };
+  const b = m.mergeEnrichment(har, facts);
+  console.log('filled(redan komplett rad):', b.filled);
+  console.log('beskrivning oförändrad:', b.row.description === har.description,
+              '| plats oförändrad:', b.row.venue === har.venue,
+              '| bild oförändrad:', b.row.imageUrl === har.imageUrl);
+  console.log('isDetailUrl(listningsrad):', m.isDetailUrl({ url:'https://ex.se/listing', sourceUrl:'https://ex.se/listing' }));
+  console.log('isDetailUrl(detaljsida):', m.isDetailUrl({ url:'https://ex.se/e/1', sourceUrl:'https://ex.se/listing' }));
+})();
+"
+# → förväntat: missing = ['description','venue','image'],
+#   filled = ['description','venue','venue_address','image','startTime'],
+#   och på den redan kompletta raden: beskrivning/plats/bild oförändrade.
 ```
+
+**Det finns INGA enhetstester för `mergeEnrichment` i repot.** Kör därför
+inte `npx vitest run 02-Ingestion/` som "bevis" — kommandot kör andra tester och
+bevisar ingenting om sammanslagningen. Receptet ovan är beviset.
 
 ## Gotchas
 
@@ -87,9 +129,15 @@ npx vitest run 02-Ingestion/
   `missingEnrichableFields` och `mergeEnrichment` i samma fil — de ska dela
   definition av "saknat".
 - **"Saknad beskrivning" betyder under 40 tecken.** En kort text räknas som
-  saknad och kan skrivas över med sidans egen.
+  saknad och skrivs över med sidans egen. Mätt 2026-11-01: 825 av 3 663
+  icke-tomma beskrivningar är kortare än 40 tecken — de **kommer** att
+  skrivas över. Läs alltså "skriver inte över" som "skriver inte över ett
+  användbart värde".
 - **En generisk `og-image.jpg` räknas som saknad bild** — och skrivs över
   med sidans riktiga bild.
+- **`venue_address` och `startTime` fylls utanför "saknat"-mängden.** De är
+  inte i `missingEnrichableFields`, men skrivs ändå när de saknas. Därför kan
+  `filled` innehålla fält som inte står i `missing`.
 - **Beskrivning är fortfarande 0 % i grafen.** 211/518 rader har plats (41 %,
   baslinj 18 %) men 0/518 har beskrivning. Berikningen skriver `description`
   i extraktionsfilerna; importen mappar det vidare, men det har inte gått
@@ -101,3 +149,11 @@ npx vitest run 02-Ingestion/
 - **Kedjesteget ligger efter gaterna och före importen.** Gaternas beteende är
   oförändrat — berikningen är ett eget steg i
   `scripts/ingestion-cron.ts`, inte en del av gaten.
+- **`--skip-images` hoppar över berikningen.** Steget ligger inuti ett
+  `if (!skipImages)`-block i `ingestion-cron.ts` som också omslutar importen.
+  Kör du med `--skip-images` laddas varken berikning eller import.
+- **`startTime` skrivs ordagrant från JSON-LD.** Ett datum utan tid
+  (`"2026-11-12"`) skrivs som det är, utan kedjans `toIsoStartTime`-konvention.
+  Och en rad som redan bär `start_time` i snake_case behåller det — den
+  berikade `startTime` ignoreras vid import (`eventStartTime` föredrar
+  `start_time`).

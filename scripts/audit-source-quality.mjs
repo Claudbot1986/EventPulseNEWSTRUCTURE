@@ -33,7 +33,9 @@ import dotenv from 'dotenv';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
-dotenv.config({ path: path.join(PROJECT_ROOT, '.env'), override: false });
+// `quiet: true` döljer dotenv-bannern. Utan det hamnar bannern på stdout
+// FÖRE JSON:en, och `--json > fil` ger en fil som inte går att parsa.
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env'), override: false, quiet: true });
 
 const { createClient } = await import('@supabase/supabase-js');
 const { assessLikeness, classifyTitleShape } = await import(
@@ -70,7 +72,15 @@ async function promotedSourceIds() {
   return [...new Set((data ?? []).map((d) => d.promoted_source_id).filter(Boolean))];
 }
 
-/** Raderna ur den senaste extraktionen — de har med sig sin egen URL. */
+/**
+ * Raderna ur den senaste extraktionen — de har med sig sin egen URL.
+ *
+ * 2026-11-01 — `sourceUrl` föll tidigare bort här. Utan den kunde inte
+ * `probeRowPages` skilja en DETALJRAD (url ≠ sourceUrl) från en LISTNINGSRAD
+ * (url === sourceUrl), så `--deep` hämtade listningssidan — som för
+ * musikaliskase.se bär JSON-LD-typen `article` och felaktigt kan få en källa
+ * med 30 riktiga evenemang att se ut som skräp.
+ */
 function readExtractedRows(sourceId) {
   const rows = [];
   for (const dir of ['', 'A', 'B', 'C', 'D']) {
@@ -80,7 +90,11 @@ function readExtractedRows(sourceId) {
       if (!line.trim()) continue;
       try {
         const row = JSON.parse(line);
-        rows.push({ title: String(row.title ?? ''), url: String(row.url ?? '') });
+        rows.push({
+          title: String(row.title ?? ''),
+          url: String(row.url ?? ''),
+          sourceUrl: String(row.sourceUrl ?? ''),
+        });
       } catch {
         /* trasig rad */
       }
@@ -123,21 +137,42 @@ async function main() {
     const articleTitles = dbTitles.filter((t) => classifyTitleShape(t) === 'article');
 
     // Signal: sidornas egna deklarationer (djup) eller titlarna (billigt).
+    //
+    // 2026-11-01 — `--deep` föll TYGST tillbaka på titlar för källor utan
+    // extraherade rader, utan att säga det. Nu redovisas vilken signal som
+    // faktiskt användes, så att "djup" i utskriften inte kan luras.
     let assessment;
     let probed = 0;
+    let pagesRead = 0;
+    let signal = 'titlar';
     if (deep && extracted.length > 0) {
       const signals = await probeRowPages(extracted, { limit: probeLimit });
       probed = signals.length;
-      assessment = assessLikeness(signals);
+      // En signal med jsonLdTypes kommer från en faktiskt läst sida; en
+      // bas-signal betyder nätverksfel eller hoppad rad.
+      pagesRead = signals.filter((s) => s.jsonLdTypes !== undefined).length;
+      if (pagesRead > 0) {
+        assessment = assessLikeness(signals);
+        signal = 'sidor';
+      } else {
+        // Inga sidor lästes → fall tillbaka på rubrikerna. Annars skulle
+        // källor vars rader pekar på listningssidan förlora sin signal
+        // helt (kollaboration.se → "okänt" i djupt läge).
+        assessment = assessLikeness(dbTitles.map((title) => ({ title })));
+        signal = 'titlar (inga sidor lästes)';
+      }
     } else {
       assessment = assessLikeness(dbTitles.map((title) => ({ title })));
+      if (deep) signal = 'titlar (inga extraherade rader)';
     }
 
     report.push({
       sourceId,
       rows: sourceRows.length,
       verdict: assessment.verdict,
+      signal,
       probedPages: probed,
+      pagesRead,
       articleTitles,
       withVenue: sourceRows.filter((r) => !!r.venue_full_name).length,
       withDescription: sourceRows.filter((r) => !!(r.description_sv || r.description_en)).length,
@@ -172,7 +207,10 @@ async function main() {
 
   console.log('═══ audit-source-quality ═══');
   console.log(`   ${new Date().toISOString()}`);
-  console.log(`   läge: ${deep ? 'djup (detaljsidor hämtade)' : 'titlar (billigt)'} — kör med --deep för pålitlig signal`);
+  const deepSources = report.filter((r) => r.signal === 'sidor').length;
+  console.log(
+    `   läge: ${deep ? `djup — ${deepSources}/${report.length} källor bedömdes på sidor` : 'titlar (billigt)'} — kör med --deep för pålitlig signal`,
+  );
   console.log('');
   console.log(`  källor granskade : ${report.length}`);
   console.log(`  rader totalt     : ${totalRows}`);
@@ -181,7 +219,7 @@ async function main() {
   for (const r of report) {
     const flag = r.verdict === 'article' ? '  ✗ ARTIKEL' : r.verdict === 'event' ? '  ✓ event  ' : '  ? okänt  ';
     console.log(
-      `${flag} ${r.sourceId.padEnd(26)} rader ${String(r.rows).padStart(4)} · plats ${String(r.withVenue).padStart(4)} · beskrivning ${String(r.withDescription).padStart(4)} · sidor ${r.probedPages}`,
+      `${flag} ${r.sourceId.padEnd(26)} rader ${String(r.rows).padStart(4)} · plats ${String(r.withVenue).padStart(4)} · beskrivning ${String(r.withDescription).padStart(4)} · sidor ${r.pagesRead}/${r.probedPages} · ${r.signal}`,
     );
     if (r.verdict === 'article') {
       for (const t of r.articleTitles.slice(0, 4)) console.log(`        · "${t.slice(0, 78)}"`);

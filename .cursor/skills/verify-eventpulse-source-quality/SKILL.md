@@ -168,14 +168,19 @@ Det är inte ett fel — det betyder att gaten ännu inte prövats på ny data. 
 ### Sekundär körning — källöversikt (radarar aldrig)
 
 ```bash
-npx tsx scripts/audit-source-quality.mjs          # titlar + DB-statistik
-npx tsx scripts/audit-source-quality.mjs --deep   # hämtar detaljsidorna
+npx tsx scripts/audit-source-quality.mjs              # titlar + DB-statistik
+npx tsx scripts/audit-source-quality.mjs --deep       # hämtar detaljsidorna
 npx tsx scripts/audit-source-quality.mjs --json > /tmp/audit.json
 npx tsx scripts/audit-source-quality.mjs --source kollaborationse,thatsupse
+npx tsx scripts/audit-source-quality.mjs --deep --probe-limit 3
 ```
 
 Utskriften listar varje källa med `event` / `artikel` / `okänt` + antal rader.
-`--deep` hämtar detaljsidorna (långsammare, men ger sidbeviset).
+`--deep` hämtar detaljsidorna (långsammare, men ger sidbeviset) och lägger till
+en signalkolumn som visar vilken signal som faktiskt användes.
+
+**I `--json`-läge är stdout ren JSON** (mänsklig text går till stderr), så
+`--json > fil` ger en fil som går att parsa direkt.
 
 ### Sekundär körning — berikning (utan skrivning)
 
@@ -257,7 +262,7 @@ Bevis (JSON-rapporter, DB-räkningar) lämnas intakta.
 - `scripts/verify-source-quality.mjs` — gaten Q1–Q9. Flaggor: `--window <h>`,
   `--json`. Exitkod 1 om någon gate är röd.
 - `scripts/audit-source-quality.mjs` — källöversikt. Flaggor: `--deep`,
-  `--json`, `--source <id,id>`. Raderar aldrig.
+  `--json`, `--source <id,id>`, `--probe-limit <n>` (default 3). Raderar aldrig.
 - `scripts/enrich-event-details.mjs` — berikning. Flaggor: `--dry-run`,
   `--per-source <n>`, `--global <n>`, `--verbose`.
 - `scripts/audit-source-quality.mjs` och `verify-source-quality.mjs` delar
@@ -290,6 +295,15 @@ kategorisidor (`/musikstilar/popmusik/`) som bär JSON-LD-typen `article` som
 en mallartefakt. Gaten blockerade en källa med 30 riktiga evenemang.
 `probeRowPages` läser därför **bara detaljrader** (`url ≠ sourceUrl`). Ändra
 inte tillbaka utan att verifiera på musikaliskase igen.
+
+**"En källa som deklarerar Event blockeras aldrig" gäller per RAD.** Koden
+hoppar över Event-rader, men en källa med en Event-rad och två artikelrubriker
+blockeras ändå. Att ingen deklarerande Event-källa blockas är en **mätning**
+(retro-gatens falsklarmkontroll), inte en kodgaranti.
+
+**Tröskeln är "minst 2 artikelrader OCH minst 30 % av de BEDÖMDA raderna".**
+Sidodeklarerade artiklar räknas i samma täljare som artikelrubriker. En rad
+utan `sourceUrl` räknas som detaljrad.
 
 **Signalen är ensidig.** Sidans JSON-LD `Article`/`NewsArticle` **bevisar**
 artikel. Frånvaro av `Event`-typ bevisar **inte** artikel — royaldjurgarden.se

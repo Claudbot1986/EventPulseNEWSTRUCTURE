@@ -60,7 +60,9 @@ const EXTRACTED_DIR = path.join(PROJECT_ROOT, '03-Queue', '03-extractedevents');
  */
 const GATE_INTRODUCED_AT = '2026-11-01T17:55:05+01:00';
 
-dotenv.config({ path: path.join(PROJECT_ROOT, '.env'), override: false });
+// `quiet: true` döljer dotenv-bannern — annars hamnar den på stdout före
+// JSON:en i `--json`-läge.
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env'), override: false, quiet: true });
 
 const { createClient } = await import('@supabase/supabase-js');
 const { assessLikeness, classifyTitleShape, decodeEntities } = await import(
@@ -84,10 +86,19 @@ const windowHours = windowIdx !== -1 && args[windowIdx + 1] ? Number(args[window
 const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const results = [];
+
+/**
+ * Mänsklig text. I `--json`-läge går den till STDERR, så att stdout är ren
+ * JSON och `--json > fil` ger en fil som faktiskt går att parsa.
+ */
+function say(...args) {
+  (asJson ? console.error : console.log)(...args);
+}
+
 function gate(id, title, ok, detail, extra) {
   const verdict = ok === null ? 'UNKNOWN' : ok ? 'OK' : 'FAIL';
   results.push({ id, title, ok, verdict, detail, ...(extra ?? {}) });
-  console.log(`  ${verdict.padEnd(7)} ${id} ${title}${detail ? ` — ${detail}` : ''}`);
+  say(`  ${verdict.padEnd(7)} ${id} ${title}${detail ? ` — ${detail}` : ''}`);
   return ok;
 }
 function ts() {
@@ -160,9 +171,9 @@ const KNOWN_EVENT_TITLES = [
 ];
 
 async function main() {
-  console.log('═══ verify-source-quality ═══');
-  console.log(`   ${new Date().toISOString()}`);
-  console.log(`   fönster: ${windowHours} h · gaten infördes ${GATE_INTRODUCED_AT}`);
+  say('═══ verify-source-quality ═══');
+  say(`   ${new Date().toISOString()}`);
+  say(`   fönster: ${windowHours} h · gaten infördes ${GATE_INTRODUCED_AT}`);
 
   const since = new Date(Date.now() - windowHours * 3600 * 1000).toISOString();
 
@@ -303,8 +314,16 @@ async function main() {
       eventPageSignals: signals,
     });
 
-    // Sidorna som själva deklarerar `Event` FÅR aldrig blockas.
-    const declaresEvent = signals.some((s) => (s.jsonLdTypes ?? []).map((t) => String(t).toLowerCase()).includes('event'));
+    // Sidorna som själva deklarerar ett EVENEMANG får inte blockas utan
+    // att det flaggas.
+    //
+    // 2026-11-01 — kontrollen matchade förut exakt strängen 'event'. Men
+    // klassifikatorn känner igen hela eventmängden (musicEvent, theatreEvent,
+    // festival, exhibitionEvent, screeningEvent, …). En källa som deklarerar
+    // `musicEvent` hade blockats UTAN att falsklarmen slagit till.
+    // Nu frågar vi klassifikatorn i stället för att duplicera dess regel —
+    // det är samma bedömning som beslutsfunktionen gör.
+    const declaresEvent = assessLikeness(signals).declaredEvent;
     retro.push({
       sourceId: id,
       rows: rows.length,
@@ -327,7 +346,7 @@ async function main() {
       : retroOk
         ? `${retroBlocked.length}/${retro.length} källor skulle blockats, 0 falsklarm`
         : retroFalseAlarm.length > 0
-          ? `FALSKLARM: ${retroFalseAlarm.map((r) => `${r.sourceId} deklarerar Event`).join(', ')}`
+          ? `FALSKLARM: ${retroFalseAlarm.map((r) => `${r.sourceId} deklarerar evenemang`).join(', ')}`
           : 'gaten blockerade ingen källa — mät om gaten biter alls',
     {
       blocked: retroBlocked.map((r) => ({ sourceId: r.sourceId, rows: r.rows, reason: r.reason, titles: r.titles })),
@@ -432,10 +451,10 @@ async function main() {
   const failed = results.filter((r) => r.ok === false).map((r) => r.id);
   const unknown = results.filter((r) => r.ok === null).map((r) => r.id);
 
-  console.log('');
-  console.log(`  röda gater : ${failed.length ? failed.join(', ') : 'inga'}`);
-  console.log(`  okända     : ${unknown.length ? unknown.join(', ') : 'inga'}`);
-  console.log(
+  say('');
+  say(`  röda gater : ${failed.length ? failed.join(', ') : 'inga'}`);
+  say(`  okända     : ${unknown.length ? unknown.join(', ') : 'inga'}`);
+  say(
     `  skuldbank (källor gaten skulle blockat): ${legacyPolluted.length ? legacyPolluted.map((p) => `${p.sourceId} (${p.rows} rader)`).join(', ') : 'tomt'}`,
   );
 
@@ -463,8 +482,8 @@ async function main() {
     console.log(JSON.stringify({ gates: results, failed, unknown, legacyPolluted }, null, 2));
   }
 
-  console.log('');
-  console.log(`bevis: ${reportPath}`);
+  say('');
+  say(`bevis: ${reportPath}`);
   process.exit(failed.length === 0 ? 0 : 1);
 }
 
