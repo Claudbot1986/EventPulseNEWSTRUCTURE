@@ -161,7 +161,7 @@ function countRowsForSource(root: string, fileName: string, sourceId: string): n
  * Vi läser de extraherade eventfilerna i sandboxen — samma filer importen
  * senare läser, så det är exakt de raderna som hade hamnat i grafen.
  */
-function readSandboxEventRows(root: string, sourceId: string): Array<{ title: string; url: string }> {
+function readSandboxEventRows(root: string, sourceId: string): Array<{ title: string; url: string; sourceUrl: string }> {
   const base = path.join(root, '03-Queue', '03-extractedevents');
   const rows: Array<{ title: string; url: string }> = [];
   const candidates: string[] = [];
@@ -173,10 +173,14 @@ function readSandboxEventRows(root: string, sourceId: string): Array<{ title: st
     for (const line of readFileSync(file, 'utf8').split('\n')) {
       if (!line.trim()) continue;
       try {
-        const row = JSON.parse(line) as { title?: string; name?: string; url?: string };
+        const row = JSON.parse(line) as { title?: string; name?: string; url?: string; sourceUrl?: string };
         const title = typeof row.title === 'string' ? row.title : typeof row.name === 'string' ? row.name : '';
         const url = typeof row.url === 'string' ? row.url : '';
-        if (title.trim()) rows.push({ title, url });
+        // 2026-11-01 — sourceUrl måste följa med, annars kan vi inte skilja en
+        // detaljrad (url ≠ sourceUrl) från en listningsrad (url === sourceUrl).
+        // Listningsradens sida beskriver hela listan, inte raden.
+        const sourceUrl = typeof row.sourceUrl === 'string' ? row.sourceUrl : '';
+        if (title.trim()) rows.push({ title, url, sourceUrl });
       } catch {
         // Trasig rad — hoppa över.
       }

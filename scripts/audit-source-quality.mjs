@@ -17,10 +17,12 @@
  * royaldjurgarden, ett riktigt evenemang utan JSON-LD).
  *
  * Användning:
- *   node scripts/audit-source-quality.mjs              # titlar + DB-statistik
- *   node scripts/audit-source-quality.mjs --deep       # hämtar detaljsidorna
- *   node scripts/audit-source-quality.mjs --json
- *   node scripts/audit-source-quality.mjs --source kollaborationse,thatsupse
+ *   npx tsx scripts/audit-source-quality.mjs              # titlar + DB-statistik
+ *   npx tsx scripts/audit-source-quality.mjs --deep       # hämtar detaljsidorna
+ *   npx tsx scripts/audit-source-quality.mjs --json
+ *   npx tsx scripts/audit-source-quality.mjs --source kollaborationse,thatsupse
+ *
+ * `npx tsx` krävs — skriptet importerar .ts-moduler direkt.
  */
 
 import path from 'node:path';

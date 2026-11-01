@@ -22,12 +22,14 @@
  *     En gate som blockerade på og:type ensamt hade tagit bort en bra källa.
  */
 
-import { extractDetailFacts } from '../../../02-Ingestion/tools/detailEnrichment.js';
+import { extractDetailFacts, isFetchableUrl } from '../../../02-Ingestion/tools/detailEnrichment.js';
 import type { SourceCandidatePageSignal } from './types.js';
 
 export interface ProbeRow {
   title: string;
   url?: string;
+  /** Sidan raden HÄMTADES från. Om url === sourceUrl är raden en listningsrad. */
+  sourceUrl?: string;
 }
 
 export interface ProbeOptions {
@@ -42,8 +44,16 @@ export interface ProbeOptions {
 /**
  * Hämta radernas detaljsidor och returnera deras egna deklarationer.
  *
- * Raders URL som pekar på samma sida som listningen (kortet i en lista) ger
- * inget extra — vi prioriterar därför rader med en egen URL.
+ * Endast DETALJRADER (url ≠ sourceUrl) är bevis. En rad vars url är samma
+ * som listningssidan säger ingenting om just den raden — sidan beskriver
+ * hela listan, inte evenemanget.
+ *
+ * 2026-11-01 — mätt på musikaliskase.se: 30 rader, ALLA med url ===
+ * sourceUrl (kategorisidor som /musikstilar/popmusik/). Sidorna bär
+ * JSON-LD-typen `article` — en mallartefakt, inte ett bevis. Gaten blockerade
+ * en källa med 30 riktiga evenemang (livenation-shows). Med detaljraderna
+ * blir sidbeviset noll, och rubrikerna ("TYLA – THE A*POP WORLD TOUR") bär
+ * evenemangsformen → källan släpps igenom.
  */
 export async function probeRowPages(
   rows: ProbeRow[],
@@ -69,8 +79,14 @@ export async function probeRowPages(
       }
     });
 
-  const withUrl = rows.filter((r) => !!r.url && !r.url.startsWith('data:'));
-  const candidates = (withUrl.length > 0 ? withUrl : rows).slice(0, limit);
+  const normalize = (u: unknown) => String(u ?? '').replace(/\/+$/, '');
+  const fetchable = rows.filter((r) => isFetchableUrl(r.url));
+  // Detaljrad: pekar på en egen sida, inte på listan den lästes från.
+  const detailRows = fetchable.filter((r) => {
+    const src = normalize(r.sourceUrl);
+    return !src || normalize(r.url) !== src;
+  });
+  const candidates = detailRows.slice(0, limit);
 
   const signals: SourceCandidatePageSignal[] = [];
   for (const row of candidates) {

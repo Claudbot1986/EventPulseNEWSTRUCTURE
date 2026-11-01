@@ -74,6 +74,94 @@ describe('source candidate decision engine', () => {
     expect(decision.reason).toContain('smoke');
   });
 
+  // 2026-11-01 — kvalitetsgaten. "Det persisterats events" är sant för en
+  // blogg också: kollaborationse lade in 10 artikelrubrikor som events.
+  it('rejects a candidate whose persisted rows are articles, not events', () => {
+    const decision = decideSourceCandidateOutcome({
+      candidate: candidate(),
+      phase: 'smoke',
+      eventsFoundTotal: 6,
+      eventsAfterNormalization: 5,
+      eventsPersisted: 5,
+      winningPath: 'html',
+      errors: [],
+      riskFlags: [],
+      reportComplete: true,
+      duplicateCanonicalSource: false,
+      eventTitles: [
+        'Så väljer du ekologisk gurkmeja för kök och produktion',
+        'Därför dominerar mytologi och slott bland europeiska spelteman',
+        'Har du glömt något på Kulturfestivalen?',
+      ],
+    });
+
+    expect(decision.decision).toBe('reject');
+    expect(decision.reason).toContain('articles');
+  });
+
+  it('still promotes a candidate with event-shaped rows', () => {
+    const decision = decideSourceCandidateOutcome({
+      candidate: candidate(),
+      phase: 'smoke',
+      eventsFoundTotal: 6,
+      eventsAfterNormalization: 5,
+      eventsPersisted: 5,
+      winningPath: 'html',
+      errors: [],
+      riskFlags: [],
+      reportComplete: true,
+      duplicateCanonicalSource: false,
+      eventTitles: [
+        'Helgkurs – Improvisationsteater Karaktär 21-22 november',
+        'Komisk grundkurs 28-29 november',
+        'Nietzsche kontra Wagner',
+      ],
+    });
+
+    expect(decision.decision).toBe('promote');
+  });
+
+  it('does NOT block when the rows cannot be judged (konservativt)', () => {
+    const decision = decideSourceCandidateOutcome({
+      candidate: candidate(),
+      phase: 'smoke',
+      eventsFoundTotal: 3,
+      eventsAfterNormalization: 3,
+      eventsPersisted: 3,
+      winningPath: 'html',
+      errors: [],
+      riskFlags: [],
+      reportComplete: true,
+      duplicateCanonicalSource: false,
+      eventTitles: ['Tigran Hamasyan', 'Natten & jazzen', 'Årsmöte'],
+    });
+
+    expect(decision.decision).toBe('promote');
+  });
+
+  it('does NOT block a mixed candidate (några guider bland många evenemang)', () => {
+    const decision = decideSourceCandidateOutcome({
+      candidate: candidate(),
+      phase: 'smoke',
+      eventsFoundTotal: 10,
+      eventsAfterNormalization: 10,
+      eventsPersisted: 10,
+      winningPath: 'html',
+      errors: [],
+      riskFlags: [],
+      reportComplete: true,
+      duplicateCanonicalSource: false,
+      eventTitles: [
+        'Helgkurs – Improvisationsteater Karaktär 21-22 november',
+        'Komisk grundkurs 28-29 november',
+        'Stand-up för nybörjare måndagar kl 17.10 start 9 november',
+        'Saker att göra i Stockholm i helgen',
+      ],
+    });
+
+    expect(decision.decision).toBe('promote');
+  });
+
   it('keeps promising non-smoke candidates out of canonical sources', () => {
     const decision = decideSourceCandidateOutcome({
       candidate: candidate(),

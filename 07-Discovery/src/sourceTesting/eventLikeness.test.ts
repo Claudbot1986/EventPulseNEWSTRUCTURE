@@ -242,10 +242,44 @@ describe('eventLikeness — sammansatt bedömning', () => {
   it('sidans deklaration väger tyngre än titeln', () => {
     // En rad som LÅTER som ett evenemang men vars sida säger NewsArticle.
     const a = assessLikeness([
-      { title: 'Guldgruvan – alternativ standup', page: { jsonLdTypes: ['NewsArticle'] } },
-      { title: 'Guldgruvan – alternativ standup', page: { jsonLdTypes: ['NewsArticle'] } },
+      { title: 'Guldgruvan – alternativ standup', jsonLdTypes: ['NewsArticle'] },
+      { title: 'Guldgruvan – alternativ standup', jsonLdTypes: ['NewsArticle'] },
     ]);
     expect(a.verdict).toBe('article');
+  });
+
+  it('REGRESSION: sidans deklarationer når klassifikatorn i FLAT form', () => {
+    // 2026-11-01 — `assessLikeness` läste `row.page`, men P3D skickar den
+    // flata `SourceCandidatePageSignal`-formen. Deklarationerna föll bort,
+    // och gaten arbetade med rubriken ensam. Det här testet fångar formen.
+    const flat = assessLikeness([
+      { title: 'Nietzsche kontra Wagner', jsonLdTypes: ['NewsArticle'] },
+      { title: 'Nietzsche kontra Wagner', jsonLdTypes: ['NewsArticle'] },
+    ]);
+    expect(flat.declaredArticle).toBe(true);
+    expect(flat.verdict).toBe('article');
+    expect(shouldBlockPromotion(flat).blocked).toBe(true);
+  });
+
+  it('REGRESSION: en rad som deklarerar Event får aldrig fällas som artikel', () => {
+    // Mätt 2026-11-01: royaldjurgarden.se bär `og:type=article` men ÄR ett
+    // riktigt evenemang. En gate som blockerar på og:type ensamt hade tagit
+    // bort en bra källa.
+    const declared = assessLikeness([
+      { title: 'Julmarknad på Nordiska museet', jsonLdTypes: ['Event'], ogType: 'article' },
+      { title: 'Julmarknad på Nordiska museet', jsonLdTypes: ['Event'], ogType: 'article' },
+    ]);
+    expect(declared.verdict).toBe('event');
+    expect(shouldBlockPromotion(declared).blocked).toBe(false);
+  });
+
+  it('og:type=article ensamt räcker INTE för att fälla', () => {
+    const onlyOg = assessLikeness([
+      { title: 'Julmarknad på Nordiska museet', ogType: 'article' },
+      { title: 'Julmarknad på Nordiska museet', ogType: 'article' },
+    ]);
+    expect(onlyOg.declaredArticle).toBe(false);
+    expect(shouldBlockPromotion(onlyOg).blocked).toBe(false);
   });
 });
 

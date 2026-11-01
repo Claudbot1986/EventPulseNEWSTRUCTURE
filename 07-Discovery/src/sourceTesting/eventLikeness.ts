@@ -140,10 +140,17 @@ export interface PageSignals {
   title?: string | null;
 }
 
-export interface LikenessSignals {
-  page?: PageSignals;
-  title?: string | null;
-}
+/**
+ * EN rad = EN form.
+ *
+ * 2026-11-01 — det fanns två former för samma sak: `LikenessSignals` med ett
+ * inneslutet `page?: PageSignals`, och `SourceCandidatePageSignal` (flat) i
+ * types.ts. P3D skickade den FLATA formen till `assessLikeness`, som läste
+ * `row.page` — så sidans egna deklarationer föll bort i varje rad, och gaten
+ * arbetade med rubriken ensam. Nu är det en enda form, och `PageSignals` och
+ * `SourceCandidatePageSignal` är samma sak.
+ */
+export interface LikenessSignals extends PageSignals {}
 
 export interface LikenessAssessment {
   verdict: LikenessVerdict;
@@ -242,7 +249,7 @@ export function classifyPageSignals(page: PageSignals | undefined): {
  * `rows` ska vara de faktiska raderna (med `title` och valfritt `page`).
  * En rad är 'article' om sidan själv säger det, annars om titeln säger det.
  */
-export function assessLikeness(rows: Array<{ title?: string | null; page?: PageSignals }>): LikenessAssessment {
+export function assessLikeness(rows: LikenessSignals[]): LikenessAssessment {
   const reasons: string[] = [];
   let declaredArticle = false;
   let declaredEvent = false;
@@ -252,7 +259,8 @@ export function assessLikeness(rows: Array<{ title?: string | null; page?: PageS
   let declaredArticleRows = 0;
 
   for (const row of rows) {
-    const page = classifyPageSignals(row.page);
+    // Sidans deklarationer ligger DIREKT på raden (LikenessSignals är flat).
+    const page = classifyPageSignals(row);
     declaredArticle = declaredArticle || page.declaredArticle;
     declaredEvent = declaredEvent || page.declaredEvent;
     for (const r of page.reasons) reasons.push(r);

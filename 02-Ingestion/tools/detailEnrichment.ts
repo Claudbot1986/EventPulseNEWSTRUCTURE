@@ -253,11 +253,17 @@ function pickImage(...candidates: Array<string | null>): string | null {
   return null;
 }
 
+/** Kan vi hämta den här URL:en över HTTP? (mailto:, tel:, #anchor → nej) */
+export function isFetchableUrl(url: unknown): boolean {
+  return /^https?:\/\//i.test(String(url ?? '').trim());
+}
+
 /** Är radens URL en detaljsida (skiljer den sig från listningssidan)? */
 export function isDetailUrl(row: EnrichmentRow): boolean {
   const url = String(row.url ?? '').replace(/\/+$/, '');
   const sourceUrl = String(row.sourceUrl ?? '').replace(/\/+$/, '');
   if (!url || !sourceUrl) return false;
+  if (!isFetchableUrl(url)) return false;
   return url !== sourceUrl;
 }
 
@@ -286,11 +292,24 @@ export function mergeEnrichment(row: EnrichmentRow, facts: DetailFacts): { row: 
   const filled: string[] = [];
   const next: EnrichmentRow = { ...row };
 
-  if (!missingEnrichableFields(next).includes('description') && facts.description) {
+  // "Saknat" har EN definition, och den ligger i missingEnrichableFields():
+  // fältet saknas helt, är för kort för att vara användbart (<40 tecken),
+  // eller är den generiska og-bilden. enrichExtractedRows() hoppar över
+  // rader som saknar inget — om de två funktionerna räknade olika skulle de
+  // säga olika saker om samma rad.
+  //
+  // 2026-11-01 — villkoret var INVERTERAT (`!missing.includes(x)`), vilket
+  // betydde att vi fyllde ett fält bara när raden redan HADE ett värde, och
+  // aldrig fyllde de fält som faktiskt saknades. Det gjorde hela berikningen
+  // till en no-op för beskrivning och plats — precis de uppgifter vi gick dit
+  // för att hämta.
+  const missing = new Set(missingEnrichableFields(next));
+
+  if (missing.has('description') && facts.description) {
     next.description = facts.description;
     filled.push('description');
   }
-  if (!missingEnrichableFields(next).includes('venue') && facts.venue) {
+  if (missing.has('venue') && facts.venue) {
     next.venue = facts.venue;
     next.venue_name = facts.venue;
     filled.push('venue');
@@ -299,7 +318,7 @@ export function mergeEnrichment(row: EnrichmentRow, facts: DetailFacts): { row: 
     next.venue_address = facts.address;
     filled.push('venue_address');
   }
-  if (!missingEnrichableFields(next).includes('image') && facts.image) {
+  if (missing.has('image') && facts.image) {
     next.imageUrl = facts.image;
     filled.push('image');
   }

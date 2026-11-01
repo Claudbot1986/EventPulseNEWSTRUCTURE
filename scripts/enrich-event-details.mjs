@@ -22,8 +22,10 @@
  * Det hittar INGA på uppgifter. Varje fält kommer från sidans eget innehåll.
  *
  * Användning:
- *   node scripts/enrich-event-details.mjs --dry-run
- *   node scripts/enrich-event-details.mjs --per-source 25 --global 300
+ *   npx tsx scripts/enrich-event-details.mjs --dry-run
+ *   npx tsx scripts/enrich-event-details.mjs --per-source 25 --global 300
+ *
+ * `npx tsx` krävs — skriptet importerar .ts-moduler direkt.
  */
 
 import path from 'node:path';
