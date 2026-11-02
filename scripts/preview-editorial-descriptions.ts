@@ -29,6 +29,39 @@ const musicArg = args.find((a) => a.startsWith('--music='));
 const otherArg = args.find((a) => a.startsWith('--other='));
 const MUSIC_N = musicArg ? Number(musicArg.slice('--music='.length)) : 10;
 const OTHER_N = otherArg ? Number(otherArg.slice('--other='.length)) : 10;
+/**
+ * --random=<seed> — slumpmässigt urval i stället för "första N raderna".
+ *
+ * Utan denna flagga är urvalet ORDNINGSBEROENDE: PostgREST returnerar raderna
+ * i insertordning, så de första N innehåller kluster från samma källa
+ * (t.ex. spelning-se) och ger en skev omvandlingsrate. Med flaggan blir
+ * urvalet representativt för hela LOW-populationen.
+ */
+const randomArg = args.find((a) => a.startsWith('--random='));
+const RANDOM_SEED = randomArg ? randomArg.slice('--random='.length) : null;
+
+/** Deterministisk shuffle (mulberry32) — samma seed → samma urval. */
+function seededShuffle<T>(arr: T[], seed: string): T[] {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  let a = h >>> 0;
+  const rand = () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -36,27 +69,49 @@ const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_
 
 // Urvalet: events som FALLBACK till faktmall (info_level=LOW) — de som
 // fortfarande är tråkiga idag. Kategorier: music = musik, resten = icke-musik.
-const { data: music } = await db
-  .from('events')
-  .select('id,title_sv,source,category_slug,start_time,venue_full_name,venue_city,is_free,price_min_sek,event_profile,raw_description,description_sv,editorial_description,editorial_info_level')
-  .eq('category_slug', 'music')
-  .eq('editorial_info_level', 'LOW')
-  .not('event_profile', 'is', null)
-  .not('editorial_description', 'is', null)
-  .limit(MUSIC_N);
+//
+// VIKTIGT (2026-11-02): hämtar ALLA matchande rader och slumpar lokalt.
+// PostgREST har ett tak på 1 000 rader per fråga, och `.limit(N)` utan
+// ordering ger de första N i insertordning — ett ordningsberoende urval med
+// kluster från samma källa och en skev omvandlingsrate.
+const SELECT_COLS =
+  'id,title_sv,source,category_slug,start_time,venue_full_name,venue_city,is_free,price_min_sek,event_profile,raw_description,description_sv,editorial_description,editorial_info_level';
 
-const { data: other } = await db
-  .from('events')
-  .select('id,title_sv,source,category_slug,start_time,venue_full_name,venue_city,is_free,price_min_sek,event_profile,raw_description,description_sv,editorial_description,editorial_info_level')
-  .neq('category_slug', 'music')
-  .eq('editorial_info_level', 'LOW')
-  .not('event_profile', 'is', null)
-  .not('editorial_description', 'is', null)
-  .limit(OTHER_N);
+async function fetchAllLow(): Promise<any[]> {
+  const out: any[] = [];
+  let off = 0;
+  for (;;) {
+    const { data, error } = await db
+      .from('events')
+      .select(SELECT_COLS)
+      .eq('editorial_info_level', 'LOW')
+      .not('event_profile', 'is', null)
+      .not('editorial_description', 'is', null)
+      .range(off, off + 999);
+    if (error) throw error;
+    if (!data?.length) break;
+    out.push(...data);
+    off += 1000;
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
+const allLow = await fetchAllLow();
+let music = allLow.filter((e) => e.category_slug === 'music');
+let other = allLow.filter((e) => e.category_slug !== 'music');
+
+if (RANDOM_SEED) {
+  music = seededShuffle(music, `${RANDOM_SEED}:music`);
+  other = seededShuffle(other, `${RANDOM_SEED}:other`);
+}
+
+music = music.slice(0, MUSIC_N);
+other = other.slice(0, OTHER_N);
 
 const picks = [
-  ...(music ?? []).map((e) => ({ ...e, kind: 'musik' })),
-  ...(other ?? []).map((e) => ({ ...e, kind: 'icke-musik' })),
+  ...music.map((e) => ({ ...e, kind: 'musik' })),
+  ...other.map((e) => ({ ...e, kind: 'icke-musik' })),
 ];
 
 const llm = new MiniMaxM3LlmClient({ apiKey: process.env.MINIMAX_API_KEY! });
@@ -64,11 +119,16 @@ const out: any[] = [];
 
 for (const ev of picks) {
   const profileRaw = (ev.event_profile as any)?.profile ?? ev.event_profile;
+  // VIKTIGT (2026-11-02): 140 av 5 388 LOW-rader har TOM title_sv men har
+  // title_en. Om bara title_sv används förlorar de sitt titel-prefix, och
+  // fallback-mallen blir identisk för t.ex. 36 "Jesus Christ Superstar"-rader
+  // och 24 "God Jul"-rader. Därför: title_sv → title_en → ''.
+  const eventTitle = (ev.title_sv || ev.title_en || '').trim();
   const res: any = await runEditorialPipeline(
     {
       event: {
-        title: ev.title_sv || '',
-        title_sv: ev.title_sv,
+        title: eventTitle,
+        title_sv: ev.title_sv || ev.title_en || undefined,
         category_slug: ev.category_slug,
         start_time: ev.start_time,
         venue_name: ev.venue_full_name,
@@ -99,6 +159,7 @@ for (const ev of picks) {
 
   out.push({
     kind: ev.kind,
+    id: ev.id,
     title: ev.title_sv,
     source: ev.source,
     category: ev.category_slug,
@@ -107,6 +168,8 @@ for (const ev of picks) {
     current_level: ev.editorial_info_level,
     next: newText,
     next_status: res.status,
+    // Ändrades texten alls mot den som redan ligger i DB?
+    changed: newText.trim() !== String(ev.editorial_description ?? '').trim(),
     similarity: sim.max_similarity,
   });
 }
@@ -140,14 +203,37 @@ for (const kind of ['musik', 'icke-musik']) {
 }
 
 const prosa = out.filter((r) => r.next_status === 'passed').length;
+const changed = out.filter((r) => r.changed).length;
 const maxSim = out.length ? Math.max(...out.map((r) => r.similarity)) : 0;
 const avgSim = out.length ? out.reduce((a, r) => a + r.similarity, 0) / out.length : 0;
 console.log('═'.repeat(100));
-console.log(`SAMMANFATTNING: ${out.length} events · ${prosa} klarar grinden (prosa) · max similarity ${maxSim.toFixed(3)} · medel ${avgSim.toFixed(3)}`);
+console.log(`SAMMANFATTNING: ${out.length} events · ${prosa} klarar grinden (prosa) · ${changed} rader ändras · max similarity ${maxSim.toFixed(3)} · medel ${avgSim.toFixed(3)}`);
+console.log(`POPULATION: ${allLow.length} LOW-rader i bas-tabellen (faktmall) — urvalet är ${RANDOM_SEED ? `slumpmässigt (seed=${RANDOM_SEED})` : 'ORDNINGsberoende (första N i insertordning)'}`);
 console.log('Ingen rad skrevs till databasen.');
 
 const outDir = resolve(PROJECT_ROOT, 'docs/audit/data');
 mkdirSync(outDir, { recursive: true });
-const file = resolve(outDir, `punkt4-forshandsvisning-${new Date().toISOString().slice(0, 10)}.json`);
-writeFileSync(file, JSON.stringify(out, null, 2), 'utf8');
+const suffix = RANDOM_SEED ? `-${RANDOM_SEED}` : '';
+const file = resolve(outDir, `punkt4-forshandsvisning-${new Date().toISOString().slice(0, 10)}${suffix}.json`);
+writeFileSync(
+  file,
+  JSON.stringify(
+    {
+      generated_at: new Date().toISOString(),
+      sample: RANDOM_SEED ? `random seed=${RANDOM_SEED}` : 'ordered (first N) — ordningsberoende',
+      population_low: allLow.length,
+      population_low_music: allLow.filter((e) => e.category_slug === 'music').length,
+      population_low_other: allLow.filter((e) => e.category_slug !== 'music').length,
+      sample_size: out.length,
+      prosa: prosa,
+      changed: changed,
+      max_similarity: maxSim,
+      avg_similarity: avgSim,
+      rows: out,
+    },
+    null,
+    2,
+  ),
+  'utf8',
+);
 console.log(`Fullständig data: ${file}`);
