@@ -154,9 +154,9 @@ Förväntat utfall på oförändrad data (mätt 2026-11-01):
   OK      Q2 P3D testade kandidater och sparade beslut — 48 beslut (23 promote, 25 reject)
   OK      Q3 promote skrev källfiler — 20/20 källfiler finns (…)
   OK      Q4 de nya källorna når databasen — 19/20 källor har events i events_public (154 rader)
-  UNKNOWN Q5 SANNING — … gaten har inte körts på ny data ännu
-  OK      Q6 RETRO-GATE — 3/45 källor skulle blockats, 0 falsklarm
-  OK      Q7 RIKEDOM — plats 211/518 (41 %, baslinj 18 %) · beskrivning 0/518
+  OK      Q5 SANNING — de källor gaten släpper igenom är evenemang, inte artiklar — 4 källor bedömda, ingen artikelkälla
+  OK      Q6 RETRO-GATE — 3/47 källor skulle blockats, 0 falsklarm
+  OK      Q7 RIKEDOM — plats 213/524 (41 %, baslinj 18 %) · beskrivning synlig för appen 0/524 · beskrivning LAGRAD i events: 8225
   OK      Q8 NEGATIV KONTROLL — 7/7 artiklar fångade · 8/8 evenemang släppta igenom
   OK      Q9 berikningen fyller fält på riktiga detaljsidor — 2/12 rader fick fält ifyllda
 ```
@@ -324,11 +324,19 @@ utan evenemang".
 `description_sv`, `description_en`, `image_url`, `source`. **Inte** `title`,
 **inte** `url`, **inte** `source_id`.
 
-**Beskrivning är fortfarande 0 % i grafen.** Mätt 2026-11-01 efter fixen av
-berikningens villkor: 211/518 rader har plats (41 %, baslinj 18 %) men 0/518
-har beskrivning. Berikningen skriver `description` i extraktionsfilerna —
-importen mappar det vidare, men det har inte kommit igenom en hel kedja ännu.
-Behandla det som **ej verifierat** tills en körning visar det.
+**"Beskrivning 0 %" kan betyda två helt olika saker — mät rätt yta.**
+`events_public` är en **vy** som döljer beskrivningar om inte
+`description_license` är en av `pressbild`, `copyright-with-attribution`,
+`partner-licensed`, `public-domain`. För skrapade källor är licensen
+`unknown` → beskrivningen är dold för appen, men den FINNS i `events`.
+Mätt 2026-11-02: `events` har 8 225 rader med `description_sv`, `events_public`
+visar 0. Q7 mäter därför båda ytorna. En beskrivning som inte syns är ett
+**licens- eller frågeproblem**, inte nödvändigtvis ett berikningsproblem.
+
+**Workerns dedup-väg skriver inte över befintliga rader.** En rad som redan
+fanns i databasen (cross-source-hit) behåller sin gamla text — den nyberikade
+beskrivningen skrivs aldrig in. Mätt 2026-11-02: 1 170 dedup-träffar mot
+259 nya rader under nattkörningen.
 
 **`.env` saknas → tomma resultat, inte fel.** Skripten laddar `.env` själva
 via dotenv. Utan nycklar returnerar gaten nollor utan att klaga. Kolla

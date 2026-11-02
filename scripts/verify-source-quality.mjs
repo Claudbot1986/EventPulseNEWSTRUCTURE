@@ -363,14 +363,44 @@ async function main() {
   // Baslinjen mätt 2026-11-01 före berikningen: 18 % med plats, 0 % med
   // beskrivning. Gaten får INTE sämre än baslinjen.
   const BASELINE_VENUE_RATE = 0.18;
+
+  // 2026-11-02 — `events_public` är en VY som döljer beskrivningar utan
+  // licens: description_sv/en syns bara om description_license är en av
+  // pressbild | copyright-with-attribution | partner-licensed | public-domain.
+  // För skrapade källor är licensen 'unknown' → beskrivningen finns i
+  // `events` men inte i den publika yn.
+  //
+  // Att mäta "beskrivning 0 %" mot events_public säger alltså ingenting om
+  // om berikningen fungerar. Vi mäter därför BÅDA ytorna: lagrat (events) och
+  // synligt för appen (events_public).
+  let storedDescriptions = null;
+  try {
+    const { count } = await sb
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .not('description_sv', 'is', null);
+    storedDescriptions = count;
+  } catch {
+    storedDescriptions = null;
+  }
+
   gate(
     'Q7',
     'RIKEDOM — raderna bär den information som finns på detaljsidan',
     flat.length === 0 ? null : venueRate >= BASELINE_VENUE_RATE,
     flat.length === 0
       ? 'inga rader att mäta'
-      : `plats ${withVenue}/${flat.length} (${Math.round(venueRate * 100)} %, baslinj ${Math.round(BASELINE_VENUE_RATE * 100)} %) · beskrivning ${withDescription}/${flat.length}`,
-    { rows: flat.length, withVenue, withDescription, venueRate, baseline: BASELINE_VENUE_RATE },
+      : `plats ${withVenue}/${flat.length} (${Math.round(venueRate * 100)} %, baslinj ${Math.round(BASELINE_VENUE_RATE * 100)} %) · beskrivning synlig för appen ${withDescription}/${flat.length} · beskrivning LAGRAD i events: ${storedDescriptions ?? 'okänd'}`,
+    {
+      rows: flat.length,
+      withVenue,
+      withDescription,
+      venueRate,
+      baseline: BASELINE_VENUE_RATE,
+      storedDescriptions,
+      note:
+        'events_public döljer beskrivningar utan licens (pressbild | copyright-with-attribution | partner-licensed | public-domain). "Lagrad" mäter events-tabellen, "synlig" mäter vyn.',
+    },
   );
 
   // ── Q8: NEGATIV KONTROLL — skiljer klassifikatorn verkligen? ─────────────

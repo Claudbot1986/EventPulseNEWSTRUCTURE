@@ -138,10 +138,12 @@ bevisar ingenting om sammanslagningen. Receptet ovan är beviset.
 - **`venue_address` och `startTime` fylls utanför "saknat"-mängden.** De är
   inte i `missingEnrichableFields`, men skrivs ändå när de saknas. Därför kan
   `filled` innehålla fält som inte står i `missing`.
-- **Beskrivning är fortfarande 0 % i grafen.** 211/518 rader har plats (41 %,
-  baslinj 18 %) men 0/518 har beskrivning. Berikningen skriver `description`
-  i extraktionsfilerna; importen mappar det vidare, men det har inte gått
-  igenom en hel kedja ännu. Behandla som **ej verifierat**.
+- **Beskrivningarna FINNS, men syns inte.** Nattkörningen 2026-11-02
+  berikade 95 rader på riktigt (description 69, venue 33, image 58,
+  startTime 30) och `events` har 8 225 rader med `description_sv`. Men
+  `events_public` visar 0 — vyn döljer beskrivningar utan licens
+  (`description_license` = 'unknown' för skrapade källor). Se även
+  [source-audit.md](source-audit.md).
 - **`--dry-run` skriver inte tillbaka.** Utan den skrivs
   `03-Queue/03-extractedevents/` över — en dataändring, inte en verifiering.
 - **Rader med `mailto:` hämtas inte.** De är inte hämtbara, och de räknades
