@@ -166,6 +166,13 @@ bygger:
 `editorial_description` — licensgrinden gäller *råtexten*, inte AI-prosan.
 Separationsregeln håller.
 
+Kontrollerat med **auditens exakta payload** (`description` = `view_description_sv`,
+vilket är `null` för licens `unknown` — inte editorial-texten): resolvern
+returnerar **AI-prosan som förstahandskälla** för alla 3, inte faktraden.
+`noDescHem` är oförändrat på **89** — de 3 verifierade eventsen ingick aldrig i
+gap-listan (de hade redan `eventpulse_summary`); de 89 är de riktigt textlösa
+eventsen, alltså de 89 som enligt beslutet lämnas tomma.
+
 ---
 
 ## 5. Vad som INTE är verifierat
