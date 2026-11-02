@@ -36,7 +36,77 @@ export interface MiniMaxConfig {
   apiKey: string;
   defaultModel?: string;
   baseUrl?: string;
+  /** Requests per minut mot MiniMax chat/completions. Default: EDITORIAL_RPM eller 120. */
+  rpm?: number;
 }
+
+// ─── RPM-guard ───────────────────────────────────────────────────────────────
+
+/**
+ * 2026-11-02 — MiniMax RPM-tak (429) tog bort beskrivningen för nya events.
+ *
+ * Rotorsak: `maybeRunEditorial` skapar en NY `MiniMaxM3LlmClient` per event.
+ * En per-instans guard skulle därför räkna varje event för sig och aldrig
+ * se taket — därför är guarden en MODUL-LEVEL singleton som räknar
+ * över hela processen.
+ *
+ * Mätning (nattkedjan 2026-11-02, worker-drain 02:24–02:42): 1 304 events,
+ * upp till 3 MiniMax-anrop per event (1 skrivning + 2 regenereringar) →
+ * ~176 anrop/min som lyckades, men 271 körningar föll på "rate limit
+ * exceeded(RPM)" och de eventsen sparades UTAN beskrivning och UTAN profil.
+ * Bursts (worker-körningen har concurrency 20) är det som spränger taket.
+ *
+ * Guarden räknar anrop, inte events — ett event kan göra 3 anrop.
+ */
+export class RpmGuard {
+  private stamps: number[] = [];
+  /**
+   * @param max     maximalt antal anrop per fönster
+   * @param windowMs fönstrets längd (default 60 000 = ett RPM-minut).
+   *                Parametern finns för att tester ska kunna använda ett
+   *                kort fönster — i drift är den alltid 60 s.
+   */
+  constructor(
+    private readonly max: number,
+    private readonly windowMs: number = 60_000,
+  ) {}
+
+  /** Reserverar en request-slott; väntar om fönstret är fullt. */
+  async acquire(): Promise<void> {
+    if (this.max <= 0) return;
+    for (;;) {
+      const now = Date.now();
+      this.stamps = this.stamps.filter((t) => now - t < this.windowMs);
+      if (this.stamps.length < this.max) {
+        this.stamps.push(now);
+        return;
+      }
+      const waitMs = Math.min(5_000, this.windowMs - (now - this.stamps[0]) + 50);
+      await new Promise((r) => setTimeout(r, Math.max(50, waitMs)));
+    }
+  }
+}
+
+/** Delad guard — räknar över hela processen, inte per klientinstans. */
+let sharedGuard: RpmGuard | null = null;
+
+function resolveRpm(explicit?: number): number {
+  if (typeof explicit === 'number' && Number.isFinite(explicit)) return explicit;
+  const fromEnv = Number(process.env.EDITORIAL_RPM);
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
+  return 120;
+}
+
+/** Nollställ den delade guarden (tests). */
+export function __resetSharedRpmGuard(): void {
+  sharedGuard = null;
+}
+
+/** Läs den delade guarden (tests) — bevisar att klienterna delar fönster. */
+export function __getSharedRpmGuard(): RpmGuard | null {
+  return sharedGuard;
+}
+
 
 /**
  * OpenAI-kompatibel klient mot MiniMax-API:et.
@@ -93,15 +163,23 @@ export class MiniMaxM3LlmClient implements LlmClient {
   private apiKey: string;
   private defaultModel: string;
   private baseUrl: string;
+  private rpm: number;
 
   constructor(config: MiniMaxConfig) {
     this.apiKey = config.apiKey;
     this.defaultModel = config.defaultModel ?? 'minimax-M3';
     this.baseUrl = (config.baseUrl ?? 'https://api.minimax.io/v1').replace(/\/$/, '');
+    this.rpm = resolveRpm(config.rpm);
   }
 
   async generate(args: LlmGenerateArgs): Promise<string> {
     const model = args.model ?? this.defaultModel;
+    // 2026-11-02 — RPM-guard. `maybeRunEditorial` skapar en ny klient per event,
+    // så guarden måste vara delad på modulnivå för att se hela processens
+    // anrop. Utan denna spränger worker-körningens concurrency MiniMax RPM-tak
+    // och eventen sparas utan beskrivning (mätt 2026-11-02: 271 av 1 304).
+    if (!sharedGuard) sharedGuard = new RpmGuard(this.rpm);
+    await sharedGuard.acquire();
     // 2026-10-31 — 429 (RPM-tak) hanterades som ett vanligt fel: klienten
     // kastade direkt, och editorial-pipelinen (maxAttempts=2) försökte igen
     // omedelbart — när taket var nått. Resultatet i nattens körning: ~14
@@ -345,19 +423,38 @@ export async function writeEditorialDescription(input: EditorialWriterInput): Pr
   const systemPrompt = buildSystemPrompt(inputs.style_guide);
   const userPrompt = buildUserPrompt(inputs);
 
-  const text = await llm.generate({
-    systemPrompt,
-    userPrompt,
-    model,
-    // FAS 3.2 (2026-10-13): stramare max_tokens + temperature hindrar M3
-    // från att gissa adjektiv/biografi som inte finns i Profile. Med 150
-    // tokens räcker 1-2 meningar — nog för att vara unik, för lite för att
-    // hallucineras utförligt. Temperatur 0.3 ger mer konservativ output.
-    // Pipeline faller tillbaka till FACT/MINIMAL vid max_tokens-truncering
-    // eller factuality-fail.
-    maxTokens: 150,
-    temperature: 0.3,
-  });
+  // FAS 3.2 (2026-10-13): stramare max_tokens + temperature hindrar M3
+  // från att gissa adjektiv/biografi som inte finns i Profile. Med 150
+  // tokens räcker 1-2 meningar — nog för att vara unik, för lite för att
+  // hallucineras utförligt. Temperatur 0.3 ger mer konservativ output.
+  //
+  // 2026-11-02 — men 150 tokens räckte INTE alltid: mätt i en live-probe på
+  // 60 events föll 2 av dem på "finish_reason=length" (content_len 483 och
+  // 360 tecken). En trunkerad beskrivning får inte användas (klienten
+  // kastar), så de eventsen saknade helt beskrivning. Fix: kör om med
+  // dubbelt budget vid truncering, i stället för att ge upp.
+  const BASE_MAX_TOKENS = 150;
+  let text: string;
+  try {
+    text = await llm.generate({
+      systemPrompt,
+      userPrompt,
+      model,
+      maxTokens: BASE_MAX_TOKENS,
+      temperature: 0.3,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!msg.includes('finish_reason=length')) throw err;
+    text = await llm.generate({
+      systemPrompt,
+      userPrompt,
+      model,
+      // Dubbelt budget + samma seed: samma innehåll, bara mer plats.
+      maxTokens: BASE_MAX_TOKENS * 2,
+      temperature: 0.3,
+    });
+  }
 
   // Defensive guard: MockLlmClient eller trasig LLM-provider kan returnera
   // tomt/undefined. Härda input-validitet så vi inte kraschar på .split() —

@@ -39,6 +39,17 @@ const OTHER_N = otherArg ? Number(otherArg.slice('--other='.length)) : 10;
  */
 const randomArg = args.find((a) => a.startsWith('--random='));
 const RANDOM_SEED = randomArg ? randomArg.slice('--random='.length) : null;
+/**
+ * --nli=1 aktiverar NLI-judgen (M3 som stöddomare för oVerifierbara claims).
+ *
+ * DEFAULT = AV, vilket är vad PRODUKTIONEN gör: `maybeRunEditorial`
+ * (04-Normalizer/editorial/normalizerIntegration.ts) anropar
+ * `runEditorialPipeline` utan `useNliJudge`. Förhandsvisningen ska spegla
+ * produktion — annars mäter man något som aldrig händer i drift.
+ * Med --nli=1 kan man mäta hur mycket NLI-judgen faktiskt bidrar.
+ */
+const nliArg = args.find((a) => a.startsWith('--nli='));
+const USE_NLI = nliArg ? nliArg.slice('--nli='.length) === '1' : false;
 
 /** Deterministisk shuffle (mulberry32) — samma seed → samma urval. */
 function seededShuffle<T>(arr: T[], seed: string): T[] {
@@ -142,7 +153,7 @@ for (const ev of picks) {
       llm,
       maxAttempts: 2,
     } as any,
-    { useNliJudge: true } as any,
+    { useNliJudge: USE_NLI } as any,
   );
 
   const raw = (ev.raw_description || ev.description_sv || '') as string;
@@ -209,6 +220,7 @@ const avgSim = out.length ? out.reduce((a, r) => a + r.similarity, 0) / out.leng
 console.log('═'.repeat(100));
 console.log(`SAMMANFATTNING: ${out.length} events · ${prosa} klarar grinden (prosa) · ${changed} rader ändras · max similarity ${maxSim.toFixed(3)} · medel ${avgSim.toFixed(3)}`);
 console.log(`POPULATION: ${allLow.length} LOW-rader i bas-tabellen (faktmall) — urvalet är ${RANDOM_SEED ? `slumpmässigt (seed=${RANDOM_SEED})` : 'ORDNINGsberoende (första N i insertordning)'}`);
+console.log(`NLI-JUDGE: ${USE_NLI ? 'PÅ (--nli=1) — INTE produktionsläget' : 'AV (produktionsläget — maybeRunEditorial kör utan useNliJudge)'}`);
 console.log('Ingen rad skrevs till databasen.');
 
 const outDir = resolve(PROJECT_ROOT, 'docs/audit/data');
@@ -221,6 +233,7 @@ writeFileSync(
     {
       generated_at: new Date().toISOString(),
       sample: RANDOM_SEED ? `random seed=${RANDOM_SEED}` : 'ordered (first N) — ordningsberoende',
+      nli_judge: USE_NLI,
       population_low: allLow.length,
       population_low_music: allLow.filter((e) => e.category_slug === 'music').length,
       population_low_other: allLow.filter((e) => e.category_slug !== 'music').length,

@@ -218,3 +218,64 @@ describe('stripThinkBlock', () => {
     expect(stripThinkBlock(raw)).toBe('Hooligan Bobs spelar. Ikväll på Debaser.');
   });
 });
+
+// ─── Trunkerings-omsök (2026-11-02) ──────────────────────────────────────────
+//
+// Bakgrund: live-probe på 60 events → 2 av dem föll på
+// "finish_reason=length" (content_len 483 respektive 360 tecken). En
+// trunkerad beskrivning får inte användas, så de eventsen fick ingen
+// beskrivning alls. Fix: kör om med dubbelt budget vid truncering.
+
+describe('writeEditorialDescription — trunkerings-omsök', () => {
+  it('kör om med dubbelt budget när första anropet trunkeras', async () => {
+    const seen: number[] = [];
+    let call = 0;
+    const llm = {
+      name: 'fake',
+      generate: async (args: { maxTokens?: number }) => {
+        seen.push(args.maxTokens ?? 0);
+        call++;
+        if (call === 1) {
+          throw new Error(
+            'MiniMax truncated output (finish_reason=length, content_len=483, completion_tokens=150, max_tokens=150). Truncated text får inte användas.',
+          );
+        }
+        return 'Hooligan Bobs intar Debaser med rock från scenen.';
+      },
+    };
+
+    const inputs = compileWriterInputs({
+      profile: baseProfile,
+      event: {
+        title: 'Hooligan Bobs',
+        start_time: '2026-10-15T20:00:00+02:00',
+        venue_name: 'Debaser',
+        city: 'Stockholm',
+        price_min_sek: 250,
+      },
+    });
+
+    const draft = await writeEditorialDescription({ inputs, llm, model: 'minimax-M3' });
+    expect(seen).toEqual([150, 300]);
+    expect(draft.text).toContain('Hooligan Bobs');
+  });
+
+  it('propagarar andra fel utan omsök', async () => {
+    const llm = {
+      name: 'fake',
+      generate: async () => {
+        throw new Error('MiniMax 429: rate limit exceeded(RPM)');
+      },
+    };
+    const inputs = compileWriterInputs({
+      profile: baseProfile,
+      event: {
+        title: 'Hooligan Bobs',
+        start_time: '2026-10-15T20:00:00+02:00',
+        venue_name: 'Debaser',
+        city: 'Stockholm',
+      },
+    });
+    await expect(writeEditorialDescription({ inputs, llm, model: 'minimax-M3' })).rejects.toThrow(/429/);
+  });
+});

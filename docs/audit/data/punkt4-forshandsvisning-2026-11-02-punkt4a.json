@@ -1,14 +1,15 @@
 {
-  "generated_at": "2026-11-02T04:56:33.641Z",
+  "generated_at": "2026-11-02T05:16:44.369Z",
   "sample": "random seed=punkt4a",
+  "nli_judge": false,
   "population_low": 5388,
   "population_low_music": 1919,
   "population_low_other": 3469,
   "sample_size": 50,
-  "prosa": 20,
-  "changed": 23,
+  "prosa": 25,
+  "changed": 27,
   "max_similarity": 0.385,
-  "avg_similarity": 0.09278,
+  "avg_similarity": 0.09394,
   "rows": [
     {
       "kind": "musik",
@@ -19,10 +20,10 @@
       "raw": "Florence Valentin spelar på Debaser Strand i Stockholm.\n\nStockholmsbandet Florence Valentin vände under sina tidiga år upp och ner på den svenska indiescenen. Debutsingeln ”Allt dom bygger upp ska vi meja ner” väckte stor uppmärksamhet i press, följt av debut-EP:n med samma namn. Med fullängdsalbumen “Jonny Drama”, “Pokerkväll i Vårby Gård” och det sista ”Spring Ricco” gjorde bandet ett stort antal turnéer över hela landet. Bandet återförenades, och efter en tid kom det efterlängtade albumet ”Det var en gång”. Idag har bandet kultstatus för sin blandning av knivskarp social patos, catchy, blåsdopad poppunk och socialt engagerade, filmiskt berättande texter om samhällets skuggidor. Bandet är nu aktuella med ny musik och en efterlängtad Sverige-turné.",
       "current": "27/11 FLORENCE VALENTIN | DEBASER STRAND. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 27 november 2026. Tid: 19:00. Pris: från 295 kr.",
       "current_level": "LOW",
-      "next": "Konsert med Florence Valentin och Debaser Strand i Stockholm. Evenemanget bjuder på musikframförande med låtar, repertoar och artistframträdande i en stämning präglad av publik, ljudupplevelse och scenframträdande.",
+      "next": "Konsert med Florence Valentin på Debaser Strand i Stockholm. Evenemanget bjuder på ett liveframträdande med musik, låt och artistframträdande i en scenbaserad kväll.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.078
+      "similarity": 0.081
     },
     {
       "kind": "musik",
@@ -33,7 +34,7 @@
       "raw": "Gurriers har snabbt blivit ett namn att räkna med på Europas indiescen och den 26 november tar de sitt nya album Nobody’s Coming To Save You till Debaser Nova.\n\nIrländska Gurriers bildades under pandemin och har sedan dess gjort sig ett namn för sina högintensiva liveshower. Sedan debuten Come and See från 2024 har milstolparna radat upp sig på löpande band: Glastonbury-spelning, framträdande på Jools Holland, supportgig till Turnstile och Kneecap. \n\nNu har det blivit dags för nästa kapitel i berättelsen om bandet. Den 25 september släpps album nummer två, Nobody’s Coming To Save You, där bandet kanaliserar protest, motstånd och personlig reflektioner till sitt mest ambitiösa giv hittills. Den 26 november stannar bandet till på Debaser Nova i Stockholm. Gillar du rivig rockmusik med samhällskritisk nerv är det här definitivt något för dig. \n\n18 år (13+ i sällskap av egen förälder eller vuxen av domstol utnämnd vårdnadshavare) ",
       "current": "Gurriers | Support: Enola Gay | Debaser Nova. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 26 november 2026. Tid: 18:00.",
       "current_level": "LOW",
-      "next": "Konsert med Gurriers, med support av Enola Gay på Debaser Nova. Evenemanget bjuder på liveframträdande med musiker, låtar och publikrespons i ett scensatt sammanhang.",
+      "next": "Konsert med Gurriers, med support av Enola Gay på Debaser Nova. Evenemanget bjuder på liveframträdande med musiker, låt och repertoar i en scenuppsättning med publiken som lyssnare och applåd.",
       "next_status": "passed",
       "changed": true,
       "similarity": 0.044
@@ -61,10 +62,10 @@
       "raw": "Jamshid and Omid Soltani at Cirkus at 2027-03-26T20:00:00+0100",
       "current": "Jamshid @ Cirkus. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 26 mars 2027. Tid: 19:00.",
       "current_level": "LOW",
-      "next": "Konsert med Jamshid på Cirkus i Stockholm. Evenemanget bjuder på liveframträdande med musiker, låt och repertoar i en stämning präglad av publikens lyssning och respons.",
+      "next": "Konsert med Jamshid på Cirkus i Stockholm. Evenemanget bjuder på ett liveframträdande med musik, repertoar och scenframträdande.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.118
+      "similarity": 0.167
     },
     {
       "kind": "musik",
@@ -75,10 +76,10 @@
       "raw": "<p>Sam Newbould Quintet (GB/NL/ES/IL) – kvintetten är en prisbelönt internationell femmannagrupp som kommer från den pulserande Amsterdam-jazzscenen.</p>\n<p>Deras musik kombinerar virtuositet med drivande groove och lekfulla melodier som fastnar i huvudet. Med klarhet, sofistikering, smarthet, humor och en helt egen vinklad melodi tar Sam Newbould med sig lyssnarna på en fängslande resa.</p>\n<p>Sam Newbould är född och uppvuxen på den norra engelska landsbygden och är en saxofonist, kompositör och bandledare baserad i Amsterdam. Som en produktiv och mångfaldigt prisbelönt kompositör, kombinerar hans kompositioner en passion för berättande med en klarhet och originalitet som beskrivs som \"häpnadsväckande, ibland introvert och intim och sedan sprudlande igen”. Hans bandledarskap, som sammanför några av Europas finaste unga improvisatörer, kombinerar en slående kreativ vision med \"ingen brist på talang i världsklass\" (UK Vibe). \"Gruppdynamiken är mästerlig och dess inneboende charm understryks tydligt i varje arrangemang\" (Jazzism, Nederländerna).</p>",
       "current": "Sam Newbould Quintet (GB/NL/ES/IL) – Dunkers kulturhus. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 12 november 2026. Tid: 19:00.",
       "current_level": "LOW",
-      "next": "Sam Newbould Quintet ger en kväll med musikframförande på scen i Dunkers kulturhus. Konserten riktar sig till vuxna lyssnare och bygger på liveframträdande, musiker, låtar och repertoar.",
+      "next": "Sam Newbould Quintet ger en livekonsert på Dunkers kulturhus i Stockholm. Quinteten bjuder på ett framträdande med musik, ljudupplevelse och scenenergi.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.057
+      "similarity": 0.047
     },
     {
       "kind": "musik",
@@ -89,10 +90,10 @@
       "raw": "Julkonsert är ett evenemang på Berwaldhallen i Stockholm.\n\nEn julkonsert äger rum på Berwaldhallen i Stockholm. Evenemanget erbjuder en möjlighet att uppleva julstämning i konserthuset.",
       "current": "Julkonsert. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 16 december 2026. Tid: 18:00. Pris: från 65 kr.",
       "current_level": "LOW",
-      "next": "Julkonsert. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 16 december 2026. Tid: 18:00. Pris: från 65 kr.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.05
+      "next": "Julkonsert i Berwaldhallen i Stockholm bjuder på ett liveframträdande med musiker, låtar och publikens applåd. Stämningen och scenframträdandet står i centrum för kvällens musikupplevelse.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.12
     },
     {
       "kind": "musik",
@@ -103,10 +104,10 @@
       "raw": "MAMMA MIA! THE PARTY är en grekisk festkväll på Tyrol i Stockholm.\n\nKliv in på Nikos taverna på den grekiska paradisön Skopelos. Här väntar en festkväll med välkomstouzo och en fyrarätters medelhavsmeny. Kvällen bjuder på sång, dans, våghalsiga luftfärder, dansanta servitörer och ABBAs låtar. Varje kväll är unik och hur den slutar beror på var ABBAs låtar tar gästerna. Evenemanget produceras av Björn Ulvaeus och Pophouse.",
       "current": "MAMMA MIA! THE PARTY. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 30 december 2026. Tid: 18:30.",
       "current_level": "LOW",
-      "next": "MAMMA MIA! THE PARTY. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 30 december 2026. Tid: 18:30.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.083
+      "next": "MAMMA MIA! THE PARTY bjuder på ett musikframträdande med låter, repertoar och scenglädje på Tyrol i Stockholm. evenemanget är en livekonsert där publiken lyssnar, responderar och applåderar.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.184
     },
     {
       "kind": "musik",
@@ -117,10 +118,10 @@
       "raw": "Wallmans International Dinnershow är en dinnershow på Wallmans Stockholm i Stockholm.\n\nDenna dinnershow inkluderar mat, musik och magi. Kvällen erbjuder en upplevelse med glädje, skratt och gemenskap.",
       "current": "Wallmans International Dinnershow. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 8 april 2027. Tid: 18:20. Pris: från 395 kr.",
       "current_level": "LOW",
-      "next": "Wallmans International Dinnershow bjuder på ett livemusikframträdande med låt, repertoar och musiker på scenen i Wallmans Stockholm. Evenemanget riktar sig till vuxna och blir en del av en scenupplevelse med publik, stämning och applåd.",
-      "next_status": "passed",
-      "changed": true,
-      "similarity": 0.217
+      "next": "Wallmans International Dinnershow. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 8 april 2027. Tid: 18:20. Pris: från 395 kr.",
+      "next_status": "fallback_fact",
+      "changed": false,
+      "similarity": 0.167
     },
     {
       "kind": "musik",
@@ -145,10 +146,10 @@
       "raw": "Regisserar gör Carl Johan Karlson, som gjorde kultföreställningen Arv på Dramaten. I huvudrollerna ser vi Ola Salo som Paul och som Rasmus och Benjamin ser vi Valdemar Wahlbeck och Martin Stokke Mathiesen. Med orkester under ledning av Karl-Johan Ankarblom och stor ensemble, för att inte tala om en fullkomligt slösande påkostad scenografi av Magdalena Åberg, blir detta 2026 års Stora Scen-händelse i Stockholm! Torka aldrig tårar utan handskar blev av DN:s läsare vald till en av de tre viktigaste kulturhändelserna i Sverige på 150 år! Den gjorde Jonas Gardell till Årets Svensk, tv-serien har utsetts till ”Bästa svenska TV-serie genom tiderna” och böckerna har sålt i 100 000-tals exemplar. – EN HELT NYSKRIVEN MUSIKALJonas Gardells roman och tv-serie Torka aldrig tårar utan handskar fullkomligt välte Sverige hösten 2012. Ett helt svenskt folk förälskade sig i Rasmus och Benjamin och deras vänner med den legendariska fjollan Paul i spetsen.",
       "current": "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 31 oktober 2026. Tid: 18:30.",
       "current_level": "LOW",
-      "next": "Konsert på Gota Lejon i Stockholm med liveframträdande, låt och repertoar. En kväll på scen med musiker, publikrespons och applåd.",
+      "next": "Konsert på Gota Lejon i Stockholm med liveframträdande, låt och ett artistframträdande på scen. Stämning, publikrespons och applåd hör till upplevelsen.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.023
+      "similarity": 0.022
     },
     {
       "kind": "musik",
@@ -159,10 +160,10 @@
       "raw": "Marky Ramone and Marky Ramones Blitzkrieg at Kollektivet Livet at 2026-10-30",
       "current": "Marky Ramone @ Kollektivet Livet. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 30 oktober 2026. Tid: 18:00.",
       "current_level": "LOW",
-      "next": "Marky Ramone ger en livekonsert på Kollektivet Livet i Stockholm. evenemanget fokuserar på musikframförande, låtar, repertoar och scenframträdande med lyssning, publikrespons och applåd.",
-      "next_status": "passed",
-      "changed": true,
-      "similarity": 0.222
+      "next": "Marky Ramone @ Kollektivet Livet. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 30 oktober 2026. Tid: 18:00.",
+      "next_status": "fallback_fact",
+      "changed": false,
+      "similarity": 0.286
     },
     {
       "kind": "musik",
@@ -173,10 +174,10 @@
       "raw": "Joddla med Siv till Kägelbanan 31 oktober…",
       "current": "Joddla med Siv. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 31 oktober 2026. Tid: 16:00. Pris: gratis.",
       "current_level": "LOW",
-      "next": "Joddla med Siv. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 31 oktober 2026. Tid: 16:00. Pris: gratis.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.3
+      "next": "Joddla med Siv är ett musikframförande på Södra Teatern i Stockholm. Evenemanget har fri entré och riktar sig till alla vuxna.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.118
     },
     {
       "kind": "musik",
@@ -201,10 +202,10 @@
       "raw": "Mia Skäringers 50-årsfest, kallad\n\nMia Skäringer bjuder in till sin 50-årsfest med",
       "current": "Mia, myself and I – Sista måltiden. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 12 december 2026. Tid: 17:00. Pris: från 395 kr.",
       "current_level": "LOW",
-      "next": "Mia, myself and I – Sista måltiden. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 12 december 2026. Tid: 17:00. Pris: från 395 kr.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.056
+      "next": "Mia, myself and I – Sista måltiden är ett liveframträdande på China Teatern i Stockholm. Konserten bygger på musikframförande, låt och repertoar, med musiker och artistframträdande på scen.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.05
     },
     {
       "kind": "musik",
@@ -215,9 +216,9 @@
       "raw": "",
       "current": "The Halo Effect - European Tour 2027. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 20 mars 2027. Tid: 19:00.",
       "current_level": "LOW",
-      "next": "The Halo Effect - European Tour 2027. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 20 mars 2027. Tid: 19:00.",
-      "next_status": "fallback_fact",
-      "changed": false,
+      "next": "The Halo Effect ger en livekonsert på Filmstudion i Stockholm som en del av European Tour 2027. Evenemanget bygger på musikframträdande, låt och artistframträdande, med publiken på plats i scenen.",
+      "next_status": "passed",
+      "changed": true,
       "similarity": 0
     },
     {
@@ -243,10 +244,10 @@
       "raw": "Harriet Nauer framför musik live på Winterviken Scen i Stockholm.\n\nHarriet Nauer tar med sig sitt debutalbum Vampire Country på turné. Vad som började som en turné fortsätter nu på grund av stor efterfrågan från både arrangörer och publik. Hennes musik omfattar ett brett känslolandskap, där sköra ballader möter mörka och stökiga ljudbilder. Hon använder atmosfäriska synthar och episka körer för att skapa sin unika stil.",
       "current": "HARRIET NAUER - LIVE AT WINTERVIKEN. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 28 november 2026. Tid: 20:00. Pris: från 395 kr.",
       "current_level": "LOW",
-      "next": "Harriet Nauer ger en livekonsert på Winterviken Scen i Stockholm, där hon framför låt tillsammans med sina musiker. Evenemanget bygger på musikframträdande, ljudupplevelse och publikens respons.",
+      "next": "Harriet Nauer ger en livekonsert på Winterviken Scen i Stockholm, med musikframförande, låtar och repertoar i centrum. Konserten bygger på lyssning, publikrespons och applåd från publiken.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.148
+      "similarity": 0.096
     },
     {
       "kind": "musik",
@@ -257,10 +258,10 @@
       "raw": "OPUS13 STRÅKKVARTETT är en stråkkvartettkonsert på Konserthuset Stockholm i Stockholm.\n\nDen prisbelönta norsk-svenska stråkkvartetten OPUS13 framför musik av Brahms och Stenhammar. Dessutom presenteras ett nyskrivet verk av Konserthusets Säsongens tonsättare Djuro Zivkovic. Wilhelm Stenhammar var en betydande tonsättare som kombinerade nordisk melankoli med influenser från europeisk senromantik. Hans fjärde stråkkvartett innehåller intensitet och lyrisk skönhet, där satser bygger på svenska folkvisor. Brahms första stråkkvartett är ett viktigt verk i kvartettrepertoaren, känd för sin täthet och kraftfulla yttersatser. Djuro Zivkovics nyskrivna stråkkvartett är en beställning från Konserthuset Stockholm.",
       "current": "OPUS13 STRÅKKVARTETT. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 22 maj 2027. Tid: 16:00. Pris: från 190 kr.",
       "current_level": "LOW",
-      "next": "Konsert med OPUS13 stråkkvartett på Konserthuset Stockholm. En liveframträdande-konsert där stråkkvartetten bjuder på ett musikframträdande i scenformat.",
+      "next": "OPUS13 Stråkkvartett ger en kväll med stråkmusik på scen i Konserthuset Stockholm. Kvartetten bjuder på ett liveframträdande med musik, låtar och ett repertoar som riktar sig till vuxna lyssnare.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.102
+      "similarity": 0.074
     },
     {
       "kind": "musik",
@@ -271,10 +272,10 @@
       "raw": "5 band en dag på Åhaga! Tillsammans med Kultur Utan Gränser ger vi er 5 band. Klara band: Trubbel Lilla krogen band Dålig isolering Radar Kampen",
       "current": "Klubb 033 – Åhaga. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 14 november 2026. Tid: 18:00.",
       "current_level": "LOW",
-      "next": "Klubb 033 – Åhaga är en livekonsert på scenen i Åhaga, Stockholm. Evenemanget fokuserar på musikframträdande, låt och ett artistframträdande med lyssning, publikrespons och applåd.",
+      "next": "Klubb 033 bjuder in till ett liveframträdande på Åhaga i Stockholm. Konserten riktar sig till vuxna lyssnare och fokuserar på musikframträdande, låtar, repertoar och scenframträdande.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.043
+      "similarity": 0.042
     },
     {
       "kind": "musik",
@@ -285,10 +286,10 @@
       "raw": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska melodier och eleganta danser till lekfull virtuositet. Konserten börjar efter en kortare paus och beräknas bli ca 40 min. Iskandar Komilov violin Diana Crafoord viola Magnus Lanning cello Walter McTigert kontrabas Niklas Andersson klarinett Henrik Blixt fagott Hans Larsson horn LUDWIG VAN BEETHOVEN (1770–1827) Septett Ess-dur op 20 40’",
       "current": "Musik från Wien - med Harding & Piemontesi. Typ: music. Medverkande: Harding, Piemontesi. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 12 november 2026. Tid: 19:00. Pris: från 130 kr.",
       "current_level": "LOW",
-      "next": "Konsert med Harding och Piemontesi på Berwaldhallen. Ett liveframträdande med musik, låtar och ett artistframträdande på scen.",
-      "next_status": "passed",
-      "changed": true,
-      "similarity": 0.014
+      "next": "Musik från Wien - med Harding & Piemontesi. Typ: music. Medverkande: Harding, Piemontesi. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 12 november 2026. Tid: 19:00. Pris: från 130 kr.",
+      "next_status": "fallback_fact",
+      "changed": false,
+      "similarity": 0
     },
     {
       "kind": "musik",
@@ -299,10 +300,10 @@
       "raw": "ZAN CODY är en konsert på Debaser Strand i Stockholm.\n\nSångaren Zinny Zan och gitarristen Harry Cody, ursprungliga kreativa krafter bakom Shotgun Messiah, har återförenats under namnet Zan/Cody. Deras debutalbum, \"Beautiful n’ Damned\", tar med sig sleaze, punkattityden och melodisk hårdrock från deras gemensamma historia. Detta nya kapitel visar större erfarenhet och grövre kanter. Zan/Cody stod nyligen på scen tillsammans på Sweden Rock, vilket var första gången Zinny Zan och Harry Cody spelade ihop på 36 år. Detta markerar nästa fas för duon.",
       "current": "29/10 ZAN CODY | DEBASER STRAND. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 29 oktober 2026. Tid: 19:30. Pris: från 350 kr.",
       "current_level": "LOW",
-      "next": "Konsert med Zan Cody på Debaser Strand i Stockholm. Evenemanget bjuder på ett liveframträdande med låt, repertoar och artistframträdande.",
+      "next": "Konsert med ZAN CODY på Debaser Strand i Stockholm. En kväll med liveframträdande, låtar och repertoar i fokus.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.113
+      "similarity": 0.118
     },
     {
       "kind": "musik",
@@ -313,7 +314,7 @@
       "raw": "",
       "current": "The Magnolia. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 20 november 2026. Tid: 20:30.",
       "current_level": "LOW",
-      "next": "Konsert med The Magnolia på Nalen i Stockholm. Evenemanget bjuder på liveframträdande med musik, låt och repertoar i en scenbaserad ljudupplevelse för vuxna lyssnare.",
+      "next": "Konsert med The Magnolia på Nalen i Stockholm. Evenemanget bygger på liveframträdande, musik och scen med publik, lyssning och applåd.",
       "next_status": "passed",
       "changed": true,
       "similarity": 0
@@ -341,10 +342,10 @@
       "raw": "<p><strong>Dörrar öppnar:</strong> 18:30 | <strong>Start:</strong> 19:30 | <strong>Slut:</strong> ca. 21:30 | <strong>Paus:</strong> Nej | <strong>Åldersgräns:</strong> Ingen åldersgräns</p>\n<p>Carola kommer till Växjö med Jag är Carola – en musikalisk unik livsberättelse</p>\n<p>Den 8 september, i samband med sin 60-årsdag, släpper Carola Häggkvist sin första bok. I självbiografin Jag är Carola, som skildrar uppväxten och hennes liv fram till 2002, berättar Carola för första gången någonsin sin egen historia. Som en förlängning av boksläppet står det nu klart att hon i höst även åker ut på en omfattande Nordenturné för att möta sin publik.</p>\n<p>Tillsammans med pianisten Will Oaks kommer Carola att ge över 30 konserter i Sverige, Norge, Finland, Island och Färöarna och där debutboken står i centrum. När hon genom musik och berättelser delar med sig av de låtar och händelser som format henne blir det enligt henne själv både “intimt och nära men framförallt väldigt exklusivt” när hon framför låtar som man kanske inte vanligen hör på en Carola-konsert som exempelvis “Krokodilbarnets längtan” och “If I Can Dream” av Elvis Presley varvat med hennes största hits såsom “Främling”, “Säg mig var du står” och “Fångad av en stormvind”.</p>\n<p>I över fyra decennier har Carola varit en av Sveriges i särklass största stjärnor. Sedan det\nsensationella genombrottet med “Främling” 1983 har hon blivit en självklar del av Sveriges kulturella arv och har sedan dess levt ett liv i offentlighetens blickfång. Nu öppnar hon dörrentill ett liv som länge skildrats av andra – och berättar själv om människan bakom artisten i en nära och exklusiv konsertupplevelse.</p>\n<p><strong>Arrangör: Jubel AB</strong></p>\n<h2>Info:</h2>\n<p><strong>Rullstolsplats</strong><br />\nRullstolsplats är inklusive en fri ledsagare och bokas enklast via denna webbshop.</p>\n<p><strong>Ytterdörrar</strong><br />\nÖppnas 1 timme innan föreställningen börjar.</p>\n<p><strong>Bar &amp; mat</strong><br />\nFoajébaren öppnar en timme före föreställningen, kom gärna i god tid.</p>\n<p><strong>Garderob</strong><br />\nVi har bemannade garderober. Av säkerhet- och trivselskäl är det inte tillåtet att ta med sig ytterkläder in i Christina Nilsson salen.</p>\n<p><strong>Väskor</strong><br />\nDet råder inget väskförbud på Växjö konserthus. Handväskor är tillåtna att ta med in i Christina Nilsson salen. Ryggsäckar och större väskor ska däremot lämnas i garderoben.</p>\n<p><strong>Konsertvärdar</strong><br />\nAlla föreställningar i Christina Nilsson salen är bemannade med konsertvärdar. Ni möter dem i entrén där de kontrollerar biljetter. Har ni frågor eller behöver hjälp i samband med föreställningen så är det till våra konsertvärdar ni ska vända er.</p>",
       "current": "Jag är Carola – En musikalisk livsberättelse – Växjö Konserthus. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 1 november 2026. Tid: 19:30.",
       "current_level": "LOW",
-      "next": "Jag är Carola – En musikalisk livsberättelse är ett scenframträdande med musik, låtar och berättelser. evenemanget ger publiken en ljudupplevelse med Carolas artistframträdande.",
+      "next": "Jag är Carola – En musikalisk livsberättelse är en konsert med Carola på Växjö Konserthus. Musiken, repertoaren och scenframträdandet står i centrum för den musikaliska livsberättelsen.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.027
+      "similarity": 0.045
     },
     {
       "kind": "musik",
@@ -355,10 +356,10 @@
       "raw": "Traditional sparkling Lucia concert at Berwaldhallen with Nacka Musikklasser.",
       "current": "Lucia with Nacka Musikklasser 2026. Typ: music. Genre: musik, liveframträdande, konsert. Lokal: scen. För: alla, vuxna. Datum: 6 december 2026. Tid: 17:00.",
       "current_level": "LOW",
-      "next": "Lucia with Nacka Musikklasser 2026 ger publiken ett liveframträdande i Berwaldhallen i Stockholm. Musiker framför låter på scen och skapar en stund med musik, stämning och publikrespons.",
+      "next": "Lucia with Nacka Musikklasser ger en livekonsert i Berwaldhallen i Stockholm. evenemanget fokuserar på musikframförande, låt och repertoar, med musiker och artistframträdanden på scen.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.278
+      "similarity": 0.294
     },
     {
       "kind": "icke-musik",
@@ -397,10 +398,10 @@
       "raw": "Den världsberömda musikalen Chicago intar Oscarsteatern i höst i en storslagen, påkostad, svensk uppsättning. I regi av Edward af Sillén och med världsstjärnan Peter Jöback och systrarna Hanna och Ellen Lindblad och Ola Forssmed i huvudrollerna bjuds publiken på en glittrande musikalupplevelse fylld av jazz, 1920-talsglamour och spektakulära shownummer. Chicago är en prisbelönt Broadway-klassiker där mord, berömmelse och showbusiness möts i en sylvass och underhållande satir. Handlingen utspelar",
       "current": "Chicago - the Musical Oscarsteatern 2026-12-10 19:30. Typ: theater. Genre: drama. Lokal: teater. För: vuxna, kulturellt intresserade, litteraturintresserade. Datum: 10 december 2026. Tid: 01:00.",
       "current_level": "LOW",
-      "next": "Konsert? Nej, en pjäs: Chicago – the Musical på Oscarsteatern i Stockholm. Scenföreställningen bygger på dialog, karaktärer, konflikt och repliker, med en textbunden och tolkande gestaltning som bjuder in i berättandet. Upplevelsen vänder sig till vuxna med kulturellt och litterärt intresse, med lyssning, reflektion och applåd i fokus.",
+      "next": "En scensatt musikalversion av Chicago på Oscarsteatern i Stockholm. Föreställningen fokuserar på dialog, karaktärer, konflikt och emotionell gestaltning genom en textbunden tolkning av dramatiken.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.044
+      "similarity": 0.054
     },
     {
       "kind": "icke-musik",
@@ -425,10 +426,10 @@
       "raw": "\"En kärlekshistoria\" är en klassiker av Roy Andersson på Stora scenen i Stockholm.\n\nRoy Anderssons klassiker \"En kärlekshistoria\" spelas på Stora scenen. Denna uppsättning involverar publiken, där du själv får inta huvudrollen.",
       "current": "En kärlekshistoria. Typ: theater. Genre: drama. Lokal: teater. För: vuxna, kulturellt intresserade, litteraturintresserade. Datum: 2 januari 2027. Tid: 19:00. Pris: från 150 kr.",
       "current_level": "LOW",
-      "next": "En kärlekshistoria är en litterär pjäs med dialog, karaktärer och emotionell konflikt. Scenföreställningen på Stora scenen i Stockholm präglas av textbunden gestaltning och inbjuder vuxna, kulturellt och litteraturintresserade till lyssning, reflektion och applåd.",
+      "next": "En kärlekshistoria är en textbunden scenföreställning med dialog, karaktärer, konflikt och emotionell gestaltning. Pjäsen vänder sig till vuxna teater- och litteraturintresserade i Stora scenen i Stockholm.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.091
+      "similarity": 0.107
     },
     {
       "kind": "icke-musik",
@@ -453,10 +454,10 @@
       "raw": "Delta i det största mötet för den nordiska datacenter-communityn på Datacenter Forum Stockholm! Oavsett om du är operatör, leverantör, konsult eller slutanvändare får du chansen att fördjupa dig i de senaste trenderna, innovationerna och möjligheterna som formar vår bransch. Förvänta dig inspirerande keynotes, expertpresentationer och massor av nätverkande med branschkollegor och beslutsfattare. Missa inte evenemanget där kunskap, idéer och nya kontakter driver framtidens digitala infrastruktur i Norden!",
       "current": "Datacenter Forum Stockholm. Typ: talk. Lokal: sal / föreläsningslokal. För: vuxna, intresserade. Datum: 3 december 2026. Tid: 01:00.",
       "current_level": "LOW",
-      "next": "Datacenter Forum Stockholm. Typ: talk. Lokal: sal / föreläsningslokal. För: vuxna, intresserade. Datum: 3 december 2026. Tid: 01:00.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.056
+      "next": "Datacenter Forum Stockholm är ett forum med föreläsningar och lyssning i en föreläsningslokal på Stockholmsmässan. Evenemanget riktar sig till vuxna och intresserade, med möjlighet till frågestund.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.088
     },
     {
       "kind": "icke-musik",
@@ -481,9 +482,9 @@
       "raw": "",
       "current": "Processindustridagarna 2026. Typ: community. Lokal: lokal / bibliotek / föreningslokal. För: lokala, vuxna, intresserade, studerande. Datum: 12 november 2026. Tid: 01:00.",
       "current_level": "LOW",
-      "next": "Processindustridagarna 2026. Typ: community. Lokal: lokal / bibliotek / föreningslokal. För: lokala, vuxna, intresserade, studerande. Datum: 12 november 2026. Tid: 01:00.",
-      "next_status": "fallback_fact",
-      "changed": false,
+      "next": "Processindustridagarna 2026 erbjuder ett lokalt och pedagogiskt program med samhällsengagemang och kunskapsdelning. Evenemanget riktar sig till vuxna, studerande och andra intresserade, med plats för frågor, diskussion och delaktighet.",
+      "next_status": "passed",
+      "changed": true,
       "similarity": 0
     },
     {
@@ -509,10 +510,10 @@
       "raw": "Elina Pirinen - Ghosts of Rosegarden är ett evenemang på Stora Scen i Stockholm.\n\nElina Pirinen presenterar Ghosts of Rosegarden på Stora Scen i Stockholm. Detta evenemang äger rum på den angivna platsen.",
       "current": "Elina Pirinen - Ghosts of Rosegarden. Typ: theater. Medverkande: Elina Pirinen, Ghosts of Rosegarden. Genre: dans. Lokal: scen. För: vuxna, kulturellt intresserade. Datum: 31 oktober 2026. Tid: 19:00.",
       "current_level": "LOW",
-      "next": "Elina Pirinen bjuder på ”Ghosts of Rosegarden”, en koreograferad dansföreställning med dansare, rörelse och musik på Stora Scen i Stockholm. Den visuella upplevelsen riktar sig till vuxna med kulturellt intresse.",
+      "next": "Elina Pirinen bjuder på ”Ghosts of Rosegarden”, en koreograferad dansföreställning med dansare, rörelser och musik på Stora Scen. Den visuella upplevelsen riktar sig till vuxna med kulturellt intresse.",
       "next_status": "passed",
       "changed": true,
-      "similarity": 0.25
+      "similarity": 0.208
     },
     {
       "kind": "icke-musik",
@@ -537,10 +538,10 @@
       "raw": "Andrew Lloyd Webbers och Tim Rices älskade rockmusikal. Om hur en gräsrotsrörelse skakar maktens grepp om människorna. Där vägen till korsfästelsen formas av kampen mellan ljus och mörker. Ett drama präglat av tro, tvivel och makt. I rollerna ser vi bland andra Alexander Lycke, Fredrik Lycke och Marsha Songcome. Regi Maria Sid. Premiär 9 oktober.",
       "current": "Jesus Christ Superstar. Typ: theater. Genre: drama. Lokal: teater. För: vuxna, kulturellt intresserade, litteraturintresserade. Datum: 8 november 2026. Tid: 13:00.",
       "current_level": "LOW",
-      "next": "Typ: theater. Genre: drama. Lokal: teater. För: vuxna, kulturellt intresserade, litteraturintresserade. Datum: 8 november 2026. Tid: 13:00.",
-      "next_status": "fallback_fact",
+      "next": "En scenföreställning på Kulturhuset Stadsteatern i Stockholm, där dramatisk dialog, karaktärer, konflikt och scenografi möter interpretativ och textbunden gestaltning. Föreställningen riktar sig till vuxna med intresse för kultur och litteratur.",
+      "next_status": "passed",
       "changed": true,
-      "similarity": 0.02
+      "similarity": 0.034
     },
     {
       "kind": "icke-musik",
@@ -621,9 +622,9 @@
       "raw": "",
       "current": "Formex 2027. Typ: exhibition. Lokal: galleri / museum. För: vuxna, kulturellt intresserade. Datum: 24 augusti 2027. Tid: 03:00.",
       "current_level": "LOW",
-      "next": "Formex 2027 är en curerad utställning med verk och installationer på Stockholmsmässan i Stockholm. Den visuella upplevelsen är lugn och självständig, med plats för vandring och observation för vuxna och kulturellt intresserade.",
-      "next_status": "passed",
-      "changed": true,
+      "next": "Formex 2027. Typ: exhibition. Lokal: galleri / museum. För: vuxna, kulturellt intresserade. Datum: 24 augusti 2027. Tid: 03:00.",
+      "next_status": "fallback_fact",
+      "changed": false,
       "similarity": 0
     },
     {
@@ -649,10 +650,10 @@
       "raw": "Slutspel är Samuel Becketts komedi på Orionteatern i Stockholm.\n\nPå Orionteatern i Stockholm spelas Slutspel, Samuel Becketts mest tragiska komedi. Föreställningen har Olof Wretling och Johan Ulveson i rollerna. Kicki Bramberg och Göran Engman medverkar också på scen. Regissören Karl Dunér står för uppsättningen av denna komedi.",
       "current": "Slutspel. Typ: theater. Genre: komedi, standup. Lokal: teater. För: vuxna. Datum: 18 december 2026. Tid: 19:00. Pris: från 250 kr.",
       "current_level": "LOW",
-      "next": "Slutspel. Typ: theater. Genre: komedi, standup. Lokal: teater. För: vuxna. Datum: 18 december 2026. Tid: 19:00. Pris: från 250 kr.",
-      "next_status": "fallback_fact",
-      "changed": false,
-      "similarity": 0.057
+      "next": "Slutspel är en scenframställning på Orionteatern i Stockholm med monolog, skämt och improvisation. Den interpretativa standup-formen bygger på humor, lyssning och direkt publikkontakt.",
+      "next_status": "passed",
+      "changed": true,
+      "similarity": 0.103
     },
     {
       "kind": "icke-musik",

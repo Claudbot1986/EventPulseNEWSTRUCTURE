@@ -21,7 +21,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { runEditorialPipeline, buildStoredProfile, buildStoredEditorialDescription } from './index';
 import { MiniMaxM3LlmClient, MockLlmClient } from './editorialWriter';
-import type { EventUnderstandingInput } from './eventUnderstanding';
+import { buildEventProfile, type EventUnderstandingInput } from './eventUnderstanding';
+import { chooseFallback, type FallbackResult } from './fallbackHierarchy';
 
 // ─── Env / config ────────────────────────────────────────────────────────────
 
@@ -158,6 +159,50 @@ export async function writeEditorialBack(
   return true;
 }
 
+/**
+ * Skriv en DETERMINISTISK fallback-text (FACT/MINIMAL) tillbaka.
+ *
+ * 2026-11-02 — Användarens beslut: punkt 4 ska gälla "kommande events enbart"
+ * (ingen backfill av de 5 388 faktmallsraderna). Då måste ett nytt event
+ * ALLTID få en beskrivning. Före detta skrev `writeEditorialBack` ingenting
+ * när LLM-anropet föll (t.ex. MiniMax 429), så eventet sparades utan både
+ * `editorial_description` och `event_profile` — och syntes tomt i appen.
+ *
+ * Fallback-texten kommer ur `chooseFallback` (profilens egna fält) — den
+ * innehåller bara fakta (titel, typ, genre, lokal, datum, tid, pris) och
+ * ingen källtext. Den är alltså copyright-säker på samma sätt som
+ * `fallbackHierarchy.ts` i övrigt.
+ */
+export async function writeEditorialFallbackBack(
+  supabase: SupabaseClient,
+  event_id: string,
+  fallback: FallbackResult,
+  profile: import('./types').EventProfile,
+): Promise<boolean> {
+  if (!fallback.text) return false;
+  const sp = buildStoredProfile(profile);
+  const { error } = await supabase
+    .from('events')
+    .update({
+      event_profile: sp,
+      editorial_description: fallback.text,
+      editorial_description_generated_at: new Date().toISOString(),
+      editorial_info_level: fallback.info_level,
+      editorial_model: 'fallback',
+      editorial_prompt_version: 'fallback-v1',
+    } as never)
+    .eq('id', event_id);
+
+  if (error) {
+    console.warn(`[editorial] fallback-DB-update misslyckades för ${event_id}: ${error.message}`);
+    return false;
+  }
+  console.log(
+    `[editorial] event ${event_id} skrev deterministisk fallback (info_level=${fallback.info_level}, källa=${fallback.level})`,
+  );
+  return true;
+}
+
 // ─── Huvudintegration ────────────────────────────────────────────────────────
 
 export interface EditorialIntegrationDeps {
@@ -188,10 +233,22 @@ export async function maybeRunEditorial(
     });
 
     // Hämta profile separat (vi behöver den för storage även om result failed).
-    const { buildEventProfile } = await import('./eventUnderstanding');
     const profile = buildEventProfile(inputs);
 
-    await writeEditorialBack(deps.supabase, event.event_id, result, profile);
+    // 2026-11-02 — prosa-fall: skriv LLM-texten. Fallback-fall: skriv den
+    // deterministiska FACT-texten istället för att lämna eventet tomt.
+    if (result.status === 'passed' || result.final_text) {
+      await writeEditorialBack(deps.supabase, event.event_id, result, profile);
+      return;
+    }
+    const fb = chooseFallback(profile, inputs);
+    if (fb.text) {
+      await writeEditorialFallbackBack(deps.supabase, event.event_id, fb, profile);
+    } else {
+      console.log(
+        `[editorial] event ${event.event_id} status=${result.status} — varken prosa eller FACT-fallback (profilen för tunn)`,
+      );
+    }
   } catch (err) {
     // 2026-10-28 — DEGRADED-markören. Editorial är en VALFRI berikning: den
     // fångar sitt eget fel och eventet sparas ändå. Utan markören klassade
@@ -204,5 +261,21 @@ export async function maybeRunEditorial(
       `[editorial] DEGRADED event ${event.event_id} misslyckades:`,
       err instanceof Error ? err.message : String(err),
     );
+
+    // 2026-11-02 — även när LLM-anropet fallerar ska eventet få en
+    // deterministisk beskrivning (bara fakta, ingen källtext). Annars sparades
+    // eventet tomt i appen.
+    try {
+      const profile = buildEventProfile(inputs);
+      const fb = chooseFallback(profile, inputs);
+      if (fb.text) {
+        await writeEditorialFallbackBack(deps.supabase, event.event_id, fb, profile);
+      }
+    } catch (fbErr) {
+      console.warn(
+        `[editorial] DEGRADED event ${event.event_id} — även fallbacken misslyckades:`,
+        fbErr instanceof Error ? fbErr.message : String(fbErr),
+      );
+    }
   }
 }
