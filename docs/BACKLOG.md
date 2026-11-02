@@ -12,24 +12,57 @@ User decisions baked in (2026-09-20): **guest taste-first är första fokus (100
 
 Do in this order. All items are launch blockers; nothing else enters NOW.
 
-1. **Guest taste-first, server side** [IN PROGRESS 2026-10-09]
+1. **Guest taste-first** [DONE — verifierat 2026-11-02]
    - Server: `scripts/smoke-anon-signin.mjs` 6/6 PASS (2026-09-20).
-   - UI: un-hide personalized home sections (Rekommenderat/Förslag/Sparade) for guests in `AppShell`/`HomeScreen`; reframe `AuthReminderModal` copy till sync-framing.
+   - UI: **klart** — `HomeScreen.js` gate:ar inte längre de personliga sektionerna (Senaste/Rekommenderat/Förslag/Sparade) för gäster; `AuthReminderModal` använder sync-framing ("behåll din smak" / "Lägg till din e-post för att behålla den på alla enheter").
+   - Live-verifierat 2026-11-02 mot produktion: anonym `signInAnonymously()` → `POST /agent/chat` ("konsert ikväll" → 4 förslag, "vad finns i helgen" → 5) → `GET /agent/recommended` → 3 events → `POST /agent/feedback` → 400 på ogiltigt id (validering OK).
+   - **Kvar för launch:** enhetsverifiering av gäst→konto-flödet (gäst sparar → lägger till e-post → samma smak) på riktig iPhone — [UNVERIFIED] sedan 2026-09-20.
 
 ### Pre-launch (updated 2026-10-09)
 
 - ~~Analytics decision~~ **Resolved 2026-10-09** (`81b467d2` — Fas 1.5 #4 Val A): `user_interactions` enda funnel source. `analyticsClient` markerad non-funnel.
 - ~~AI image top-up~~ **Superseded 2026-10-28 — replaced by "Storage-restore" below.** BFL round 5 + backfill-verktyg var klart (`1f81a149`), men kvoten uppfylls inte: det stämpade biblioteket (`local_image_library_stamped/`, 488 webp) räcker inte till måltalet 990 (v2-formeln, användarbeslut 2026-10-18) — **kort 557 bilder**.
 
+### Launch-readiness — mätning 2026-11-02 [VERIFIED]
+
+| Vad | Mätvärde | Källa |
+|---|---|---|
+| Framtida events i `events_public` | 10 124 | direkt Postgres |
+| … med `image_url` | 10 120 (99,96 %) | samma |
+| … med `editorial_description` | 9 225 (91 %) | samma |
+| … med `eventpulse_summary` | 9 664 (95 %) | samma |
+| … med `venue_full_name` | 9 102 (90 %) | samma |
+| … med `ticket_url` | 10 037 (99 %) | samma |
+| Event inom 14 dagar | 2 876 — 100 % bild, 92 % beskrivning, 99 % bokningslänk | samma |
+| Live-feed `/agent/feed` | HTTP 200, 29 events, 29/29 `image_url` | `eventpulse-agent.fly.dev` |
+| Live-`image_url` HTTP-svar | 66/69 → 200 (3 trasiga = `malmo-icc-2`) | mätning |
+| Gästflöde live | anon-signin → `/agent/chat` (4 + 5 svar) → `/agent/recommended` (3) → `/agent/feedback` (validerar) | mätning |
+| Testsvit | 4 509/4 529 gröna, 13 fel i 3 kändastegelfiler | `vitest run --reporter=json` |
+| iOS-bundle (Expo SDK 58) | `expo export --platform ios` exit 0 | mätning |
+| Senaste EAS store-bygg | SDK 57, build 10, 2026-10-11 → **föråldrad mot SDK 58** | `eas build:list` |
+| Hemsida | `eventpulse.nu` + `/privacy` `/villkor` `/kontakt` `/support` `/en/*` → 200 | mätning |
+
+**Kvar som faktiskt blockerar en publik launch:**
+1. Ny EAS production-bygg på SDK 58 + TestFlight-uppladdning (bygget är 3 veckor gammalt).
+2. Enhetsverifiering av gäst→konto-flödet på riktig iPhone (ej verifierat sedan 2026-09-20).
+3. App Store-material: skärmbilder (0 finns), metadata, nutrition labels, `PrivacyInfo.xcprivacy` (saknas i `06-UI`).
+4. Repo-hygien: 46 opushade commits på `bfl`, `main` ligger 463 commits före, `.github/workflows/` är tomt (CI körs inte).
+
 ### Storage-restore [BLOCKER — discovered 2026-10-28, verified against live feed]
+
+> **Status 2026-11-02: blocken är LÖST.** Bucketen `event-posters` är populerad och bilderna
+> svarar 200. Mätt: `image_library` 1 750 rader (alla under `import-stamped/`), 10 120 av
+> 10 124 framtida events har `image_url`, 66/69 slumpade live-URLer svarar HTTP 200,
+> och de 3 trasiga som återstod är `malmo-icc-2` (se nedan). Originalfynd nedan är
+> historik — orsakerna (sökväg, fillista, skip-kontroll, källmapp) är rättade.
 
 Supabase Storage-bucketen `event-posters` innehåller **0 objekt**. Varje `image_url` i databasen svarar HTTP 400 `NoSuchKey`, och det live-feedet appen läser (`eventpulse-agent.fly.dev/agent/feed`) levererar 15/15 events med trasiga bild-URL:er. UI saknar `onError` på `<Image>`, så tecknet blir en tom yta.
 
 - [x] **Uppladdningssökvägen rättad** (2026-10-29, commit `d8dbff5e`). `scripts/_upload_stamped_to_storage.ts` hade FYRA fel: kategori-undermappen saknades i sökvägen (`import-stamped/<fil>.webp` i stället för `import-stamped/<kategori>/<fil>.webp`), fillistan var icke-rekursiv, skip-kontrollen jämförde bara filnamnet, och källmappen var hårdkodad till det gamla biblioteket. Nu: `--src=`, rekursiv fillista med hela sökvägar, jämförelse på sökväg, `--register` (upsert i image_library), `--include-all`. Default = endast 3:2.
 - [x] **`image_library.storage_path` UNIQUE** (2026-10-29, migration `20261029-0002`, applicerad). Saknades helt → `upsert(..., {onConflict:'storage_path'})` gick inte att köra. Mätt före: 422 rader, 422 unika → inga dubbletter.
-- [ ] **Ladda upp `local_image_library_stamped_v2/`** → `import-stamped/<kategori>/<fil>.webp` och registrera i `image_library`. Kommando: `node --env-file=.env --import tsx scripts/_upload_stamped_to_storage.ts --src=local_image_library_stamped_v2 --register --apply`.
-- [ ] Återställ de 2 271 unika "flat" URL:erna (`import-stamped/bfl5v2_*.webp`) från `local_image_library/` (2 136 finns som `.png`) — konvertera PNG→WebP med stamp. 135 unika URL:er saknar helt lokal källa.
-- [ ] Kör `08-Agent/scripts/backfill_library_to_future.ts --apply` mot de 744 framtida events med `image_url IS NULL` (`image_generation_status='pending'`) — kräver att storage är populerat först. Ingen AI-image-worker körs (ingen launchd-job).
+- [x] **Ladda upp `local_image_library_stamped_v2/`** → `import-stamped/<kategori>/<fil>.webp` och registrera i `image_library`. **Verifierat 2026-11-02:** `image_library` har 1 750 rader, samtliga med `storage_path` under `import-stamped/` (22 kategorier + 885 `word`-rader); 66/69 slumpade live-`image_url` svarar HTTP 200.
+- [~] **Flat-URL:erna är i praktiken redan ersatta** (2026-11-02). `image_library` har 0 rader med `bfl5v2`, och bara **5 framtida events** pekar fortfarande på `import-stamped/bfl5v2_*.webp` (alla `malmo-icc-2`, HTTP 400) → UI visar platshållare via `onError`. Ingen blockerare för launch.
+- [x] **Backfill mot saknade bilder** (2026-11-02): `image_url IS NULL` är nu **4** framtida events (av 10 124) — var 744. 0 av dem ligger inom 14 dagar. Ingen AI-image-worker behövdes köras.
 - [x] **`onError` på 13 `<Image>`-taggar** (2026-10-29, commit `d8dbff5e`). Ny hook `06-UI/hooks/useBrokenImage.js` (samma mönster som MapEventCard redan använde) tillämpad på EventPulseCard, EventPulseSenasteCard, NewEventCard, UtforskaSection och App.js:s två eventbilder. Verifierat visuellt i riktig app: **105 onError-varningar** i konsolen och platshållare i stället för tydiga tomma ytor.
 - [ ] Fixa `scripts/_check_image_quota_v2.ts` (saknar `import 'dotenv/config'` → rapporterar "alla kategorier uppfyller kvoten" utan att mäta) och låt båda kvotskripten läsa `events_public` i stället för legacy `events` (kategori-slugs matchar inte `image_library`).
 
