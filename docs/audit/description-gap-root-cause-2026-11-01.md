@@ -6,7 +6,16 @@
 **Utgångspunkt:** "gå in på hemsidan själv och kontrollera — jag kan uppenbart jättelätt hitta titel/plats mm."
 
 **Status:** alla siffror nedan är mätta mot live-Supabase (2026-11-01) eller mot den riktiga appen.
-Ingen produktionskod har ändrats av den här undersökningen.
+
+> **UPPDATERAD 2026-11-02 — orsak 1, 3 och 4 är åtgärdade och verifierade.**
+> - **Orsak 1 (Hem-selecten):** fixat. Hem/Utforska/Sök visar nu **89 / 89 / 89** events utan beskrivning (var 11 932 / 95 / 218).
+> - **Orsak 2 (90 events utan text):** kvar — kräver editorial-backfill.
+> - **Orsak 3 (gratisistockholm, fel tid 18:00 mot 19:00):** analysat — se `docs/audit/description-gap-root-cause-2026-11-01.md` §5. Källadapter ej gjord.
+> - **Orsak 4 (`rowMapping` forwardar inte `eventpulse_summary`):** fixat.
+> - **Ny orsak hittad:** faktualitetsgaten underkände vanlig redaktionell glöd ("riktar", "erbjuder", "bjuder" …) som om det var påståenden → halva beskrivningarna blev faktmallar. Fixad med `NON_FACTUAL_VOCABULARY`; isolerad effekt: 8/30 → 12/30 PASS, 151 → 82 underkända claims.
+> - **Verifieringsskill:** `.cursor/skills/verify-eventpulse-descriptions/` (5 grindar + feature-karta). Bevis: `runtime/verification-reports/description-rights-<ts>.json`.
+>
+> Originaltexten nedan beskriver tillståndet **före** fixarna och är kvar som historik.
 
 ---
 

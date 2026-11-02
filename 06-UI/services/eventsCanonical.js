@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { formatLocalDate, formatLocalTime } from './localTime';
+import { isPublicLicense } from '../utils/descriptionFallback';
 
 const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const DEFAULT_SERVICE_KEY =
@@ -16,7 +17,7 @@ const DEFAULT_SERVICE_KEY =
 // events som inte hunnit matchas mot venues ännu) används venue_full_name/address
 // från source-payload istället för att visa "Plats ej angiven".
 const EVENT_SELECT =
-  'id,source,source_id,title_sv,title_en,description_sv,description_en,start_time,end_time,venue_id,venue_full_name,venue_full_address,venue_city,venue_lat,venue_lng,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
+  'id,source,source_id,title_sv,title_en,description_sv,description_en,description_license,start_time,end_time,venue_id,venue_full_name,venue_full_address,venue_city,venue_lat,venue_lng,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
 
 export function getSupabaseConfig() {
   return {
@@ -76,7 +77,15 @@ export function transformEvent(row) {
     title,
     title_sv: row.title_sv,
     title_en: row.title_en,
-    description: row.description_sv || row.description_en || '',
+    // 2026-11-02 — LICENSGRIND. Den här vägen läser BAS-TABELLEN `events`,
+    // inte vyn `events_public`, så vyns CASE WHEN-filter gäller inte här.
+    // Utan egen gate kringgår vägen rättighetsregeln: källans råa
+    // beskrivningstext skulle synas i appen trots `description_license='unknown'`.
+    // Samma lista som i descriptionFallback.js / descriptionLicense.ts.
+    // Mätt 2026-11-02: 0 events har en tillåtande licens → råtext blockeras.
+    description: isPublicLicense(row.description_license)
+      ? row.description_sv || row.description_en || ''
+      : '',
     date: formatDate(row.start_time),
     time: formatTime(row.start_time),
     start_time: row.start_time,

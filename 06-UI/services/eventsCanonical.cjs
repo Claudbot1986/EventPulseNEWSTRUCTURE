@@ -13,7 +13,22 @@ const DEFAULT_SERVICE_KEY =
 // 20261005-0001-events-venue-full-fields.sql. venue_name prioriteras från
 // venues-tabellen (curated), annars venue_full_name från source-payload.
 const EVENT_SELECT =
-  'id,source,source_id,title_sv,title_en,description_sv,description_en,start_time,end_time,venue_id,venue_full_name,venue_full_address,venue_city,venue_lat,venue_lng,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
+  'id,source,source_id,title_sv,title_en,description_sv,description_en,description_license,start_time,end_time,venue_id,venue_full_name,venue_full_address,venue_city,venue_lat,venue_lng,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
+
+// 2026-11-02 — LICENSGRIND (spegel av 06-UI/utils/descriptionFallback.js och
+// 04-Normalizer/descriptionLicense.ts). Den här vägen läser BAS-TABELLEN
+// `events`, inte vyn `events_public`, så vyns filter gäller inte — utan
+// egen gate kringgår vägen rättighetsregeln.
+const PUBLIC_LICENSES = new Set([
+  'pressbild',
+  'copyright-with-attribution',
+  'partner-licensed',
+  'public-domain',
+]);
+
+function isPublicLicense(license) {
+  return license != null && PUBLIC_LICENSES.has(license);
+}
 
 function getConfig() {
   return {
@@ -42,7 +57,9 @@ const formatTime = formatLocalTime;
 function transformEvent(row) {
   const venue = row.venues || {};
   const title = row.title_sv || row.title_en || 'Untitled';
-  const description = row.description_sv || row.description_en || '';
+  const description = isPublicLicense(row.description_license)
+    ? row.description_sv || row.description_en || ''
+    : '';
   // 2026-10-05 — venue-resolution prioritetsordning:
   //   1. venues.name (curated) — bästa kvalitet
   //   2. venue_full_name (från source-payload) — fallback om venue_id är null

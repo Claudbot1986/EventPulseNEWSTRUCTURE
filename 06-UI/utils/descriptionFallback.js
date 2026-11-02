@@ -70,6 +70,14 @@ function isPublicLicense(license) {
 }
 
 /**
+ * 2026-11-02 — exporteras så att VARJE läsväg i UI:t kan gate:a på samma
+ * lista. `06-UI/services/eventsCanonical.js` läser bas-tabellen `events`
+ * (inte vyn `events_public`) och behöver därför samma gate — annars
+ * kringgår den licensgrinden.
+ */
+export { isPublicLicense };
+
+/**
  * Bygg en kort faktabaserad beskrivning från strukturerade fält.
  * Detta är UI:s sista "säkra" rad om varken eventpulse_summary eller en
  * tillåten description finns.

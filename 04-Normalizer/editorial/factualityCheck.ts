@@ -186,6 +186,82 @@ const GENERIC_TIME_NOUNS: ReadonlySet<string> = new Set([
   'scen', 'scenen', 'lokal', 'hus', 'huset',
 ]);
 
+/**
+ * Icke-faktual vokabulär (2026-11-02) — ord som INTE kan verifieras eller
+ * motbevisas mot Profilen, och vars närvaro/ frånvaro inte säger något om
+ * evenemanget. De får därför aldrig bilda en faktualitets-claim.
+ *
+ * Varför detta behövdes — mätt 2026-11-02:
+ *   30 LOW-level events kördes om genom pipelinen: 24 föll tillbaka till
+ *   FACT-mallen, 6 klarade grinden. 145 claims underkändes, och varje
+ *   enda av de 40 vanligaste var ren connective-formulering:
+ *     "riktar" (4), "riktar sig" (4), "erbjuder" (3), "och erbjuder" (3),
+ *     "riktar sig till" (3), "stödja" (3), "kan stödja" (3), "bygger" (3),
+ *     "bjuder" (2), "evenemanget riktar" (2), "kombinerar" (2) …
+ *   Ingenting av det är en hallucination — det är normal svensk
+ *   redaktionell glöd ("Evenemanget riktar sig till vuxna och intresserade").
+ *   Gaten behandlade den som ett påstående som måste spåras i Profilen,
+ *   underkände den, genererade om, underkände igen → FACT-mall.
+ *   Det är så hälften av alla beskrivningar blev faktmallar i stället för
+ *   prosa.
+ *
+ * VIKTIGT — listan är avsiktligt snäv. Den får INTE innehålla ord som
+ * påstår något om evenemangets identitet, plats, tid, pris, genre, publik
+ * eller artister. "scen", "lokal", "kväll", "gemensam", "community",
+ * "format" och "genre" är alltså INTE här — de är fakta och ska fortsätta
+ * underkännas när Profilen inte bär dem (FARVEBLIND-fallet).
+ *
+ * Rättslig relevans: den här ändringen rör INTE upphovsrättsgrinden.
+ *   - brandväggen (writer-inputs) är orörd — källtext når aldrig modellen
+ *   - independence-checken är orörd — utdata jämförs mot källtexten
+ *   Det som ändras är bara vilka strängar som räknas som "påstående".
+ */
+const NON_FACTUAL_VOCABULARY: ReadonlySet<string> = new Set([
+  // Verb som erbjuder/riktar/förmedlar — rena glödord.
+  'riktar', 'riktat', 'riktade', 'riktas',
+  'erbjuder', 'erbjuds', 'erbjudit', 'erbjudna',
+  'bjuder', 'bjuds', 'bjudit', 'inbjuder', 'inbjuds',
+  'stödja', 'stöds', 'stöder', 'stödjer', 'understödja', 'understöds',
+  'bygger', 'byggt', 'byggde', 'byggs',
+  'kombinerar', 'kombinerat', 'kombinerade',
+  'följa', 'följt', 'följer',
+  'vänder', 'vände', 'vänder',
+  'samlar', 'samlat', 'samlade', 'samlande',
+  'förmedlar', 'förmedlat', 'förmedlade',
+  'skapar', 'skapats', 'skapade', 'skapelse',
+  'ger', 'get', 'gav', 'givit',
+  'bär', 'burit', 'bära',
+  'präglas', 'präglat', 'präglade',
+  'kännetecknas', 'kännetecknar', 'kännetecknade',
+  'utmärks', 'utmärkt', 'utmärkta',
+  'sker', 'skedde', 'pågår', 'pågått',
+  'hålls', 'hållet', 'hålla',
+  'arrangeras', 'arrangerat', 'arrangerade',
+  'genomförs', 'genomför', 'genomförande',
+  'rymmer', 'rymma', 'rymdes',
+  'omfattar', 'omfattande',
+  'fokuserar', 'fokuserat',
+  'syftar', 'syftat', 'siktar', 'siktat',
+  'möter', 'möt', 'mötte',
+  'samspel', 'samspelet', 'växelverkan', 'växelverkan',
+  // Abstrakta/evaluativa substantiv — kan inte falsifieras mot Profilen.
+  'upplevelse', 'upplevelser', 'möjlighet', 'möjligheter',
+  'anda', 'energi', 'glädje', 'stolpar',
+  // Rena funktionsord som ändå saknades i listan.
+  'både', 'eget', 'egen', 'egna', 'tillsammans', 'emot', 'mellan',
+  'genom', 'sådan', 'sådant', 'dylik', 'dylika',
+  // Andra omgången (mätt 2026-11-02 efter första fixen): 28 claims kvar,
+  // varav 28 → 21 var samma slags glöd i ny form.
+  'utforskas', 'utforska', 'utforskades', 'utforskning',
+  'responderar', 'svarar', 'svarade',
+  'präglad', 'präglade', 'präglats',
+  'kring', 'hos', 'inom', 'utom', 'utåt', 'inåt',
+  'visuella', 'visuellt', 'visuell', 'curerad', 'curerat', 'curerade',
+  // Possessiva pronomen (de saknades i PRONOUNS-listan).
+  'hans', 'hennes', 'deras', 'vår', 'våra', 'vårt', 'min', 'mig',
+  'din', 'ditt', 'dina',
+]);
+
 /** Tids-/kvantitetsord (inte claims om ensamma). */
 const QUANTITY_TIME: ReadonlySet<string> = new Set([
   // [FAS 5 2026-10-08] REVERTED 'längre/kort/kortare/fler/flera/många' — materiella claims.
@@ -313,6 +389,9 @@ function isStylisticOrCommon(w: string): boolean {
   if (PRONOUNS.has(lower)) return true;
   if (QUANTITY_TIME.has(lower)) return true;
   if (GENERIC_TIME_NOUNS.has(lower)) return true;
+  // 2026-11-02 — icke-faktual vokabulär (connective glöd). Se definitionen
+  // ovan för mätvärden och varför listan är avsiktligt snäv.
+  if (NON_FACTUAL_VOCABULARY.has(lower)) return true;
   return false;
 }
 
@@ -940,6 +1019,7 @@ export const __test__ = {
   STYLISTIC_ADJECTIVES,
   PRONOUNS,
   QUANTITY_TIME,
+  NON_FACTUAL_VOCABULARY,
   isStylisticOrCommon,
   buildEvidenceBase,
   matchClaim,

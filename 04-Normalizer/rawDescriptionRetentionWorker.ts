@@ -12,9 +12,11 @@
  *
  * Loggning: skriver antal raderade events till runtime/raw-description-retention.jsonl.
  *
- * Körs manuellt eller via launchd-jobb:
+ * Körs av nattkedjan (steget `raw-description-retention` i
+ * scripts/ingestion-cron.ts) eller manuellt:
  *   tsx 04-Normalizer/rawDescriptionRetentionWorker.ts --dry-run
  *   tsx 04-Normalizer/rawDescriptionRetentionWorker.ts --apply
+ *   tsx 04-Normalizer/rawDescriptionRetentionWorker.ts --retention-days 1 --dry-run
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -123,6 +125,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const dryRun = args.includes('--dry-run');
   const apply = args.includes('--apply');
 
+  // 2026-11-02 — `--retention-days N` gör time-boxen justerbar och
+  // gör workern testbar: `--retention-days 1 --dry-run` visar exakt vilka
+  // rader som WOULD rensas, utan att radera något.
+  const daysIdx = args.indexOf('--retention-days');
+  const retentionDays =
+    daysIdx !== -1 && args[daysIdx + 1] ? Number(args[daysIdx + 1]) : undefined;
+  if (retentionDays !== undefined && (!Number.isFinite(retentionDays) || retentionDays <= 0)) {
+    console.error('[retention] --retention-days måste vara ett positivt tal');
+    process.exit(1);
+  }
+
   const mode: 'dry-run' | 'apply' = apply ? 'apply' : 'dry-run';
 
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -133,7 +146,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
 
-  runRetentionWorker(supabaseUrl, supabaseKey, { mode })
+  runRetentionWorker(supabaseUrl, supabaseKey, {
+    mode,
+    ...(retentionDays !== undefined ? { retentionDays } : {}),
+  })
     .then((result) => {
       console.log('[retention]', JSON.stringify(result, null, 2));
       process.exit(0);

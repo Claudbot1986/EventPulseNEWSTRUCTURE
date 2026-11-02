@@ -142,9 +142,16 @@ function dedupeByImageUrl(cards) {
 // Normaliserar en Supabase-rad (events_public) till den shape DetailsScreen
 // (App.js) läser: event.id, event.title, event.url, event.hasExternalLink,
 // event.date, event.time, event.description, event.category, event.source,
-// event.image_url/imageUrl, event.image_ai_*. venue_name finns inte i
-// events_public (endast venue_id + lat/lng) — DetailsScreen visar då
-// "Plats ej angiven" via getVenueLabel-fallback.
+// event.image_url/imageUrl, event.image_ai_*.
+//
+// 2026-11-02 (beskrivningslucka): vyn `events_public` exponerar numera
+// `venue_full_name` (inte `venue_name`) — den gamla kommentaren "venue_name
+// finns inte i events_public" var FEL och gjorde att fältet hämtades men
+// aldrig mappades, så DetailsScreen visade tom platsrad. Nu mappas
+// `venue_full_name` → `venue_name`. Samma select-listor hämtar dessutom
+// `editorial_description`, `eventpulse_summary` och `description_license` —
+// utan dem kunde `getDetailsDescription` inte några av sina fem steg, och
+// appen visade "No description available from <källa>" för 100 % av eventsen.
 //
 // start_time är ISO-timestamp; splittas till date (YYYY-MM-DD) + time
 // (HH:MM) eftersom DetailsScreen läser dem separat via formatDate/formatTime.
@@ -200,6 +207,11 @@ function toDetailsScreenEvent(row) {
     description_attribution: row.description_attribution ?? null,
     description_source_url: row.description_source_url ?? null,
     category,
+    // 2026-11-02: getDetailsDescription() steg 2 läser `eventpulse_summary`
+    // och steg 4 läser `category_slug` — inte `category`. Utan dessa två
+    // forwarding-fält kunde resolver inte någon av sina fem steg i Hem-flödet.
+    category_slug: row.category_slug ?? category ?? null,
+    eventpulse_summary: typeof row.eventpulse_summary === 'string' ? row.eventpulse_summary : null,
     source: row.source || null,
     image_url: row.image_url || null,
     imageUrl: row.image_url || null,
@@ -214,7 +226,7 @@ function toDetailsScreenEvent(row) {
     lat: typeof row.lat === 'number' ? row.lat : null,
     lng: typeof row.lng === 'number' ? row.lng : null,
     // venue_name / area används av NewEventCard för meta-raden ("Venue · Area").
-    venue_name: row.venue_name || null,
+    venue_name: row.venue_name || row.venue_full_name || null,
     area: row.area || row.city || null,
     address: row.address || null,
   };
@@ -370,7 +382,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         // fylla top-10). Visa bara framtida rekommendationer.
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free, confidence_score, freshness_at, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free, confidence_score, freshness_at, venue_id, venue_full_name')
           .gte('start_time', new Date().toISOString())
           .order('confidence_score', { ascending: false })
           .order('freshness_at', { ascending: false })
@@ -393,7 +405,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         future.setDate(today.getDate() + 21);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, confidence_score, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, confidence_score, venue_id, venue_full_name')
           .gte('start_time', today.toISOString())
           .lte('start_time', future.toISOString())
           .order('start_time', { ascending: false })
@@ -420,7 +432,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         todayEnd.setHours(23, 59, 59, 999);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
           // 2026-09-26 — tidigare .gte(todayStart) som innebar midnatt, så
           // Chicago-events (02:00-Stockholm-tid pga ingestion-bugg) fyllde
           // limit(40) och de riktiga ikväll-eventsen (18:00+) kom aldrig
@@ -456,7 +468,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         // events. .gte(now) släpper bara igenom framtida helg-events.
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
           .gte('start_time', new Date().toISOString())
           .gte('start_time', from.toISOString())
           .lte('start_time', to.toISOString())
@@ -476,7 +488,7 @@ export default function HomeScreen({ onCardPress, userState }) {
       try {
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
           .order('confidence_score', { ascending: true })
           .limit(UPPTACK_LIMIT);
         if (cancelled) return;
@@ -498,7 +510,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         tomorrowEnd.setHours(23, 59, 59, 999);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
           .gte('start_time', tomorrowStart.toISOString())
           .lte('start_time', tomorrowEnd.toISOString())
           .order('start_time', { ascending: true })
@@ -517,7 +529,7 @@ export default function HomeScreen({ onCardPress, userState }) {
       try {
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, venue_id, venue_full_name')
           .eq('category_slug', 'food')
           .gte('start_time', new Date().toISOString())
           .order('start_time', { ascending: true })
@@ -536,7 +548,7 @@ export default function HomeScreen({ onCardPress, userState }) {
       try {
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free, venue_id, venue_full_name')
           .eq('is_free', true)
           .gte('start_time', new Date().toISOString())
           .order('start_time', { ascending: true })
@@ -558,7 +570,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at, venue_id, venue_full_name')
+          .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at, venue_id, venue_full_name')
           .gte('freshness_at', fortyEightHoursAgo.toISOString())
           .gte('start_time', new Date().toISOString())
           .order('freshness_at', { ascending: false })
@@ -569,7 +581,7 @@ export default function HomeScreen({ onCardPress, userState }) {
           const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
           const { data: dataWide, error: errorWide } = await supabase
             .from('events_public')
-            .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at, venue_id, venue_full_name')
+            .select('id, title_sv, title_en, description_sv, description_en, editorial_description, editorial_description_generated_at, eventpulse_summary, description_license, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at, venue_id, venue_full_name')
             .gte('freshness_at', sevenDaysAgo.toISOString())
             .gte('start_time', new Date().toISOString())
             .order('freshness_at', { ascending: false })

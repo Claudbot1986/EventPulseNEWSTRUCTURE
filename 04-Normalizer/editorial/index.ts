@@ -109,6 +109,13 @@ export async function runEditorialPipeline(
     },
   });
 
+  // 2026-11-02 — `assertFirewallClean` var importerad men aldrig anropad i
+  // produktion (bara i tester). Det är ANDRA försvarslinjen: fångar
+  // förbjudna fält som smyger in via en annan väg än compileWriterInputs.
+  // Nu körs den på writer-inputs innan modellen anropas — kostnadsfritt
+  // (rent lokalt objekt) och gör brandväggen faktiskt dubbel.
+  assertFirewallClean(writerInputs);
+
   // ── Steg 3-6: Writer + Factuality + Independence, regenerera vid fail ──
   let attempts = 0;
   let draft: EditorialDraft = await writeEditorialDescription({

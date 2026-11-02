@@ -223,7 +223,7 @@ export interface IndependenceCheckInput {
   /** Profile för extra skydd av artistnamn/venues/genrer. */
   profile?: EventProfile;
   event?: { title?: string; venue_name?: string | null; city?: string | null };
-  /** Valfri threshold (0..1). Default 0.35. */
+  /** Valfri threshold (0..1). Default 0.5 (= DEFAULT_SIMILARITY_THRESHOLD). */
   threshold?: number;
 }
 

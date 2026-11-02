@@ -966,6 +966,34 @@ if (!skipImages) {
     args: ['scripts/reconcile-source-status.mjs', ...(smoke ? ['--dry'] : [])],
   });
 
+  // ── raw-description-retention: 30-dagars time-box på rå källtext ──────────
+  //
+  // 2026-11-02 — beslutet (T0201, 2026-10-05) är att `raw_description`
+  // (källans råa beskrivningstext) ska försvinna ur databasen 30 dagar
+  // efter att den fångades. Modulen `rawDescriptionRetention.ts` och
+  // workern `rawDescriptionRetentionWorker.ts` har funnits sedan dess —
+  // men workern hade INGEN anropare: inte i nattkedjan, inte i launchd,
+  // inte i något skript. Mätt 2026-11-02: 9 154 events hade råtext,
+  // 0 rader var äldre än 30 dagar ännu (senaste fångst 2026-11-01), så
+  // regeln var inte bruten — men den skulle ha börjat försummas 2026-11-03.
+  //
+  // Placerat EFTER worker-drain: nattens nya events är persisterade när
+  // workern kör, så de som precis passerade 30-dagarsgränsen rensas
+  // samma natt. Rör BARA `raw_description` + `raw_description_captured_at`
+  // — aldrig annat fält. Idempotent: körs flera gånger samma dag raderas
+  // inget extra.
+  //
+  // I smoke: --dry-run (bara rapportera). Smoke ska inte mutera.
+  steps.push({
+    name: 'raw-description-retention',
+    cmd: 'npx',
+    args: [
+      'tsx',
+      '04-Normalizer/rawDescriptionRetentionWorker.ts',
+      ...(smoke ? ['--dry-run'] : ['--apply']),
+    ],
+  });
+
   // ── P2C: Active-learning closed loop ──────────────────────────────────
   // Triggar review-flagga för låg-confidence events → record_feedback
   // → dashboard visar dem i human-review modal.

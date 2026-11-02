@@ -179,6 +179,13 @@ export function mapAgentEventToRow(event, language) {
     editorial_description_generated_at: typeof event.editorial_description_generated_at === 'string'
       ? event.editorial_description_generated_at
       : null,
+    // 2026-11-02: getDetailsDescription() steg 2 läser `eventpulse_summary`.
+    // Utan forwarding tappade de 115 events som bara har summary (ingen
+    // editorial_description) sin rad-preview i sökresultatet — de fick
+    // beskrivning när man öppnade eventet men ingen under raden i listan.
+    eventpulse_summary: typeof event.eventpulse_summary === 'string'
+      ? event.eventpulse_summary
+      : null,
     description_license: event.description_license ?? null,
     description_attribution: event.description_attribution ?? null,
     description_source_url: event.description_source_url ?? null,

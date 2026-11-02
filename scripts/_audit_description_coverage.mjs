@@ -32,7 +32,7 @@ import { stripHtml } from '../06-UI/utils/stripHtml.js';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT_DIR = path.join(ROOT, 'docs', 'audit');
 const OUT_DATA_DIR = path.join(OUT_DIR, 'data');
-const STAMP = '2026-11-01';
+const STAMP = new Date().toISOString().slice(0, 10);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Läs Hem-flödets select-listor rakt ur koden
@@ -97,22 +97,25 @@ function resolveHem(row) {
   for (const f of homeFields) {
     if (f in row) selected[f] = row[f];
   }
-  // toDetailsScreenEvent (HomeScreen.js:151)
+  // toDetailsScreenEvent (HomeScreen.js) — speglar payload-fälten exakt.
+  // 2026-11-02: description_license, editorial_description,
+  // eventpulse_summary och category_slug forwardas nu (var tidigare
+  // oforwardade → resolver nade inget av sina fem steg).
+  const venueName = selected.venue_name || selected.venue_full_name || null;
   const payload = {
     id: selected.id,
     title: selected.title_sv || selected.title_en || 'Evenemang',
     description: stripHtml(selected.view_description_sv || selected.view_description_en || null),
-    // Obs: description_license, editorial_description, eventpulse_summary och
-    // venue_name finns INTE i select-listan → blir undefined → resolver
-    // kan inte använda dem.
     editorial_description: selected.editorial_description ?? null,
     editorial_description_generated_at: selected.editorial_description_generated_at ?? null,
     event_profile: selected.event_profile ?? null,
     description_license: selected.description_license ?? null,
-    category: selected.category_slug ?? null,
+    eventpulse_summary: selected.eventpulse_summary ?? null,
+    category: selected.category ?? selected.category_slug ?? null,
+    category_slug: selected.category_slug ?? null,
     source: selected.source ?? null,
     start_time: selected.start_time ?? null,
-    venue_name: selected.venue_name ?? null,
+    venue_name: venueName,
     artist: selected.artist ?? null,
   };
   return getDetailsDescription(payload);
@@ -138,10 +141,9 @@ function resolveFeed(row) {
 }
 
 /**
- * Sök-läge: App.js:1319 mappar sökresultat via `mapAgentEventToRow`
- * (06-UI/components/rowMapping.js). Den mappen FORWARDAR
- * editorial_description och description_license men INTE eventpulse_summary
- * (verifierat: noll förekomster av fältet i filen).
+ * Sök-läge: App.js mappar sökresultat via `mapAgentEventToRow`
+ * (06-UI/components/rowMapping.js). Mappen forwardar editorial_description,
+ * description_license och (sedan 2026-11-02) eventpulse_summary.
  */
 function resolveSearch(row) {
   const venue_name = row.venue_table_name || row.venue_full_name || null;
@@ -150,8 +152,7 @@ function resolveSearch(row) {
     title: row.title_sv || row.title_en || 'Evenemang',
     description: stripHtml(row.view_description_sv || row.view_description_en || null),
     editorial_description: row.editorial_description ?? null,
-    // eventpulse_summary: medvetet utelämnat — speglar rowMapping.js
-    eventpulse_summary: null,
+    eventpulse_summary: row.eventpulse_summary ?? null,
     description_license: row.description_license ?? null,
     category_slug: row.category_slug ?? null,
     source: row.source ?? null,
@@ -298,6 +299,9 @@ md.push(`| Har bara \`eventpulse_summary\` → förlorar rad-preview i Sök | ${
 md.push('');
 md.push('## Hem-flödets select-listor (lästa ur HomeScreen.js vid körning)');
 md.push('');
+md.push('Fälten nedan är verifierade genom att select-listorna **läses ur koden vid körning** —');
+md.push('inte påstådda. En ändring i HomeScreen.js ändrar därför tabellen automatiskt.');
+md.push('');
 md.push('Antal select()-listor i HomeScreen.js: ' + homeSelects.length);
 md.push('');
 md.push('| Fält | finns i Hem-select? | betyder |');
@@ -310,9 +314,8 @@ md.push('| `description_sv` / `description_en` | ' + (homeHas.description_sv ? '
 md.push('');
 md.push('## Sök-läget (`mapAgentEventToRow` i `rowMapping.js`)');
 md.push('');
-md.push('Sök-läget mappar sökresultat via `mapAgentEventToRow`. Den mappen forwardar');
-md.push('`editorial_description` och `description_license` men **inte** `eventpulse_summary');
-md.push('(verifierat: 0 förekomster av fältet i `rowMapping.js`).');
+md.push('Sök-läget mappar sökresultat via `mapAgentEventToRow`. Mappen forwardar');
+md.push('`editorial_description`, `eventpulse_summary` (sedan 2026-11-02) och `description_license`.');
 md.push('');
 md.push(`| Mätning | Antal |`);
 md.push('|---|---:|');
