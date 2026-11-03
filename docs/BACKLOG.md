@@ -20,6 +20,7 @@ Do in this order. All items are launch blockers; nothing else enters NOW.
 
 ### Pre-launch (updated 2026-10-09)
 
+- **Apple-godkännande — se `docs/APPLE-LAUNCH-PLAN.md`** (2026-11-03). Åtta blockerare identifierade och mappade mot guideline 1–5: privacy manifest saknas i app-target, integritetstexterna i appen innehåller `[TODO: ...]` + synlig AI-utkastsbanner, webbens policy är 859 tecken utan tredje parter/gallring, noll App Store-skärmbilder, ingen demo-åtkomst för granskare (ingen `signInWithPassword`), Google Maps utan `googleMapsApiKey`, `supportsTablet: true` utan iPad-layout, och senaste store-bygget på SDK 57 (2026-10-11).
 - ~~Analytics decision~~ **Resolved 2026-10-09** (`81b467d2` — Fas 1.5 #4 Val A): `user_interactions` enda funnel source. `analyticsClient` markerad non-funnel.
 - ~~AI image top-up~~ **Superseded 2026-10-28 — replaced by "Storage-restore" below.** BFL round 5 + backfill-verktyg var klart (`1f81a149`), men kvoten uppfylls inte: det stämpade biblioteket (`local_image_library_stamped/`, 488 webp) räcker inte till måltalet 990 (v2-formeln, användarbeslut 2026-10-18) — **kort 557 bilder**.
 
