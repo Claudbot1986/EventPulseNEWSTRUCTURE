@@ -111,12 +111,19 @@ test.describe('Hem — appstart, flikar och sektioner', () => {
     // 2026-10-28 — Hem-chipsen ligger i HEM-QUARANTINE och är inte
     // monterade; `handleChipPress` är död kod. Detta test dokumenterar läget
     // istället för att tyst hoppa över det.
+    //
+    // 2026-11-04 — assertionen var för lös: `getByText('Konserter')` träffade
+    // ett EVENEMANG som råkar ha titeln "Konserter" (aria "Tors 01:00 —
+    // Konserter"), inte chipen. Nu kräver vi ett element med EXAKT
+    // accessible name "Konserter" — en monterad chip hade haft det.
     await boot(page, BASE_URL);
     await page.waitForTimeout(2_000);
 
-    const konserterChip = page.getByText('Konserter');
-    const chipVisible = await konserterChip.isVisible().catch(() => false);
-    expect(chipVisible, 'Hem-chipsen ska inte vara monterade i den utskickade appen').toBe(false);
+    const konserterChip = page.getByRole('button', { name: 'Konserter', exact: true });
+    expect(
+      await konserterChip.count(),
+      'Hem-chipsen ska inte vara monterade i den utskickade appen',
+    ).toBe(0);
 
     // Utforska har i stället 18 kategorirutor.
     await tapTab(page, 'Utforska');

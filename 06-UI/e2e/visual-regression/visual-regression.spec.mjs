@@ -35,18 +35,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { tapTab } from '../helpers/ui.mjs';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 const DIFF_THRESHOLD = 0.005; // 0.5% pixlar — generös för font-rendering
 
 // ─── Hjälpare ────────────────────────────────────────────────────────────────
-
-/** Navigera till en Metro-route och vänta tills hydrering är klar. */
-async function gotoApp(page, route = '/') {
-  await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle', timeout: 20000 });
-  // Expo + React 19 hydrerar gradvis — ge Metro en stund att slutföra.
-  await page.waitForTimeout(2500);
-}
 
 /** Standard-screenshot-options. */
 const shot = (name) => ({
@@ -55,6 +49,21 @@ const shot = (name) => ({
   animations: 'disabled',
   caret: 'hide',
 });
+
+/**
+ * Navigera till en vy via FLIK-KLICK och vänta på en skärmspecifik markör.
+ * (Appen har ingen router — se kommentaren vid live-sviterna nedan.)
+ */
+async function gotoTab(page, tabLabel, readySelector) {
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  // Expo + React 19 hydrerar gradvis — ge Metro en stund att slutföra.
+  await page.waitForTimeout(4000);
+  const res = await tapTab(page, tabLabel);
+  if (!res.ok) throw new Error(`fliken "${tabLabel}" hittades inte: ${JSON.stringify(res)}`);
+  await page.locator(readySelector).first().waitFor({ state: 'visible', timeout: 15000 });
+  // Låt bilder och animationer sätta sig innan bilden tas.
+  await page.waitForTimeout(2500);
+}
 
 // ─── Self-test: verifierar att pipeline-mekaniken fungerar ──────────────────
 
@@ -131,25 +140,42 @@ test.describe('@visual-self-test — pipeline-mekanik', () => {
 
 // ─── Live-screenshots: 4 kritiska vyer ───────────────────────────────────────
 
+/**
+ * Appen är en single-page-app utan router (registerRootComponent(AppShell),
+ * ingen expo-router/react-navigation). Webbadresser som /karta eller /agent
+ * serverar samma index.html och appen startar ALLTID på Hem — routes fungerar
+ * alltså inte för att nå en vy.
+ *
+ * 2026-11-04: den här specen navigerade med just sådana routes, så alla fyra
+ * "kritiska vyer" var i själva verket skärmbilder av Hem. Baselines saknades
+ * dessutom helt (skrivdes först när testet misslyckades).
+ *
+ * Nu navigerar vi via FLIK-KLICK med pointer-events (RNW:s Pressable svarar
+ * inte på .click()) och väntar på en skärmspecifik markör innan vi fotograferar.
+ */
+
 test.describe('@visual-live — EventPulse kritiska vyer', () => {
-  test('HEM — Senaste', async ({ page }) => {
-    await gotoApp(page, '/');
+  test('HEM — För dig + Senaste', async ({ page }) => {
+    await gotoTab(page, 'Hem', '[data-testid="home-screen"]');
     await expect(page).toHaveScreenshot(shot('screen-home.png'));
   });
 
   test('UTFORSKA — Sök & filter', async ({ page }) => {
-    await gotoApp(page, '/utforska');
+    await gotoTab(page, 'Utforska', '[data-testid="explore-search-input"]');
     await expect(page).toHaveScreenshot(shot('screen-utforska.png'));
   });
 
   test('KARTA — Stockholm-karta', async ({ page }) => {
-    await gotoApp(page, '/karta');
+    await gotoTab(page, 'Karta', '[data-testid="karta-screen-ready"]');
     await expect(page).toHaveScreenshot(shot('screen-karta.png'));
   });
 
-  test('AGENT — Chatt', async ({ page }) => {
-    await gotoApp(page, '/agent');
-    await expect(page).toHaveScreenshot(shot('screen-agent.png'));
+  // Agent-chatten är DORMANT (ingen ingång — `features/agent-chat-ui.md`:
+  // verified-unreachable). Vi fotograferar därför Profil, som är den vy som
+  // bär de juridiska texterna (Apple §5.1.1(i)).
+  test('PROFIL — Gästvy + juridik', async ({ page }) => {
+    await gotoTab(page, 'Profil', 'text=Sparade & inställningar');
+    await expect(page).toHaveScreenshot(shot('screen-profile.png'));
   });
 });
 

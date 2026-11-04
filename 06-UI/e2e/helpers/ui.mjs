@@ -90,18 +90,37 @@ export async function tapBack(page) {
 /** Tryck på en flik (Hem/Utforska/Karta/Notiser/Profil). */
 export async function tapTab(page, label) {
   return page.evaluate((needle) => {
+    // Appen har EN synlig tabbar (AppShells BottomTabBar). App.js:s egen är
+    // dold via hideInternalTabBar sedan 2026-10-28 (verifierat live
+    // 2026-11-04: 5 [role=tab], 0 [role=tablist]).
+    //
+    // 2026-11-04 — matchningen var för lös: vi sökte bland ALLA knappar med
+    // "innehåller etiketten". "Hem" träffade ett evenemang med "hemsidan" i
+    // titeln (aria "… Se programmet … på hemsidan. — FRE 6 nov …"), och
+    // "Karta"/"Profil" riskerar samma sak. Nu söker vi bland [role="tab"]
+    // först (exakt matchning före delmatchning) och faller tillbaka till
+    // vanliga knappar BARA om ingen flik matchar.
     const isVisible = (el) => {
       const r = el.getBoundingClientRect();
       const st = window.getComputedStyle(el);
       return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none';
     };
-    // Appen har TVÅ tabbars: App.js:os egen (dold) och AppShells synliga
-    // BottomTabBar. Vi får bara trycka på synliga flikar.
-    const tabs = Array.from(document.querySelectorAll('[role="tab"], button')).filter(isVisible);
-    const tab = tabs.find((t) =>
-      (t.getAttribute('aria-label') || t.textContent || '').trim().toLowerCase().includes(needle.toLowerCase()),
-    );
-    if (!tab) return { ok: false, reason: 'not-found', visible: tabs.map((t) => t.getAttribute('aria-label') || (t.textContent || '').trim()) };
+    const labelOf = (el) => (el.getAttribute('aria-label') || el.textContent || '').trim();
+    const n = needle.toLowerCase();
+    const pick = (list) =>
+      list.find((el) => labelOf(el).toLowerCase() === n) ||
+      list.find((el) => labelOf(el).toLowerCase().includes(n));
+
+    const tabs = Array.from(document.querySelectorAll('[role="tab"]')).filter(isVisible);
+    const buttons = Array.from(document.querySelectorAll('button')).filter(isVisible);
+    const tab = pick(tabs) || pick(buttons);
+    if (!tab) {
+      return {
+        ok: false,
+        reason: 'not-found',
+        visible: [...tabs, ...buttons].map(labelOf),
+      };
+    }
     const opts = {
       bubbles: true,
       cancelable: true,
