@@ -8,6 +8,8 @@
 - En gäst ser samma nio sektioner som en inloggad användare.
 - Kortet "Rekommenderad" är ett *underetikett* på kortet, inte en sektion.
 - Tappas ett kort → händelsen skrivs till `eventpulse.pending_event`, skalet byter till Utforska-fliken och App.js öppnar gemensamma DetailsScreen.
+- **Beskrivning:** sedan `a7e1c0b7` väljer Hem-selecten `editorial_description`/`eventpulse_summary` och fixar `venue_full_name` — det detaljskort man öppnar visar alltså **prosa**, inte "No description available from <källa>".
+- **Bild:** ramen är låst till **3:2** (`hooks/imageAspectCore.js`). Trasig URL ger en **bildtext-placeholder**, inte en tom ruta. Test-ID:n: `event-card-image` (karusell) och `event-card-image-latest` (Senaste).
 
 ## How to get to it (user POV)
 
@@ -21,8 +23,8 @@ Nycklar:
 
 - Hem-roten bär `testID="home-screen"` → `data-testid="home-screen"`.
 - Varje karusell bär `accessibilityRole="list"` + `aria-label="<Rubrik> — karusell"`. **Använd det som sektions-handle**, inte rubriktexten.
-- Eventkort är `<button>` med `aria-label`. I de åtta `EventPulseCarousel`-sektionerna är formatet **`<underetikett> — <titel>`**, i **Senaste** är det **`<titel> — <underetikett>`** (ordningen är omvänd mellan komponenterna). De saknar `data-testid` (propen `testID` droppas i `EventPulseCarousel`).
-- Tillbaka-knappen på detaljskärmen är en `TouchableOpacity` **utan** `accessibilityRole`/`testID` → den är INTE ett `<button>`. Hitta den på texten `"< Tillbaka"`.
+- Eventkort är `<button>` med `aria-label`. I de åtta `EventPulseCarousel`-sektionerna är formatet **`<underetikett> — <titel>`**, i **Senaste** är det **`<titel> — <underetikett>`** (ordningen är omvänd mellan komponenterna). **Har evenemanget andra datum finns en TREDJE del: `<underetikett> — <titel> — N andra datum`.** De saknar `data-testid` (propen `testID` droppas i `EventPulseCarousel`).
+- Tillbaka-knappen på **detaljskärmen** (`DetailsScreen`) är en `TouchableOpacity` **utan** `accessibilityRole`/`testID` → den är INTE ett `<button>`. Hitta den på texten `"< Tillbaka"`. (På Utforska-kategoriskärmen är "Tillbaka" däremot en riktig `<button aria-label="Tillbaka">` — verifierat live 2026-11-04.)
 
 Recept i korthet:
 
@@ -37,5 +39,6 @@ Recept i korthet:
 - `testID="home-personalized-gated"` droppas i `EventPulseCarousel` (propen finns inte i signaturen) — kan inte väljas på.
 - `<ul>` (role=list) innehåller `<div>`-barn: ogiltig HTML men React varnar inte.
 - "Senaste"-korten tappar `extraDatesCount` → "+N andra datum" visas inte i Senaste.
-- **"TEST EVENT" ligger i produktionsfeeden** (första kortet i För dig). Testdata har läckt till den publika vyn.
+- **"TEST EVENT" ligger i produktionsfeeden** (första kortet i För dig, `category_slug=community`). Testdata har läckt till den publika vyn — synlig för användare och för App Store-granskare.
 - `useAiImageUrl` anropas inuti `.map()` i `HomeScreen.js` — ren funktion idag, men bryter hook-reglerna om den blir stateful.
+- **Rättat 2026-11-04:** bilderna fungerar (storage-restore). Verifierat live: 126 av 126 bilder laddade, 0 trasiga, 0 misslyckade bildanrop. Tidigare stod det att alla storage-URLer gav 404.

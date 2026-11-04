@@ -111,9 +111,16 @@ Befintliga specar:
 |---|---|
 | `e2e/app-tabs.test.mjs` | Alla fem flikar öppnar utan konsolfel + feeden laddar events |
 | `e2e/hem-sections.test.mjs` | Varje Hem-sektion öppnar ett event och "Tillbaka" går tillbaka |
+| `e2e/home.test.mjs` | Hem-basvyn: sektioner, kort, tomma tillstånd |
 | `e2e/event-detail-buttons.test.mjs` | Varje knapp i eventkortet trycks + inga kapslade `<button>` |
 | `e2e/utforska-categories.test.mjs` | Alla 18 kategorier öppnar med events + ⋯-menyn |
 | `e2e/search.test.mjs` | Live-sök i Utforska (om-skriven 2026-10-28) |
+| `e2e/save-favorite.test.mjs` | Hjärtat flippar + **persisterar inget** (den kända luckan) |
+| `e2e/dedup-no-duplicate-cards.test.mjs` | Ingen kategori visar samma evenemang två gånger |
+| `e2e/multi-date-verification.test.mjs` | Evenemang med flera datum visas korrekt |
+| `e2e/image-frame-aspect.test.mjs` | Bildramen är låst till 3:2 |
+| `e2e/legal-policy.test.mjs` | Policyn i appen: inga `[TODO]`, inga råa `legal.*`-nycklar, rätt innehåll |
+| `e2e/demo-login.test.mjs` | Demologinen syns bara när flaggan är på (läser `06-UI/.env` själv) |
 
 Förklaring av en drive (live-felsökning, ingen assertion):
 
@@ -177,9 +184,7 @@ session. Lämna baseline-screenshots och rapporter intakta.
 
 **Tre landminer som förstör körningar:**
 
-1. **Appen har två tabbares i DOM.** App.js:s egen (Hem/Map/Profil) är dold
-   (`display:none`), AppShells `BottomTabBar` är synlig. Tryck bara på **synliga**
-   element — annars träffar du den dolda och "ingen händer".
+1. ~~**Appen har två tabbares i DOM.**~~ **Rättad 2026-11-04 — numera FÖREDEBAND.** App.js:s egen tabbar (Hem/Map/Profil) är dold via `hideInternalTabBar` (`AppShell.js:592` → `App.js:2370`), så det finns **bara en** tablist i DOM med 5 synliga flikar. Verifierat live 2026-11-04: `[role="tab"]` → 5 träffar, alla synliga, `role="tablist"` → 0. Välj flik på `[role="tab"]` med `aria-label`.
 2. **`aria-selected` finns inte i DOM.** Välj flik via `[role="tab"]` + synlighet.
 3. **Tryck måste ske via pointer-events.** `page.click()` triggar inte RNW:s Pressable.
 
@@ -206,10 +211,13 @@ Utforska gör **två** anrop per kategori → snabb kategoribrowsing ger **429**
 Appen visar då "Kunde inte hämta evenemang. Försök igen." — det är verifierat
 felbeteende, inte en krasch. Pacing i specen (1–2 s mellan kategorier).
 
-**Bilder:** alla Supabase-storage-URLer ger **404** i den nuvarande databasen
-(`NoSuchKey`) → webbläsaren blockerar dem med ORB → tomma bildrutor. Detta är
-ett känt bildproblem och **ska inte** räknas som UI-fel. Verifiera **innehåll**
-(text, data, navigation), inte bilder.
+**Bilder:** ~~alla Supabase-storage-URLer ger **404**~~ — **INAKTUELLT, rättat
+2026-11-04.** Storage-restore (`d8dbff5e`) plus rättad uppladdningssökväg gör att
+bilderna fungerar. Verifierat live 2026-11-04 på Hem: **126 av 126 bilder laddade,
+0 trasiga, 0 misslyckade nätverksanrop** på bildresurser. Bildramen är låst till
+**3:2** (`hooks/imageAspectCore.js`); trasig URL ger en **bildtext-placeholder** i
+stället för en tom ruta. Verifiera alltså gärna bilder igen — men en tom ruta är
+fortfarande ett verkligt fel.
 
 **Sökfel sväljs tyst** (`agentClient.js` → `search.error`, ingen synlig feedback).
 
@@ -227,3 +235,44 @@ live-pass driver en långlivad Metro-instans genom alla features.
 
 **2026-10-28 — genomförd maintenance-pass.** Se `features/README.md` för den
 korrigerade feature-kartan och vilka claims som var fel.
+
+**2026-11-04 — genomförd maintenance-pass. Outcome: `changed`.**
+15 read-only `explore`-subagenter (en per feature-fil) + live-pass över hela
+e2e-sviten (40 tester, 10,5 min). Rättat i **11 feature-filer**:
+- **Landminen "två tabbares i DOM" är inaktuell** — `hideInternalTabBar` gör att det finns
+  **en** tabbar. Verifierat live: 5 `[role="tab"]`, 0 `[role="tablist"]`.
+- **Landminen "alla storage-URLer ger 404" är inaktuell** — bilderna fungerar sedan
+  storage-restore. Verifierat live: 126/126 bilder laddade, 0 trasiga.
+- Juridiska texter: råa i18n-nycklar och `[TODO]` är **fixade** (profil.md, i18n.md).
+- `PROVIDER_APPLE` finns **inte** i `react-native-maps` — kartans leverantör är
+  `PROVIDER_DEFAULT` (= MapKit på iOS). Se `karta.md`.
+- Push-prompten **syns på webb** (verifierat live) — den är bara inert.
+- Onboarding **har** en "Hoppa över"-knapp.
+- Sök har **ingen submit** och **3-teckens-tröskel**; fel tystas bort i `App.js`.
+- Agent-chatten monteras av `App-agent.js` (ingen importerar den) — inte "ingenstans".
+- Ny: `analytics.md` — env-gaten är **öppen** i lokal build; identiteten sätts av den
+  anonyma bootstrapen.
+
+**Harness-fixar som följde med (ej produktkod):**
+- `e2e/helpers/ui.mjs` — `tapTab` söker bland `[role="tab"]` **först** (exakt matchning
+  före delmatchning). Tidigare matchade den bland alla knappar: "Hem" träffade ett
+  evenemang med "hemsidan" i titeln.
+- `e2e/visual-regression/visual-regression.spec.mjs` — navigerade via **webbroutes**
+  (`/karta`, `/agent`) som inte finns (appen har ingen router) ⇒ alla fyra "kritiska
+  vyer" var skärmbilder av Hem. Nu flik-klick + skärmspecifik markör; `AGENT — Chatt`
+  ersatt av `PROFIL — Gästvy + juridik` (chatten är dormant).
+- `e2e/home.test.mjs` — assertionen "Konserter syns inte" träffade ett evenemang med
+  titeln "Konserter". Nu krävs **exakt** accessible name.
+- `e2e/demo-login.test.mjs` — läser `06-UI/.env` själv (Metro gör det, Playwright-processen
+  gjorde inte det) ⇒ det negativa fallet föll annars.
+- **Baselines tillagda:** `baseline/screen-{home,utforska,karta,profile}-darwin.png`.
+
+**Produktluckor rapporterade (inte fixade i dokumentationen):**
+- "⋯"-menyn i Utforska är **no-ops** — den visar val som inte gör något.
+- Notiser: `attendance_prompt` och `follow_drop` filtreras bort av klientens `sanitize()`
+  ⇒ kan aldrig visas. Servertypen `match`/`response` finns bara i testfixtures.
+- Webbbygget förbrukar push-promptens engångsflagga utan att registrera någon token.
+- Sökfel tystas bort ⇒ ser ut som "inga träffar".
+- "TEST EVENT" ligger i produktionsfeeden (första kortet i För dig) — synligt för
+  användare och granskare.
+- Sparat hjärta återställs (ingen återhydrering) trots att `/agent/feedback` skrivs en rad.

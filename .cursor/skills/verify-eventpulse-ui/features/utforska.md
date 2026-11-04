@@ -21,16 +21,17 @@ Nycklar:
 
 - Kategoriknapparna är `<button>` med `aria-label` = kategorinamn exakt ("Musik", "Mat & Dryck").
 - Detaljskärmen: `data-testid="utforska-section-screen"`, rubrik `RUBRIK · N EVENEMANG`.
-- Tillbaka: texten `"< Tillbaka"` (inte `role=button`).
-- Radens tryckyta är `div[role="button"]` (inte `<button>`) med `aria-label="<titel> — <undertext>"` — matcha på `[role="button"]`; radmenyn: `aria-label="Fler alternativ"`.
+- Tillbaka: **`<button aria-label="Tillbaka">`** (verifierat live 2026-11-04). Det finns också en `<div>` med texten "< Tillbaka" — välj via aria-label, inte via text.
+- Radens tryckyta är **`<button>`** (inte `div[role="button"]`) med `aria-label="<titel> — <undertext>"` (verifierat live 2026-11-04: t.ex. "Lunchkören — ONS 4 nov · 12:00 · Kulturhuset Dieselverkstade"); radmenyn: `aria-label="Fler alternativ"`.
 
 Recept: öppna Utforska → för varje kategori: tryck kategorinamn → vänta på `utforska-section-screen` → läs rubrikens evenemangstal → tryck "Tillbaka" → nästa kategori.
 
 ## Gotchas
 
 - **Agent-API:t rate-limitar** (token bucket, 10 rps / burst 40 per IP för `/agent/feed` — 5 rps / burst 20 gäller `/agent/chat`). Snabb kategoribrowsing ger **429**; appen visar då ärligt felmeddelandet "Kunde inte hämta evenemang. Försök igen." Det är verifierat felbeteende, inte en krasch — kör specen med paus mellan kategorier.
-- Det finns **två** `ProfileScreen`-/`Karta`-etiketter i DOM (dold + synlig tabbar). Tryck bara på **synliga** element.
+- **En** tabbar i DOM (sedan 2026-10-28, `hideInternalTabBar`). Verifierat live 2026-11-04: `[role="tab"]` → 5 träffar, `role="tablist"` → 0. Tryck bara på **synliga** element.
 - `ExploreDetailScreen` gör **två** feed-anrop per kategori (sida + total), vilket dubblerar rate-limittrycket.
 - `aria-selected` finns **inte** i DOM (RNW mappar inte `accessibilityState.selected`) — välj flik på `role="tab"` + synlighet, inte på `aria-selected`.
 - Radens "⋯"-knapp låg tidigare **inuti** radens `<button>` → "button cannot be a descendant of `<button>`". Fixat 2026-10-28 genom att göra raden till en `View` med en tryckbar yta.
-- Sökfel **sväljs tyst** (`services/agentClient.js` → `search.error`, ingen synlig feedback i UI). Det är en produktlucka, inte en harnesslucka.
+- Sökfel **sväljs tyst** — fångstället ligger i `App.js:1253-1257` (`agentClient.js:806` kastar, men felet visas aldrig i UI). Det är en produktlucka, inte en harnesslucka.
+- **Produktlucka (hittad 2026-11-04):** åtgärderna i "⋯"-menyn är **no-ops** (`UtforskaSection.js:379-387`, `App.js:1723-1735` ignorerar bl.a. `save`). Menyn öppnas och visar val, men ingen av dem gör något.
