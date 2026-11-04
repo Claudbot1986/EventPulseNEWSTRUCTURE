@@ -32,17 +32,154 @@
 <main class="container">
   <article class="prose">
     <h1>Privacy</h1>
-    <p>EventPulse is built on one principle: collect as little as possible, and sell nothing to anyone.</p>
+    <p>
+      Last updated: 4 November 2026. EventPulse is built on one principle:
+      collect as little as possible, sell nothing and share nothing with
+      advertisers. This policy describes what actually happens to your data — in
+      the app and on this website.
+    </p>
 
-    <h2>What we store</h2>
-    <p>The public website (eventpulse.nu) sets no cookies and no sessions. It reads events directly from our database via public REST and renders them in your browser.</p>
-    <p>The app stores an anonymous user profile that can be upgraded to an account via Apple ID or magic link. No third-party tracking pixels.</p>
+    <h2>1. Who we are</h2>
+    <p>
+      EventPulse is a personal event agent delivered as an iOS and Android app,
+      operated by Tomor Gashi in Stockholm, Sweden. The app helps users in the
+      Stockholm region find concerts, exhibitions and other events based on
+      their own taste. Privacy contact:
+      <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
+    </p>
 
-    <h2>Analytics</h2>
-    <p>Statistics are anonymous and can be turned off at any time. We do not share data with advertisers and we sell nothing.</p>
+    <h2>2. What we collect</h2>
+    <p>
+      <strong>The website (eventpulse.nu)</strong> sets no cookies, no sessions
+      and no tracking pixels. It reads events directly from our database via
+      public REST and renders them in your browser. No statistics are collected
+      on the website.
+    </p>
+    <p>
+      <strong>The app</strong> stores an anonymous user profile. You can use the
+      app fully without an account. If you choose to sign in with Apple ID or
+      e-mail (magic link) we store:
+    </p>
+    <ul>
+      <li>Your e-mail address (if you sign in via magic link).</li>
+      <li>Your Apple user id (if you sign in with Apple — we receive a unique id only, not your e-mail, if you choose to hide it).</li>
+      <li>An automatically generated anonymous user id (if you use the app without signing in).</li>
+    </ul>
+    <p>Your user-generated data includes:</p>
+    <ul>
+      <li>Events you save, tap on or mark as uninteresting.</li>
+      <li>Venues and artists you follow.</li>
+      <li>Push subscriptions (if you want notifications for specific venues).</li>
+      <li>Conversations you have with the app's built-in event agent.</li>
+    </ul>
+    <p>
+      The app also collects a hashed device id (djb2, 64 characters) derived from
+      your user id or your anonymous id. It is used only to count users and
+      sessions and cannot be used to contact you. We do not collect any
+      location data: the app never requests location access. Separate,
+      anonymous statistics (for example which events are shown) only happen if
+      you opt in under Profile → Privacy in the app, and are retained for up to
+      30 days.
+    </p>
 
-    <h2>Your rights (GDPR)</h2>
-    <p>You have the right to request export or deletion of all data we hold about you. Email <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.</p>
+    <h2>3. Why we process the data</h2>
+    <p>
+      Account data and user-generated data are processed to deliver the service
+      you asked for (GDPR art. 6(1)(b), contract). Push notifications and
+      anonymous statistics rely on your consent (art. 6(1)(a)), which you can
+      withdraw at any time in the app. Technical logs without personal data are
+      processed for security and troubleshooting (art. 6(1)(f), legitimate
+      interest).
+    </p>
+
+    <h2>4. How long we keep the data</h2>
+    <ul>
+      <li>Account data: for as long as the account is active. When you delete the account, the account and its links are removed from the database.</li>
+      <li>User-generated data: tied to the account and deleted with it.</li>
+      <li>Anonymous statistics: 30 days, then automatically cleared.</li>
+      <li>Push tokens: until you disable push for a venue or delete the account.</li>
+    </ul>
+
+    <h2>5. Who we share data with</h2>
+    <p>
+      We sell nothing and we do not share your personal data with third parties
+      for marketing. We use the following processors:
+    </p>
+    <ul>
+      <li><strong>Supabase</strong> — authentication, database and file storage. Server region eu-north-1 (Stockholm), within the EU/EEA.</li>
+      <li><strong>Fly.io</strong> — hosting for the app's API.</li>
+      <li><strong>Expo and Apple Push Notification Service</strong> — push delivery.</li>
+      <li><strong>MiniMax</strong> (Nanonoble Pte. Ltd., Singapore) — the provider of the language model behind the agent chat.</li>
+    </ul>
+    <p>
+      Only the text you type, the interpreted request (date, budget, company,
+      category) and a short list of event titles, times, categories and prices
+      are sent to MiniMax. We do not send your user id, your e-mail address,
+      your device id or your saved taste profile.
+    </p>
+
+    <h2>6. Transfers to third countries</h2>
+    <p>
+      MiniMax stores personal data, including submitted text, in a data centre
+      in the United States. MiniMax states that transfers from the EU/EEA rely
+      on EU–US Data Privacy Framework certification and, where applicable, the
+      EU Commission standard contractual clauses (SCCs). Under MiniMax's API
+      terms the provider may use submitted text to provide, maintain and improve
+      the service, and their own policy states that personal data is retained
+      for as long as needed for the stated purpose. The other processors
+      (Supabase, Fly.io, Expo and APNs) process data within the EU/EEA.
+    </p>
+
+    <h2>7. Your rights</h2>
+    <ul>
+      <li><strong>Access (art. 15)</strong> — write to <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a> and we will send you a copy of your data.</li>
+      <li><strong>Rectification (art. 16)</strong> — contact us if something is wrong.</li>
+      <li><strong>Erasure (art. 17)</strong> — directly in the app: Profile → Delete account.</li>
+      <li><strong>Restriction (art. 18)</strong> — turn off statistics and/or push under Profile → Privacy.</li>
+      <li><strong>Portability (art. 20)</strong> — the same export by e-mail as for access.</li>
+      <li><strong>Objection (art. 21)</strong> — contact us.</li>
+    </ul>
+    <p>
+      The most common rights can be exercised directly in the app under Profile.
+      For anything else, write to <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
+      We respond within 30 days as required by the GDPR.
+    </p>
+
+    <h2>8. Cookies and tracking</h2>
+    <p>
+      The website uses no cookies, no tracking pixels and no third-party
+      scripts. The app uses no advertising networks and does not track you
+      across other apps or websites.
+    </p>
+
+    <h2>9. Artificial intelligence</h2>
+    <p>
+      The app contains an AI agent that suggests events based on your question,
+      and AI-generated images for event cards. The images are labelled
+      “AI-generated”. The agent does not invent events: it picks among the
+      events that actually exist in our database, with times, venues and ticket
+      links from the organisers. Chats are sent to MiniMax as described in
+      section 5.
+    </p>
+
+    <h2>10. Terms and age</h2>
+    <p>
+      You must be at least 18 years old to use EventPulse. Our
+      <a href="/en/terms/">terms of service</a> apply in full.
+    </p>
+
+    <h2>11. Changes to this policy</h2>
+    <p>
+      We may update this policy. Material changes are announced in the app. The
+      latest update is stated at the top.
+    </p>
+
+    <h2>12. Supervisory authority</h2>
+    <p>
+      If you believe we handle your data incorrectly you can complain to the
+      Swedish Authority for Privacy Protection (IMY) —
+      <a href="https://www.imy.se/">imy.se</a>.
+    </p>
   </article>
 </main>
 

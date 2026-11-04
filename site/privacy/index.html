@@ -33,31 +33,150 @@
   <article class="prose">
     <h1>Integritet</h1>
     <p>
-      EventPulse bygger på en enkel princip: vi samlar in så lite som möjligt och vi
-      säljer ingenting till någon.
+      Senast uppdaterad: 4 november 2026. EventPulse bygger på en enkel princip: vi
+      samlar in så lite som möjligt, vi säljer ingenting och vi delar ingenting med
+      annonsörer. Den här policyn beskriver vad som faktiskt händer med dina
+      uppgifter — i appen och på den här webbplatsen.
     </p>
 
-    <h2>Vad vi lagrar</h2>
+    <h2>1. Vem vi är</h2>
     <p>
-      Den publika webbplatsen (eventpulse.nu) lagrar inga cookies och inga sessions.
-      Den läser evenemang direkt från vår databas via publik REST och visar dem i din
-      webbläsare.
-    </p>
-    <p>
-      Appen lagrar en anonym användarprofil som kan uppgraderas till ett konto via
-      Apple-ID eller magic-link. Inga spårningspixels från tredje part används.
+      EventPulse är en personlig event-agent i form av en iOS- och Android-app,
+      drivs av Tomor Gashi i Stockholm, Sverige. Appen hjälper användare i
+      Stockholmsregionen att hitta konserter, utställningar och andra evenemang
+      utifrån deras egen smak. Kontakt för integritetsfrågor:
+      <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
     </p>
 
-    <h2>Analys</h2>
+    <h2>2. Vad vi samlar in</h2>
     <p>
-      Statistik är anonym och kan stängas av när som helst. Vi delar inte data med
-      annonsörer och vi säljer ingenting.
+      <strong>Webbplatsen (eventpulse.nu)</strong> lagrar inga cookies, inga
+      sessions och inga spårningspixlar. Den läser evenemang direkt från vår
+      databas via publik REST och visar dem i din webbläsare. Ingen statistik
+      samlas in på webbplatsen.
+    </p>
+    <p>
+      <strong>Appen</strong> lagrar en anonym användarprofil. Du kan använda appen
+      fullt ut utan konto. Om du väljer att logga in med Apple-ID eller e-post
+      (magic link) sparas:
+    </p>
+    <ul>
+      <li>E-postadress (om du loggar in via magic link).</li>
+      <li>Apple-användar-id (om du loggar in med Apple — vi får bara ett unikt id, inte din e-post, om du väljer att dölja den).</li>
+      <li>Autogenererat anonymt användar-id (om du använder appen utan att logga in).</li>
+    </ul>
+    <p>Din användargenererade data omfattar:</p>
+    <ul>
+      <li>Evenemang du sparar, klickar på eller markerar som ointressanta.</li>
+      <li>Venues och artister du följer.</li>
+      <li>Push-prenumerationer (om du vill ha notiser för specifika venues).</li>
+      <li>Konversationer du har med appens inbyggda event-agent.</li>
+    </ul>
+    <p>
+      Appen samlar också ett hashat enhets-id (djb2, 64 tecken) som härleds från
+      ditt användar-id eller ditt anonyma id. Det används bara för att räkna
+      användare och sessioner och kan inte användas för att kontakta dig. Vi
+      samlar inte in någon platsdata: appen begär inte åtkomst till din plats.
+      Separat, anonym statistik (t.ex. vilka evenemang som visas) sker bara om du
+      godkänner det i appen under Profil → Integritet, och den sparas i upp till
+      30 dagar.
     </p>
 
-    <h2>Dina rättigheter (GDPR)</h2>
+    <h2>3. Varför vi behandlar uppgifterna</h2>
     <p>
-      Du har rätt att begära export eller radering av all data vi har om dig. Skicka
-      ett mail till <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
+      Kontouppgifter och användargenererad data behandlas för att leverera den
+      tjänst du har bett om (GDPR art. 6(1)(b), avtal). Push-notiser och anonym
+      statistik bygger på ditt samtycke (art. 6(1)(a)), som du kan återkalla
+      när som helst i appen. Tekniska loggar utan personuppgifter behandlas för
+      säkerhet och felsökning (art. 6(1)(f), berättigat intresse).
+    </p>
+
+    <h2>4. Hur länge vi sparar uppgifterna</h2>
+    <ul>
+      <li>Kontouppgifter: så länge kontot är aktivt. Vid kontoradering tas kontot och dess kopplingar bort ur databasen.</li>
+      <li>Användargenererad data: knuten till kontot och raderas vid kontoradering.</li>
+      <li>Anonym statistik: 30 dagar, därefter automatisk rensning.</li>
+      <li>Push-tokens: tills du stänger av push för en venue eller raderar kontot.</li>
+    </ul>
+
+    <h2>5. Vem vi delar uppgifterna med</h2>
+    <p>
+      Vi säljer ingenting och delar inte dina personuppgifter med tredje part för
+      marknadsföring. Vi använder följande underleverantörer:
+    </p>
+    <ul>
+      <li><strong>Supabase</strong> — autentisering, databas och fillagring. Serverregion eu-north-1 (Stockholm), inom EU/EES.</li>
+      <li><strong>Fly.io</strong> — drift av appens API.</li>
+      <li><strong>Expo och Apple Push Notification Service</strong> — push-leverans.</li>
+      <li><strong>MiniMax</strong> (Nanonoble Pte. Ltd., Singapore) — leverantören av språkmodellen bakom agentchatten.</li>
+    </ul>
+    <p>
+      Till MiniMax skickas endast texten du skriver, den tolkade frågan (datum,
+      budget, sällskap, kategori) och en kort lista med evenemangens titel, tid,
+      kategori och pris. Vi skickar inte ditt användar-id, din e-postadress, ditt
+      enhets-id eller din sparade smakprofil.
+    </p>
+
+    <h2>6. Överföring till tredje land</h2>
+    <p>
+      MiniMax lagrar personuppgifter, inklusive inskickad text, i ett datacenter i
+      USA. MiniMax anger att överföringar från EU/EES sker med EU–US Data Privacy
+      Framework-certifiering och, där det är tillämpligt, EU-kommissionens
+      standardavtalsklausuler (SCC). Enligt MiniMaxs API-villkor får leverantören
+      använda inskickad text för att tillhandahålla, underhålla och utveckla
+      tjänsten, och deras egen policy anger att personuppgifter sparas så länge de
+      behövs för det angivna ändamålet. Övriga underleverantörer (Supabase,
+      Fly.io, Expo och APNs) behandlar uppgifterna inom EU/EES.
+    </p>
+
+    <h2>7. Dina rättigheter</h2>
+    <ul>
+      <li><strong>Tillgång (art. 15)</strong> — skriv till <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a> så skickar vi en kopia av dina uppgifter.</li>
+      <li><strong>Rättelse (art. 16)</strong> — kontakta oss om något är fel.</li>
+      <li><strong>Radering (art. 17)</strong> — direkt i appen: Profil → Radera konto.</li>
+      <li><strong>Begränsning (art. 18)</strong> — stäng av statistik och/eller push under Profil → Integritet.</li>
+      <li><strong>Dataportabilitet (art. 20)</strong> — samma export via e-post som under tillgång.</li>
+      <li><strong>Invändande (art. 21)</strong> — kontakta oss.</li>
+    </ul>
+    <p>
+      Vanliga rättigheter går att utöva direkt i appen under Profil. För övriga
+      ärenden, skriv till <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
+      Vi svarar inom 30 dagar enligt GDPR.
+    </p>
+
+    <h2>8. Cookies och spårning</h2>
+    <p>
+      Webbplatsen använder inga cookies, inga spårningspixlar och inga
+      tredjeparts-skript. Appen använder inga annonsnätverk och spårar dig inte
+      över andra appar eller webbplatser.
+    </p>
+
+    <h2>9. Artificiell intelligens</h2>
+    <p>
+      Appen innehåller en AI-agent som föreslår evenemang utifrån din fråga, och
+      AI-genererade bilder för evenemangskort. Bilderna är märkta
+      ”AI-genererad”. Agenten hittar inte på evenemang: den väljer bland de
+      evenemang som faktiskt finns i vår databas, med tid, plats och
+      biljettlänkar från arrangörerna. Chattar skickas till MiniMax enligt
+      avsnitt 5.
+    </p>
+
+    <h2>10. Villkor och ålder</h2>
+    <p>
+      Du måste vara minst 18 år för att använda EventPulse. Våra
+      <a href="/villkor/">användarvillkor</a> gäller i sin helhet.
+    </p>
+
+    <h2>11. Ändringar av policyn</h2>
+    <p>
+      Vi kan uppdatera denna policy. Vid väsentliga ändringar meddelas du via
+      appen. Senaste uppdatering anges högst upp.
+    </p>
+
+    <h2>12. Tillsynsmyndighet</h2>
+    <p>
+      Om du anser att vi hanterar dina uppgifter fel kan du klaga till
+      Integritetsskyddsmyndigheten (IMY) — <a href="https://www.imy.se/">imy.se</a>.
     </p>
   </article>
 </main>
