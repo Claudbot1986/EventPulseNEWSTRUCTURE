@@ -617,7 +617,7 @@ export default {
   // ─── Legal (integritetspolicy + villkor) ─────────────────────────────────
   // _legalDraftOnly: '1' = AI-utkast (banner visas), '0' = granskat (banner borta).
   // Vänd till '0' när jurist/ansvarig har godkänt texten.
-  '_legalDraftOnly': '1',
+  '_legalDraftOnly': '0',
 
   'legal.close': 'Stäng',
   'legal.lastUpdatedLabel': 'Senast uppdaterad:',
@@ -626,7 +626,7 @@ export default {
     'Texten är skriven av AI som ett första förslag baserat på vad appen faktiskt gör. Den ska granskas av ansvarig person eller extern jurist innan den publiceras som slutgiltig policy. EventPulse ansvarar inte för textens rättsliga korrekthet i sin nuvarande form.',
   'legal.readOnWebLabel': 'Läs den fullständiga versionen med formatering på webben:',
   'legal.webMirrorNote':
-    'Samma text finns på webbplatsen — den uppdateras där först, appens version speglas vid varje release.',
+    'Den fullständiga versionen med samma innehåll finns på webbplatsen: eventpulse.nu/privacy.',
 
   // Profile rows that open the modals
   'profile.privacyPolicy': 'Integritetspolicy',
@@ -636,11 +636,11 @@ export default {
 
   // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
   'legal.privacy.title': 'Integritetspolicy',
-  'legal.privacy.lastUpdated': '2026-10-04 (utkast v0.1)',
+  'legal.privacy.lastUpdated': '2026-11-04 (version 1.0)',
 
   'legal.privacy.p1.title': '1. Vem vi är',
   'legal.privacy.p1.body':
-    'EventPulse är en personlig event-agent i form av en iOS- och Android-app, utvecklad av [TODO: fullständigt företagsnamn och organisationsnummer]. Appen hjälper användare i Stockholmsregionen att hitta konserter, utställningar och andra evenemang baserat på deras egen smak. Kontakt för integritetsfrågor: privacy@eventpulse.nu [TODO: bekräfta].',
+    'EventPulse är en personlig event-agent i form av en iOS- och Android-app, drivs av Tomor Gashi i Stockholm, Sverige. Appen hjälper användare i Stockholmsregionen att hitta konserter, utställningar och andra evenemang baserat på deras egen smak. Kontakt för integritetsfrågor: hej@eventpulse.nu.',
 
   'legal.privacy.p2a.title': '2.1 Kontouppgifter (när du skapar konto)',
   'legal.privacy.p2a.bullets':
@@ -652,7 +652,7 @@ export default {
 
   'legal.privacy.p2c.title': '2.3 Enhets- och användningsdata',
   'legal.privacy.p2c.bullets':
-    'Enhets-id hashat som 64-tecken hex-kod (anonym, kan inte spåras tillbaka till dig utan vår interna salt-nyckel).\nSpråkinställning.\nPlats (endast om du uttryckligen gett appen platsåtkomst — används för att visa evenemang nära dig).',
+    'Enhets-id hashat med djb2 till en 64-tecken hex-kod. Hashen härleds från ditt användar-id (eller från ett anonymt id om du inte loggar in) och används bara för att räkna användare och sessioner — den kan inte användas för att kontakta dig.\nSpråkinställning.\nAppen begär inte åtkomst till din plats och samlar inte in någon platsdata. Evenemangens platser kommer från arrangörernas egna uppgifter.',
 
   'legal.privacy.p2d.title': '2.4 Anonym statistik (endast om du godkänner)',
   'legal.privacy.p2d.body':
@@ -664,23 +664,23 @@ export default {
 
   'legal.privacy.p4.title': '4. Hur länge vi sparar uppgifterna',
   'legal.privacy.p4.bullets':
-    'Kontouppgifter: så länge kontot är aktivt. Raderas inom 30 dagar efter kontoradering.\nAnvändargenererad data: knuten till kontot; raderas vid kontoradering via cascade i databasen.\nAnonym statistik: 30 dagar, därefter automatisk rensning.\nPush-tokens: tills du stänger av push för en venue eller raderar kontot.',
+    'Kontouppgifter: så länge kontot är aktivt. Vid kontoradering tas kontot och dess kopplingar bort ur databasen.\nAnvändargenererad data: knuten till kontot; raderas vid kontoradering.\nAnonym statistik: 30 dagar, därefter automatisk rensning.\nPush-tokens: tills du stänger av push för en venue eller raderar kontot.',
 
   'legal.privacy.p5.title': '5. Vem vi delar uppgifterna med',
   'legal.privacy.p5.body':
-    'Vi delar inte dina personuppgifter med tredje part för marknadsföring. Underleverantörer: Supabase (autentisering, databas, fillagring — serverregion [TODO: bekräfta EU, helst eu-north-1]); Expo / Apple Push Notification Service (push-leverans); OpenAI / Anthropic / valfri LLM-leverantör (agent-chatt — endast texten du skickar, inte kontodata).',
+    'Vi säljer ingenting och delar inte dina personuppgifter med tredje part för marknadsföring. Underleverantörer: Supabase (autentisering, databas, fillagring — serverregion eu-north-1 i Stockholm, inom EU/EES); Fly.io (drift av API:et); Expo och Apple Push Notification Service (push-leverans); MiniMax (Nanonoble Pte. Ltd., Singapore — leverantören av språkmodellen bakom agentchatten).\nVad som skickas till MiniMax: endast texten du skriver, den tolkade frågan (datum, budget, sällskap, kategori) och en kort lista med evenemangens titel, tid, kategori och pris. Vi skickar inte ditt användar-id, din e-postadress, ditt enhets-id eller din sparade smakprofil.',
 
   'legal.privacy.p6.title': '6. Överföring till tredje land',
   'legal.privacy.p6.body':
-    'Vissa underleverantörer kan behandla data utanför EU/EES (särskilt USA-baserade LLM-leverantörer). Vi säkerställer att överföringar sker med lämplig rättslig mekanism (EU-kommissionens standardavtalsklausuler eller motsvarande). [TODO: dokumentera aktuell mekanism per leverantör].',
+    'MiniMax lagrar personuppgifter, inklusive inskickad text, i ett datacenter i USA. MiniMax anger att överföringar från EU/EES sker med EU–US Data Privacy Framework-certifiering och, där det är tillämpligt, EU-kommissionens standardavtalsklausuler (SCC). Enligt MiniMaxs API-villkor får leverantören använda inskickad text för att tillhandahålla, underhålla och utveckla tjänsten, och deras egen policy anger att personuppgifter sparas så länge de behövs för det angivna ändamålet. Övriga underleverantörer (Supabase, Fly.io, Expo och APNs) behandlar uppgifterna inom EU/EES.',
 
   'legal.privacy.p7.title': '7. Dina rättigheter (GDPR Art. 15–22)',
   'legal.privacy.p7.bullets':
-    'Rätt till tillgång (Art. 15): Du kan begära en kopia av dina uppgifter. I appen: Profil → Ladda ner min data [TODO: knapp kommer i Fas 4].\nRätt till rättelse (Art. 16): Kontakta oss om något är fel.\nRätt till radering (Art. 17): I appen: Profil → Radera konto.\nRätt till begränsning (Art. 18): Stäng av statistik och/eller push under Profil → Integritet.\nRätt till dataportabilitet (Art. 20): Samma exportknapp som Art. 15.\nRätt att göra invändningar (Art. 21): Kontakta oss.',
+    'Rätt till tillgång (Art. 15): Skriv till hej@eventpulse.nu så skickar vi en kopia av dina uppgifter.\nRätt till rättelse (Art. 16): Kontakta oss om något är fel.\nRätt till radering (Art. 17): I appen: Profil → Radera konto.\nRätt till begränsning (Art. 18): Stäng av statistik och/eller push under Profil → Integritet.\nRätt till dataportabilitet (Art. 20): Samma export via e-post som Art. 15.\nRätt att göra invändningar (Art. 21): Kontakta oss.',
 
   'legal.privacy.p8.title': '8. Hur du utövar dina rättigheter',
   'legal.privacy.p8.body':
-    'Direkt i appen under Profil för de vanligaste rättigheterna. För övriga ärenden, skriv till privacy@eventpulse.nu. Vi svarar inom 30 dagar enligt GDPR.',
+    'Direkt i appen under Profil för de vanligaste rättigheterna. För övriga ärenden, skriv till hej@eventpulse.nu. Vi svarar inom 30 dagar enligt GDPR.',
 
   'legal.privacy.p9.title': '9. Cookies och spårning på webbplatsen',
   'legal.privacy.p9.body':
@@ -696,7 +696,7 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Användarvillkor',
-  'legal.terms.lastUpdated': '2026-10-05 (utkast v0.2)',
+  'legal.terms.lastUpdated': '2026-11-04 (version 1.0)',
 
   'legal.terms.t1.title': '1. Vad tjänsten är',
   'legal.terms.t1.body':
@@ -704,11 +704,11 @@ export default {
 
   'legal.terms.t2.title': '2. Vem som kan använda tjänsten',
   'legal.terms.t2.body':
-    'Du måste vara minst 16 år för att använda EventPulse. Om du är under 18 behöver du vårdnadshavares godkännande.',
+    'Du måste vara minst 18 år för att använda EventPulse.',
 
   'legal.terms.t3.title': '3. Konto',
   'legal.terms.t3.body':
-    'Du kan använda appen utan konto. Vissa funktioner kräver konto. Logga in med magic link via e-post eller med Apple. Du ansvarar för att dina inloggningsuppgifter inte används av någon annan. Meddela oss på privacy@eventpulse.nu om du misstänker att ditt konto har blivit hackat.',
+    'Du kan använda appen utan konto. Vissa funktioner kräver konto. Logga in med magic link via e-post eller med Apple. Du ansvarar för att dina inloggningsuppgifter inte används av någon annan. Meddela oss på hej@eventpulse.nu om du misstänker att ditt konto har blivit hackat.',
 
   'legal.terms.t4.title': '4. Acceptabel användning',
   'legal.terms.t4.bullets':
@@ -748,7 +748,7 @@ export default {
 
   'legal.terms.t13.title': '13. Kontakt',
   'legal.terms.t13.body':
-    'Frågor om villkoren? Skriv till privacy@eventpulse.nu.',
+    'Frågor om villkoren? Skriv till hej@eventpulse.nu.',
 
   'legal.terms.t14.title': '14. Meddelanden',
   'legal.terms.t14.body':

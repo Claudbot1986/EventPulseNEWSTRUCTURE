@@ -212,6 +212,64 @@ function LanguageSection({ t, language, setLanguage }) {
   );
 }
 
+/**
+ * Juridiska länkar (integritetspolicy + användarvillkor).
+ *
+ * Apple §5.1.1(i) kräver att policyn går att nå INNE i appen. Gästläget är
+ * appens defaultläge (ingen inloggning krävs), så länkarna måste finnas där
+ * också — annars når en granskare som inte loggar in ingen policy alls.
+ * Gemensam komponent så att båda grenarna (gäst + inloggad) visar samma.
+ */
+function LegalLinks({ t, onPrivacy, onTerms }) {
+  return (
+    <>
+      <Pressable
+        style={({ pressed }) => [
+          styles.row,
+          styles.legalRow,
+          pressed && styles.linkButtonPressed,
+        ]}
+        onPress={onPrivacy}
+        accessibilityRole="button"
+        accessibilityLabel={t('profile.privacyPolicy')}
+        testID="open-privacy-policy"
+      >
+        <View style={styles.rowTextWrap}>
+          <Text style={styles.rowLabel}>{t('profile.privacyPolicy')}</Text>
+          <Text style={styles.rowDescription}>
+            {t('profile.privacyPolicyDesc')}
+          </Text>
+        </View>
+        <Text style={styles.legalChevron} aria-hidden="true">
+          ›
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.row,
+          styles.legalRow,
+          pressed && styles.linkButtonPressed,
+        ]}
+        onPress={onTerms}
+        accessibilityRole="button"
+        accessibilityLabel={t('profile.terms')}
+        testID="open-terms-of-service"
+      >
+        <View style={styles.rowTextWrap}>
+          <Text style={styles.rowLabel}>{t('profile.terms')}</Text>
+          <Text style={styles.rowDescription}>
+            {t('profile.termsDesc')}
+          </Text>
+        </View>
+        <Text style={styles.legalChevron} aria-hidden="true">
+          ›
+        </Text>
+      </Pressable>
+    </>
+  );
+}
+
 export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   const { t, language, setLanguage } = useI18n();
   const [followPushEnabled, setFollowPushEnabled] = useState(false);
@@ -640,6 +698,12 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
           ) : null}
         </View>
 
+        <LegalLinks
+          t={t}
+          onPrivacy={() => setPrivacyModalVisible(true)}
+          onTerms={() => setTermsModalVisible(true)}
+        />
+
         <LanguageSection t={t} language={language} setLanguage={setLanguage} />
 
         <Pressable
@@ -649,6 +713,17 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         >
           <Text style={styles.linkButtonText}>{t('profile.about')}</Text>
         </Pressable>
+
+        <LegalModal
+          visible={privacyModalVisible}
+          kind="privacy"
+          onClose={() => setPrivacyModalVisible(false)}
+        />
+        <LegalModal
+          visible={termsModalVisible}
+          kind="terms"
+          onClose={() => setTermsModalVisible(false)}
+        />
       </ScrollView>
     );
   }
@@ -825,49 +900,11 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         {/* Legal links — Apple App Store §5.1.1 review expects in-app access
           to privacy + terms. i18n strings stay until reverse:true drops the
           draft banner. */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.row,
-            styles.legalRow,
-            pressed && styles.linkButtonPressed,
-          ]}
-          onPress={() => setPrivacyModalVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t('profile.privacyPolicy')}
-          testID="open-privacy-policy"
-        >
-          <View style={styles.rowTextWrap}>
-            <Text style={styles.rowLabel}>{t('profile.privacyPolicy')}</Text>
-            <Text style={styles.rowDescription}>
-              {t('profile.privacyPolicyDesc')}
-            </Text>
-          </View>
-          <Text style={styles.legalChevron} aria-hidden="true">
-            ›
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.row,
-            styles.legalRow,
-            pressed && styles.linkButtonPressed,
-          ]}
-          onPress={() => setTermsModalVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t('profile.terms')}
-          testID="open-terms-of-service"
-        >
-          <View style={styles.rowTextWrap}>
-            <Text style={styles.rowLabel}>{t('profile.terms')}</Text>
-            <Text style={styles.rowDescription}>
-              {t('profile.termsDesc')}
-            </Text>
-          </View>
-          <Text style={styles.legalChevron} aria-hidden="true">
-            ›
-          </Text>
-        </Pressable>
+        <LegalLinks
+          t={t}
+          onPrivacy={() => setPrivacyModalVisible(true)}
+          onTerms={() => setTermsModalVisible(true)}
+        />
       </View>
 
       <LanguageSection t={t} language={language} setLanguage={setLanguage} />

@@ -606,7 +606,7 @@ export default {
   // ─── Legal (privacy policy + terms) ─────────────────────────────────────
   // _legalDraftOnly: '1' = AI draft (banner shown), '0' = reviewed (banner hidden).
   // Flip to '0' once counsel or the operator has signed off.
-  '_legalDraftOnly': '1',
+  '_legalDraftOnly': '0',
 
   'legal.close': 'Close',
   'legal.lastUpdatedLabel': 'Last updated:',
@@ -615,7 +615,7 @@ export default {
     'The text was drafted by an AI based on what the app actually does. It must be reviewed by a responsible person or external counsel before being published as a final policy. EventPulse takes no responsibility for the legal correctness of this text in its current form.',
   'legal.readOnWebLabel': 'Read the long version with full formatting on the web:',
   'legal.webMirrorNote':
-    'The same text lives on the website — that copy is updated first, and the in-app version is mirrored at every release.',
+    'The full version with the same content is on the website: eventpulse.nu/privacy.',
 
   // Profile rows that open the modals
   'profile.privacyPolicy': 'Privacy Policy',
@@ -625,11 +625,11 @@ export default {
 
   // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
   'legal.privacy.title': 'Privacy Policy',
-  'legal.privacy.lastUpdated': '2026-10-04 (draft v0.1)',
+  'legal.privacy.lastUpdated': '2026-11-04 (version 1.0)',
 
   'legal.privacy.p1.title': '1. Who we are',
   'legal.privacy.p1.body':
-    'EventPulse is a personal event agent delivered as an iOS and Android app, developed by [TODO: full company name and corporate ID]. The app helps users in the Stockholm region find concerts, exhibitions and other events based on their own taste. Privacy contact: privacy@eventpulse.nu [TODO: confirm].',
+    'EventPulse is a personal event agent delivered as an iOS and Android app, operated by Tomor Gashi in Stockholm, Sweden. The app helps users in the Stockholm region find concerts, exhibitions and other events based on their own taste. Privacy contact: hej@eventpulse.nu.',
 
   'legal.privacy.p2a.title': '2.1 Account data (when you create an account)',
   'legal.privacy.p2a.bullets':
@@ -641,7 +641,7 @@ export default {
 
   'legal.privacy.p2c.title': '2.3 Device and usage data',
   'legal.privacy.p2c.bullets':
-    'Device id hashed as a 64-character hex string (anonymous; cannot be traced back to you without our internal salt key).\nLanguage preference.\nLocation (only if you have explicitly granted location access to the app — used to show events near you).',
+    'Device id hashed with djb2 into a 64-character hex code. The hash is derived from your user id (or from an anonymous id if you are not signed in) and is used only to count users and sessions — it cannot be used to contact you.\nLanguage preference.\nThe app does not request location access and does not collect any location data. Event venues come from the organisers\' own listings.',
 
   'legal.privacy.p2d.title': '2.4 Anonymous statistics (only if you opt in)',
   'legal.privacy.p2d.body':
@@ -657,19 +657,19 @@ export default {
 
   'legal.privacy.p5.title': '5. Who we share data with',
   'legal.privacy.p5.body':
-    'We do not share your personal data with third parties for marketing. Processors: Supabase (authentication, database, file storage — server region [TODO: confirm EU, preferably eu-north-1]); Expo / Apple Push Notification Service (push delivery); OpenAI / Anthropic / chosen LLM provider (agent chat — only the text you send, not account data).',
+    'We do not sell anything and we do not share your personal data with third parties for marketing. Processors: Supabase (authentication, database, file storage — server region eu-north-1 in Stockholm, within the EU/EEA); Fly.io (hosting for the API); Expo and Apple Push Notification Service (push delivery); MiniMax (Nanonoble Pte. Ltd., Singapore — the provider of the language model behind the agent chat).\nWhat is sent to MiniMax: only the text you type, the interpreted request (date, budget, company, category) and a short list of event titles, times, categories and prices. We do not send your user id, your email address, your device id or your saved taste profile.',
 
   'legal.privacy.p6.title': '6. International transfers',
   'legal.privacy.p6.body':
-    'Some processors may handle data outside the EU/EEA (notably US-based LLM providers). We ensure transfers use an appropriate legal mechanism (EU Commission standard contractual clauses or equivalent). [TODO: document the current mechanism per provider].',
+    'MiniMax stores personal data, including submitted text, in a data centre in the United States. MiniMax states that transfers from the EU/EEA rely on EU–US Data Privacy Framework certification and, where applicable, the EU Commission standard contractual clauses (SCCs). Under MiniMax\'s API terms the provider may use submitted text to provide, maintain and improve the service, and their own policy states that personal data is retained for as long as needed for the stated purpose. The other processors (Supabase, Fly.io, Expo and APNs) process data within the EU/EEA.',
 
   'legal.privacy.p7.title': '7. Your rights (GDPR Art. 15–22)',
   'legal.privacy.p7.bullets':
-    'Right of access (Art. 15): You can request a copy of your data. In the app: Profile → Download my data [TODO: button coming in Phase 4].\nRight to rectification (Art. 16): Contact us if something is wrong.\nRight to erasure (Art. 17): In the app: Profile → Delete account.\nRight to restriction (Art. 18): Turn off statistics and/or push under Profile → Privacy.\nRight to data portability (Art. 20): Same export button as Art. 15.\nRight to object (Art. 21): Contact us.',
+    'Right of access (Art. 15): Write to hej@eventpulse.nu and we will send you a copy of your data.\nRight to rectification (Art. 16): Contact us if something is wrong.\nRight to erasure (Art. 17): In the app: Profile → Delete account.\nRight to restriction (Art. 18): Turn off statistics and/or push under Profile → Privacy.\nRight to data portability (Art. 20): The same export by email as Art. 15.\nRight to object (Art. 21): Contact us.',
 
   'legal.privacy.p8.title': '8. How to exercise your rights',
   'legal.privacy.p8.body':
-    'Directly in the app under Profile for the most common rights. For other requests, write to privacy@eventpulse.nu. We respond within 30 days per GDPR.',
+    'Directly in the app under Profile for the most common rights. For other requests, write to hej@eventpulse.nu. We respond within 30 days per GDPR.',
 
   'legal.privacy.p9.title': '9. Cookies and tracking on the website',
   'legal.privacy.p9.body':
@@ -685,7 +685,7 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Terms of Service',
-  'legal.terms.lastUpdated': '2026-10-05 (draft v0.2)',
+  'legal.terms.lastUpdated': '2026-11-04 (version 1.0)',
 
   'legal.terms.t1.title': '1. What the service is',
   'legal.terms.t1.body':
@@ -693,11 +693,11 @@ export default {
 
   'legal.terms.t2.title': '2. Who can use the service',
   'legal.terms.t2.body':
-    'You must be at least 16 years old to use EventPulse. If you are under 18 you need a guardian\'s consent.',
+    'You must be at least 18 years old to use EventPulse.',
 
   'legal.terms.t3.title': '3. Account',
   'legal.terms.t3.body':
-    'You can use the app without an account. Some features require an account. Sign in via magic link using your e-mail, or with Apple. You are responsible for keeping your credentials private. Notify us at privacy@eventpulse.nu if you suspect your account has been compromised.',
+    'You can use the app without an account. Some features require an account. Sign in via magic link using your e-mail, or with Apple. You are responsible for keeping your credentials private. Notify us at hej@eventpulse.nu if you suspect your account has been compromised.',
 
   'legal.terms.t4.title': '4. Acceptable use',
   'legal.terms.t4.bullets':
@@ -737,7 +737,7 @@ export default {
 
   'legal.terms.t13.title': '13. Contact',
   'legal.terms.t13.body':
-    'Questions about these terms? Write to privacy@eventpulse.nu.',
+    'Questions about these terms? Write to hej@eventpulse.nu.',
 
   'legal.terms.t14.title': '14. Notices',
   'legal.terms.t14.body':
