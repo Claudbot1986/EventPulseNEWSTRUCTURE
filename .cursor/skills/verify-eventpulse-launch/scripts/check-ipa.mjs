@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+/**
+ * IPA-gate: verifierar den FAKTISKA byggartefakten (inte repot).
+ *
+ *   node .cursor/skills/verify-eventpulse-launch/scripts/check-ipa.mjs <url|path.ipa>
+ *
+ * Kontrollerar:
+ *   1. PrivacyInfo.xcprivacy finns i app-target med rätt deklarationer
+ *   2. UIDeviceFamily == [1] (iPhone-only)
+ *   3. aps-environment == production + Sign in with Apple-entitlement
+ *   4. JS-bundlen innehåller de nya juridiska texterna och saknar de gamla
+ *
+ * VIKTIGT: Hermes lagrar strängar som innehåller icke-ASCII som UTF-16.
+ * Ett vanligt grep på "MiniMax" hittar då ingenting — sök i båda encodings.
+ */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+const target = process.argv[2];
+if (!target) {
+  console.error('Användning: check-ipa.mjs <artifact-url|path.ipa>');
+  process.exit(2);
+}
+
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ep-ipa-'));
+const ipaPath = path.join(tmp, 'app.ipa');
+if (/^https?:/.test(target)) {
+  console.log(`Hämtar ${target} …`);
+  execFileSync('curl', ['-sL', '--max-time', '300', '-o', ipaPath, target], { stdio: 'inherit' });
+} else {
+  fs.copyFileSync(target, ipaPath);
+}
+const appDir = path.join(tmp, 'extracted');
+execFileSync('unzip', ['-q', ipaPath, '-d', appDir]);
+const app = fs.readdirSync(path.join(appDir, 'Payload')).find((d) => d.endsWith('.app'));
+const appRoot = path.join(appDir, 'Payload', app);
+
+const results = [];
+const check = (label, ok, detail = '') => results.push({ label, ok, detail });
+
+// 1. Privacy manifest
+const manifestPath = path.join(appRoot, 'PrivacyInfo.xcprivacy');
+if (!fs.existsSync(manifestPath)) {
+  check('PrivacyInfo.xcprivacy finns i app-target', false);
+} else {
+  check('PrivacyInfo.xcprivacy finns i app-target', true, `${fs.statSync(manifestPath).size} byte`);
+  const plist = execFileSync('plutil', ['-convert', 'json', '-o', '-', manifestPath]).toString();
+  const d = JSON.parse(plist);
+  const types = (d.NSPrivacyCollectedDataTypes || []).map((t) => t.NSPrivacyCollectedDataType.replace('NSPrivacyCollectedDataType', ''));
+  const accessed = (d.NSPrivacyAccessedAPITypes || []).map((t) => `${t.NSPrivacyAccessedAPIType.replace('NSPrivacyAccessedAPICategory', '')}:${(t.NSPrivacyAccessedAPITypeReasons || []).join('/')}`);
+  check('manifest: tracking false', d.NSPrivacyTracking === false);
+  for (const t of ['EmailAddress', 'UserID', 'DeviceID', 'ProductInteraction', 'SearchHistory', 'OtherUserContent']) {
+    check(`manifest: ${t}`, types.includes(t), types.join(','));
+  }
+  check('manifest: accessed-API deklarerade', accessed.length >= 1, accessed.join(' '));
+}
+
+// 2. UIDeviceFamily
+const family = execFileSync('plutil', ['-extract', 'UIDeviceFamily', 'json', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
+check('UIDeviceFamily == [1] (iPhone-only)', family.replace(/\s/g, '') === '[1]', family);
+
+// 3. Entitlements
+try {
+  const prov = path.join(appRoot, 'embedded.mobileprovision');
+  const ent = execFileSync('bash', ['-lc',
+    `security cms -D -i "${prov}" 2>/dev/null | plutil -extract Entitlements xml1 -o - - 2>/dev/null`]).toString();
+  check('entitlement: aps-environment = production', /<key>aps-environment<\/key>\s*<string>production<\/string>/.test(ent));
+  check('entitlement: Sign in with Apple', /com\.apple\.developer\.applesignin/.test(ent));
+} catch (e) {
+  check('entitlement-kontroll kunde inte köras', false, String(e.message).slice(0, 80));
+}
+
+// 4. JS-bundle (UTF-16-medveten sökning)
+const bundle = fs.readFileSync(path.join(appRoot, 'main.jsbundle'));
+const countAscii = (s) => {
+  let n = 0, i = 0;
+  const needle = Buffer.from(s, 'utf8');
+  while ((i = bundle.indexOf(needle, i)) !== -1) { n++; i += needle.length; }
+  return n;
+};
+const countUtf16 = (s) => {
+  let n = 0, i = 0;
+  const needle = Buffer.from(s, 'utf16le');
+  while ((i = bundle.indexOf(needle, i)) !== -1) { n++; i += needle.length; }
+  return n;
+};
+const either = (s) => countAscii(s) + countUtf16(s);
+
+for (const s of ['MiniMax', 'eu-north-1', 'Användarvillkor', 'minst 18 år', 'härleds från ditt användar-id', 'EU–US Data Privacy Framework', 'djb2', 'hej@eventpulse.nu', 'demo@eventpulse.nu']) {
+  check(`bundle: "${s}" finns`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
+}
+for (const s of ['OpenAI / Anthropic', 'salt-nyckel', '[TODO:', 'privacy@eventpulse.nu']) {
+  check(`bundle: gammal text "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
+}
+
+// 5. Version/build
+const shortVersion = execFileSync('plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
+const build = execFileSync('plutil', ['-extract', 'CFBundleVersion', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
+check('version/build läst', !!shortVersion, `${shortVersion} (${build})`);
+
+const failed = results.filter((r) => !r.ok);
+for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FEL '} ${r.label}${r.detail ? `  (${r.detail})` : ''}`);
+console.log(`\n${results.length - failed.length}/${results.length} kontroller gröna i ${ipaPath}`);
+console.log(`Artefakt: ${ipaPath}`);
+process.exit(failed.length > 0 ? 1 : 0);

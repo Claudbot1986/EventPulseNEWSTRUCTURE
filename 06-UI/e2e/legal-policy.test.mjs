@@ -36,6 +36,8 @@ test.describe('Juridisk text i appen', () => {
 
     expect(text, 'integritetspolicyn öppnade inte').toMatch(/Integritetspolicy/i);
     expect(text, 'en [TODO: ...]-platshållare syns i appen').not.toMatch(/\[TODO:/i);
+    // Råa i18n-nycklar i den publicerade texten = trasig sektionskoppling.
+    expect(text, 'råa i18n-nycklar renderas i policyn').not.toMatch(/legal\.(privacy|terms)\./i);
     expect(text, 'AI-utkastsbanneren syns fortfarande').not.toMatch(/AI-utkast|AI draft|bozza AI/i);
     expect(text, 'MiniMax saknas som AI-leverantör').toMatch(/MiniMax/);
     expect(text, 'Supabase-regionen eu-north-1 saknas').toMatch(/eu-north-1/);
@@ -56,6 +58,7 @@ test.describe('Juridisk text i appen', () => {
 
     expect(text, 'villkoren öppnade inte').toMatch(/Användarvillkor/i);
     expect(text, 'en [TODO: ...]-platshållare syns i villkoren').not.toMatch(/\[TODO:/i);
+    expect(text, 'råa i18n-nycklar renderas i villkoren').not.toMatch(/legal\.(privacy|terms)\./i);
     expect(text, 'AI-utkastsbanneren syns fortfarande').not.toMatch(/AI-utkast|AI draft|bozza AI/i);
     expect(text, 'åldersgränsen är fortfarande 16 år').not.toMatch(/minst 16 år|at least 16 years|almeno 16 anni/i);
     expect(text, 'åldersgränsen 18 år saknas').toMatch(/minst 18 år|at least 18 years|almeno 18 anni/i);

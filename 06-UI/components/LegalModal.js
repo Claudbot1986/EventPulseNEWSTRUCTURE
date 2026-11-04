@@ -248,12 +248,25 @@ function buildSections(kind, t) {
         ];
 
   return sectionIds.map((sid) => {
-    const title = t(`legal.${kind}.${sid}.title`);
-    const body = t(`legal.${kind}.${sid}.body`);
-    const bulletsRaw = t(`legal.${kind}.${sid}.bullets`);
-    const bullets = bulletsRaw
-      ? bulletsRaw.split('\n').map((s) => s.trim()).filter((s) => s.length > 0)
-      : null;
+    // translate() ekar nyckeln när den saknas. Ett avsnitt har antingen en
+    // .body-text eller en .bullets-lista — inte båda. Utan detta filter
+    // renderar den saknade varianten som rå nyckel ("legal.privacy.p2a.body")
+    // i den publicerade policyn.
+    const titleKey = `legal.${kind}.${sid}.title`;
+    const bodyKey = `legal.${kind}.${sid}.body`;
+    const bulletsKey = `legal.${kind}.${sid}.bullets`;
+
+    const rawTitle = t(titleKey);
+    const title = rawTitle === titleKey ? null : rawTitle;
+
+    const rawBody = t(bodyKey);
+    const body = rawBody === bodyKey ? null : rawBody;
+
+    const rawBullets = t(bulletsKey);
+    const bullets =
+      rawBullets && rawBullets !== bulletsKey
+        ? rawBullets.split('\n').map((s) => s.trim()).filter((s) => s.length > 0)
+        : null;
     return { title, body, bullets };
   });
 }
