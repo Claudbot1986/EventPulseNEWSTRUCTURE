@@ -513,6 +513,61 @@ export async function signInWithEmail(email, { timeoutMs = 15_000 } = {}) {
 }
 
 /**
+ * Sign in with email + password.
+ *
+ * EXISTS FOR ONE PURPOSE: the App Store review demo account.
+ * Guideline 2.1 requires a demo account (or a pre-approved built-in demo
+ * mode) whenever an app has a login — but our only other paths are the
+ * e-mail OTP code and Sign in with Apple, and a reviewer cannot read an
+ * inbox they do not own. Supabase password auth is the deterministic path.
+ *
+ * The UI surface is gated behind EXPO_PUBLIC_ENABLE_DEMO_LOGIN, so end users
+ * never see it; the credentials live in App Store Connect "Notes for Review"
+ * and in EAS environment variables — never in git.
+ *
+ * @param {string} email
+ * @param {string} password
+ * @returns {Promise<{ session: object|null, error: string|null }>}
+ */
+export async function signInWithPassword(email, password, { timeoutMs = 15_000 } = {}) {
+  if (typeof email !== 'string' || email.trim().length === 0) {
+    return { session: null, error: 'email_required' };
+  }
+  if (typeof password !== 'string' || password.length === 0) {
+    return { session: null, error: 'password_required' };
+  }
+
+  let timeoutHandle = null;
+  const timeout = new Promise((resolve) => {
+    timeoutHandle = setTimeout(
+      () => resolve({ session: null, error: 'timeout' }),
+      timeoutMs,
+    );
+  });
+  const signInPromise = (async () => {
+    try {
+      const { data, error } = await supabaseAuth.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) return { session: null, error: error.message || 'signin_failed' };
+      if (!data?.session) return { session: null, error: 'signin_failed' };
+      await saveAuthSession(data.session);
+      return { session: data.session, error: null };
+    } catch (err) {
+      const msg = err && typeof err === 'object' && 'message' in err
+        ? String(err.message)
+        : 'signin_failed';
+      return { session: null, error: msg };
+    }
+  })();
+
+  const result = await Promise.race([signInPromise, timeout]);
+  if (timeoutHandle) clearTimeout(timeoutHandle);
+  return result;
+}
+
+/**
  * Verify a Supabase OTP token. Two call shapes are supported depending
  * on how the deep link arrives:
  *   - `{ token_hash, type }` — the modern PKCE flow.

@@ -36,7 +36,7 @@ import {
   ScrollView,
 } from 'react-native';
 
-import { signInWithEmail, signInWithApple, authRedirectTo } from '../services/supabaseAuthClient';
+import { signInWithEmail, signInWithApple, signInWithPassword, authRedirectTo } from '../services/supabaseAuthClient';
 import { saveAuthSession } from '../services/storage';
 import { useI18n } from '../i18n';
 
@@ -139,6 +139,33 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
   }, [onSuccess, t]);
 
   const showAppleButton = Platform.OS === 'ios';
+
+  // App Store review demo account (guideline 2.1). Off unless the build
+  // explicitly enables it — end users never see this surface. Removing the
+  // two env vars from the build profile hides it completely.
+  const demoEnabled =
+    process.env.EXPO_PUBLIC_ENABLE_DEMO_LOGIN === 'true' &&
+    !!process.env.EXPO_PUBLIC_DEMO_EMAIL;
+  const [demoEmail, setDemoEmail] = useState(
+    process.env.EXPO_PUBLIC_DEMO_EMAIL || '',
+  );
+  const [demoPassword, setDemoPassword] = useState('');
+  const [demoState, setDemoState] = useState('idle'); // idle | signing | error
+  const [demoErrorMsg, setDemoErrorMsg] = useState('');
+
+  const handleDemoSignIn = useCallback(async () => {
+    setDemoState('signing');
+    setDemoErrorMsg('');
+    const result = await signInWithPassword(demoEmail, demoPassword);
+    if (result.error || !result.session) {
+      setDemoState('error');
+      setDemoErrorMsg(result.error || t('login.demoFailed'));
+      return;
+    }
+    if (typeof onSuccess === 'function') {
+      onSuccess(result.session);
+    }
+  }, [demoEmail, demoPassword, onSuccess, t]);
 
   return (
     <KeyboardAvoidingView
@@ -261,6 +288,61 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
             <Text style={styles.deepLinkHint}>
               {t('login.linkLandsAt', { url: authRedirectTo() })}
             </Text>
+
+            {demoEnabled ? (
+              <View style={styles.demoBox}>
+                <Text style={styles.demoTitle}>{t('login.demoTitle')}</Text>
+                <Text style={styles.demoBody}>{t('login.demoBody')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={demoEmail}
+                  onChangeText={setDemoEmail}
+                  placeholder={t('login.demoEmailPlaceholder')}
+                  placeholderTextColor="#8A8478"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  editable={demoState !== 'signing'}
+                  accessibilityLabel={t('login.demoEmailA11y')}
+                  testID="demo-login-email"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={demoPassword}
+                  onChangeText={setDemoPassword}
+                  placeholder={t('login.demoPasswordPlaceholder')}
+                  placeholderTextColor="#8A8478"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={demoState !== 'signing'}
+                  accessibilityLabel={t('login.demoPasswordA11y')}
+                  testID="demo-login-password"
+                  onSubmitEditing={handleDemoSignIn}
+                  returnKeyType="go"
+                />
+                {demoState === 'error' && demoErrorMsg ? (
+                  <Text style={styles.errorText}>{demoErrorMsg}</Text>
+                ) : null}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondary,
+                    (pressed || demoState === 'signing') && styles.pressed,
+                  ]}
+                  onPress={handleDemoSignIn}
+                  disabled={demoState === 'signing'}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('login.demoSignIn')}
+                  testID="demo-login-submit"
+                >
+                  {demoState === 'signing' ? (
+                    <ActivityIndicator color="#F7F2EA" />
+                  ) : (
+                    <Text style={styles.secondaryLabel}>{t('login.demoSignIn')}</Text>
+                  )}
+                </Pressable>
+              </View>
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -365,6 +447,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 16,
     textAlign: 'center',
+  },
+  demoBox: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2E2A24',
+    backgroundColor: '#121110',
+  },
+  demoTitle: {
+    color: '#F7F2EA',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  demoBody: {
+    color: '#8A8478',
+    fontSize: 11,
+    lineHeight: 15,
+    marginBottom: 10,
   },
   sentBox: {
     backgroundColor: '#1A1A1A',

@@ -17,7 +17,9 @@
 //   1. fetchFutureEvents() — paginerat, 3 600+ events via events_public.
 //   2. MapFilterBar (Idag / Helgen / Nästa helg / Alla) byter tidsfönster.
 //   3. ClusteredMapView renderar markers med auto-klustring på riktiga
-//      Apple Maps (PROVIDER_DEFAULT = MapKit på iOS).
+//      Apple Maps (PROVIDER_APPLE = MapKit på iOS). PROVIDER_DEFAULT är
+//      Google Maps på iOS och kräver en API-nyckel + ger Google en tredjeparts-
+//      roll i privacy-frågan, så vi använder MapKit.
 //   4. Event-counts (TOTAL / VISIBLE) under kartan.
 //   5. Loading / error / empty states enligt SCREEN_STATES.md.
 //
@@ -25,7 +27,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
+import { PROVIDER_APPLE, Marker } from 'react-native-maps';
 import MapView from 'react-native-map-clustering';
 
 import { projectViewport, viewportFromCenter } from '../components/mapProjection.js';
@@ -303,7 +305,7 @@ export default function KartaScreen({ onEventPress }) {
     <View style={styles.screen} testID="karta-screen-ready">
       <View style={styles.mapWrap} onLayout={handleMapLayout}>
         <MapView
-          provider={PROVIDER_DEFAULT}
+          provider={PROVIDER_APPLE}
           style={StyleSheet.absoluteFill}
           initialRegion={INITIAL_REGION}
           showsCompass

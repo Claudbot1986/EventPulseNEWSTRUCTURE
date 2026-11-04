@@ -12,7 +12,11 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENABLE_DEMO_LOGIN": "true",
+        "EXPO_PUBLIC_DEMO_EMAIL": "demo@eventpulse.nu"
+      }
     }
   },
   "submit": {

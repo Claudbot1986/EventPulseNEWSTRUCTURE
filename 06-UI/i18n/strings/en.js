@@ -87,6 +87,18 @@ export default {
   'login.sendMagicLink': 'Send magic link',
   'login.linkLandsAt': 'The link lands at: {url}',
 
+  // ─── Demo login (App Store review, §2.1) ─────────────────────────────────
+  // Visible only when EXPO_PUBLIC_ENABLE_DEMO_LOGIN=true (the review build).
+  'login.demoTitle': 'Demo login for App Review',
+  'login.demoBody':
+    'Review account. Use the credentials from App Store Connect → Notes for Review.',
+  'login.demoEmailPlaceholder': 'demo-account@eventpulse.nu',
+  'login.demoPasswordPlaceholder': 'Password',
+  'login.demoEmailA11y': 'Email address for demo login',
+  'login.demoPasswordA11y': 'Password for demo login',
+  'login.demoSignIn': 'Sign in as demo',
+  'login.demoFailed': 'Could not sign in as demo.',
+
   // ─── Email code entry ────────────────────────────────────────────────────
   'codeEntry.errInvalid': 'The code is incorrect or has expired — check it and try again.',
   'codeEntry.errRateLimited': 'Too many attempts — wait a moment and try again.',

@@ -90,6 +90,18 @@ export default {
   'login.sendMagicLink': 'Skicka magic link',
   'login.linkLandsAt': 'Länken landar på: {url}',
 
+  // ─── Demo-inloggning (App Store-granskning, §2.1) ────────────────────────
+  // Syns bara när EXPO_PUBLIC_ENABLE_DEMO_LOGIN=true (granskningsbygget).
+  'login.demoTitle': 'Demologin för App Review',
+  'login.demoBody':
+    'Granskningskonto. Använd uppgifterna i App Store Connect → Notes for Review.',
+  'login.demoEmailPlaceholder': 'demo-konto@eventpulse.nu',
+  'login.demoPasswordPlaceholder': 'Lösenord',
+  'login.demoEmailA11y': 'Email-adress för demologin',
+  'login.demoPasswordA11y': 'Lösenord för demologin',
+  'login.demoSignIn': 'Logga in som demo',
+  'login.demoFailed': 'Kunde inte logga in som demo.',
+
   // ─── Email code entry ────────────────────────────────────────────────────
   'codeEntry.errInvalid': 'Koden stämmer inte eller har gått ut — kontrollera och försök igen.',
   'codeEntry.errRateLimited': 'För många försök — vänta en liten stund och testa igen.',
