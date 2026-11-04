@@ -25,7 +25,32 @@ function fetchText(url) {
   });
 }
 
-const mustContain = ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 år'];
+// Cloudflare "Email Address Obfuscation" skriver om mailto-länkar till
+// /cdn-cgi/l/email-protection#<hex> och lägger den råa adressen i
+// data-cfemail="<hex>" (första byte = XOR-nyckel). Utan avkodning tror
+// gaten att kontaktadressen saknas i den publicerade policyn.
+// Hela <span data-cfemail>…</span> ersätts med den avkodade texten —
+// enbart attributvärdet räcker inte, eftersom tag-strippingen tar bort
+// attributen tillsammans med taggen.
+function decodeCfEmails(html) {
+  return html.replace(
+    /<span[^>]*data-cfemail="([a-f0-9]+)"[^>]*>[\s\S]*?<\/span>/gi,
+    (m, hex) => {
+      const key = parseInt(hex.slice(0, 2), 16);
+      let out = '';
+      for (let i = 2; i < hex.length; i += 2) {
+        out += String.fromCharCode(parseInt(hex.substr(i, 2), 16) ^ key);
+      }
+      return ` ${out} `;
+    },
+  );
+}
+
+// Åldersgränsen formuleras per språk — "18 år" finns inte på den engelska sidan.
+const rules = {
+  sv: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 år'] },
+  en: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 years'] },
+};
 const mustNotContain = ['[TODO', 'utkast', 'OpenAI / Anthropic'];
 const results = [];
 
@@ -37,12 +62,13 @@ for (const { url, lang } of urls) {
     results.push({ label: `${lang}: hämtning`, ok: false, detail: String(e.message).slice(0, 80) });
     continue;
   }
-  const text = res.body
+  const text = decodeCfEmails(res.body)
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  const { mustContain } = rules[lang];
   results.push({ label: `${lang}: HTTP 200`, ok: res.status === 200, detail: `HTTP ${res.status}` });
   results.push({ label: `${lang}: sidan är inte en stub (minst 2000 tecken)`, ok: text.length >= 2000, detail: `${text.length} tecken` });
   for (const needle of mustContain) {
@@ -55,11 +81,10 @@ for (const { url, lang } of urls) {
 
 let failed = 0;
 for (const r of results) {
-  const ok = r.ok || (allowStale && r.label.includes('HTTP 200') === false ? false : r.ok);
-  if (!ok) failed++;
-  console.log(`${ok ? 'OK  ' : 'FEL '} ${r.label}${r.detail ? `  (${r.detail})` : ''}`);
+  if (!r.ok) failed++;
+  console.log(`${r.ok ? 'OK  ' : 'FEL '} ${r.label}${r.detail ? `  (${r.detail})` : ''}`);
 }
-const problems = results.filter((r) => !r.ok).length;
+const problems = failed;
 console.log(`\n${results.length - problems}/${results.length} kontroller gröna.`);
 if (problems > 0) {
   console.log(allowStale

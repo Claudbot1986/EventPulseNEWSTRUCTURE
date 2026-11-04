@@ -1,9 +1,11 @@
 # App Store Connect-underlag — EventPulse 1.0 (iOS)
 
 > Allt du behöver skriva in i App Store Connect, med svaren och underbyggnaden.
-> Byggen som ska lämnas in: **iOS, version 1.0.0, build 3**, SDK 58, IPA:
-> `https://expo.dev/artifacts/eas/Gafwswppxc_IUHomzQYopXtnHZXJBm-w6gVJEd2lOZw.ipa`
-> (EAS build `997cc40b-ee29-4a6d-8a8b-6331f5fff02d`).
+> Byggen som ska lämnas in: **iOS, version 1.0.0, build 4**, SDK 58, IPA:
+> `https://expo.dev/artifacts/eas/dujp2FL-iGkeunOq4u1m2Ul9YBAChRLsBjvBt81PlQg.ipa`
+> (EAS build `cfa059fe-8686-473b-b613-effce8fe7577`, byggd från commit
+> `fb4d45a0` som innehåller rättningen av de råa i18n-nycklarna i policyn).
+> IPA-gate `check-ipa.mjs`: **42/42 kontroller gröna**.
 >
 > **Lösenordet till demokontot ligger i `06-UI/.env` (gitignored) under
 > `EXPO_PUBLIC_DEMO_PASSWORD` — kopiera det till "Notes for Review", inte hit.**
@@ -220,7 +222,7 @@ utan alfakanal. 1–10 bilder.
 
 > **Måste göras på en riktig iPhone (eller simulator med Xcode).** Det finns
 > ingen Xcode-installation på maskinen här, så skärmbilderna kunde inte tas
-> automatiskt. Ta dem från **TestFlight-builden** (build 3), inte från Expo Go.
+> automatiskt. Ta dem från **TestFlight-builden** (build 4), inte från Expo Go.
 
 ---
 
@@ -234,7 +236,7 @@ utan alfakanal. 1–10 bilder.
 - [ ] Review Notes ifyllda med demokontot (lösenord från `06-UI/.env`)
 - [ ] Review-kontakt: namn, email, telefon
 - [ ] Skärmbilder 1–9 i rätt format (1320×2868 eller 1290×2796)
-- [ ] iOS-build 3 uppladdad och vald i version 1.0.0
+- [ ] iOS-build 4 uppladdad och vald i version 1.0.0
 - [ ] **Integritetspolicyn live på eventpulse.nu** (se avsnitt 8)
 - [ ] Skicka in
 
@@ -244,7 +246,7 @@ utan alfakanal. 1–10 bilder.
 
 | Punkt | Status | Vad som krävs |
 |---|---|---|
-| Integritetspolicyn live på `eventpulse.nu/privacy/` | **Blockerat** — texten är klar och pushad till `bfl`, men Cloudflare Pages har inte deployat (cf-ray saknas, live-sidan svarar fortfarande med den gamla 859-teckensversionen efter 12 pollningar under ~4 min). Cloudflare-API:t i `.env` ger "Authentication error", så direkt-upload går inte heller | Bekräfta Pages-projektets branch/uppkoppling i Cloudflare-dashboarden, eller ladda upp `site/` manuellt |
+| Integritetspolicyn live på `eventpulse.nu/privacy/` | **LÖST 2026-11-04** — Cloudflare Pages-projektet `eventpulse-nu` deployades via `wrangler pages deploy site --branch main`. Live-gate `check-live-site.mjs`: **18/18 kontroller gröna** (sv + en). Live-sidan svarar nu med den fulla policyn (9 413 B sv / 9 255 B en) | — |
 | TestFlight-uppladdning | **Blockerat** — `eas submit` kräver inloggning mot App Store Connect (API-nyckel eller interaktiv OAuth). Bygget finns redo | `cd 06-UI && eas submit --platform ios --latest` (logga in först) eller ladda upp IPA:n i App Store Connect manuellt |
 | Skärmbilder | **Blockerat på maskinen** — ingen Xcode/simulator | Ta på riktig iPhone från TestFlight-builden |
 | Juridiskt bolagsnamn | Antagande | Policyn anger "Tomor Gashi" (från git/EAS-kontot). Bekräfta att det är ditt juridiska namn, eller ändra i `06-UI/i18n/strings/{sv,en,it}.js` + `site/privacy/index.html` + `site/en/privacy/index.html` |

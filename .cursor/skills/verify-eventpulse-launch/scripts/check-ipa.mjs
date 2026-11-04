@@ -95,6 +95,32 @@ for (const s of ['OpenAI / Anthropic', 'salt-nyckel', '[TODO:', 'privacy@eventpu
   check(`bundle: gammal text "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
 }
 
+// 4b. Legalavsnitten som tidigare läckte råa i18n-nycklar (p1, p2a, p2b, p2c).
+// Varje avsnitt har antingen .body eller .bullets — inte båda. Fixen i
+// LegalModal.buildSections filtrerar bort nyckel-ekot, så de riktiga
+// rubrikerna MÅSTE finnas i bunten i alla tre språk som publiceras.
+// Råa nycklar får inte finnas som literaler (det vore en ny leak).
+const legalTitles = [
+  '1. Vem vi är',
+  '2.1 Kontouppgifter (när du skapar konto)',
+  '2.2 Användargenererad data',
+  '2.3 Enhets- och användningsdata',
+  '1. Who we are',
+  '2.1 Account data (when you create an account)',
+  '2.2 User-generated data',
+  '2.3 Device and usage data',
+  '1. Chi siamo',
+  "2.1 Dati dell'account (quando crei un account)",
+  "2.2 Dati generati dall'utente",
+  '2.3 Dati del dispositivo e di utilizzo',
+];
+for (const s of legalTitles) {
+  check(`bundle: policyns rubrik "${s}" finns`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
+}
+for (const s of ['legal.privacy.p1.bullets', 'legal.privacy.p2a.body', 'legal.privacy.p2b.body', 'legal.privacy.p2c.body']) {
+  check(`bundle: rå nyckel "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
+}
+
 // 5. Version/build
 const shortVersion = execFileSync('plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
 const build = execFileSync('plutil', ['-extract', 'CFBundleVersion', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
