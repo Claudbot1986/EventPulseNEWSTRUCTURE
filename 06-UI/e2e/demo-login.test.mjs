@@ -9,14 +9,42 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { boot, collectErrors, tap, tapTab, tapText } from './helpers/ui.mjs';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:9090';
 const OUT = process.env.UI_EVIDENCE_DIR || `runtime/verification-reports/ui-verify-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-const DEMO_EMAIL = process.env.EXPO_PUBLIC_DEMO_EMAIL;
-const DEMO_PASSWORD = process.env.EXPO_PUBLIC_DEMO_PASSWORD;
-const DEMO_ENABLED = process.env.EXPO_PUBLIC_ENABLE_DEMO_LOGIN === 'true';
+
+/**
+ * Metro laddar 06-UI/.env (`scripts/launch-metro.sh` gör `. ./.env`) — appen
+ * under test ser alltså de flaggor som står i filen. Playwright-processen gör
+ * det inte, så specen läser samma fil själv. Utan det här trodde specen att
+ * flaggan var AV medan appen hade den PÅ, och det negativa fallet föll.
+ */
+function readDotEnv(file) {
+  try {
+    const out = {};
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+      if (!m) continue;
+      out[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+const dotEnv = readDotEnv(
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.env'),
+);
+const envValue = (key) => process.env[key] ?? dotEnv[key];
+
+const DEMO_EMAIL = envValue('EXPO_PUBLIC_DEMO_EMAIL');
+const DEMO_PASSWORD = envValue('EXPO_PUBLIC_DEMO_PASSWORD');
+const DEMO_ENABLED = envValue('EXPO_PUBLIC_ENABLE_DEMO_LOGIN') === 'true';
 
 async function openLogin(page) {
   await tapTab(page, 'Profil');

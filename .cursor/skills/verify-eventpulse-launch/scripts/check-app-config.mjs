@@ -75,16 +75,25 @@ for (const file of stringFiles) {
 }
 
 // ── Kartprovider ──────────────────────────────────────────────────────────────
+// FACT: react-native-maps 1.29.11 exporterar PROVIDER_DEFAULT (= undefined)
+// och PROVIDER_GOOGLE ('google'). Det finns INGEN PROVIDER_APPLE — att
+// importera den ger undefined via Babel-interop, vilket råkar betyda samma
+// sak (undefined provider = plattformens standard = MapKit på iOS,
+// decorateMapComponent.ts:139).
+//
+// Korrekt mål: ingen icke-existerande import, och absolut inte PROVIDER_GOOGLE
+// (kräver API-nyckel vi inte shippar + ger Google en tredjepartsroll).
 for (const screen of ['MapScreen.js', 'KartaScreen.js']) {
   const content = fs.readFileSync(path.join(ROOT, '06-UI/screens', screen), 'utf8');
-  check(`${screen}: PROVIDER_APPLE används`, content.includes('PROVIDER_APPLE'));
-  // Bara kod räknas — kommentarer får nämna PROVIDER_DEFAULT (vi förklarar
-  // varför vi INTE använder det).
   const codeOnly = content
     .split('\n')
     .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line))
     .join('\n');
-  check(`${screen}: PROVIDER_DEFAULT används inte i kod`, !codeOnly.includes('PROVIDER_DEFAULT'));
+  check(`${screen}: PROVIDER_APPLE importeras inte (finns inte i react-native-maps)`,
+    !codeOnly.includes('PROVIDER_APPLE'));
+  check(`${screen}: PROVIDER_GOOGLE används inte`, !codeOnly.includes('PROVIDER_GOOGLE'));
+  check(`${screen}: provider sätts till PROVIDER_DEFAULT (= MapKit på iOS)`,
+    codeOnly.includes('provider={PROVIDER_DEFAULT}'));
 }
 
 // ── Policy i gästläget (Apple §5.1.1(i)) ─────────────────────────────────────

@@ -47,7 +47,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, PROVIDER_APPLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { fetchFeed } from '../services/agentClient';
 import { useI18n } from '../i18n';
@@ -402,7 +402,7 @@ export default function MapScreen({ onEventPress, events: eventsProp }) {
       <View style={styles.mapWrapper}>
         <MapView
           style={styles.map}
-          provider={PROVIDER_APPLE}
+          provider={PROVIDER_DEFAULT}
           initialRegion={initialRegion}
           showsUserLocation={false}
           showsMyLocationButton={false}
