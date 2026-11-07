@@ -1457,8 +1457,8 @@ async function toggleIngestionCron(action: 'start' | 'stop'): Promise<{
   }
 }
 
-function readIngestionCronStatus(): Record<string, unknown> {
-  const statusFile = join(PROJECT_ROOT, 'runtime/ingestion-cron.status.json');
+function readIngestionCronStatus(root: string = PROJECT_ROOT): Record<string, unknown> {
+  const statusFile = join(root, 'runtime/ingestion-cron.status.json');
   const emptyStatus = {
     running: false, pid: null, startedAt: null, finishedAt: null,
     exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
@@ -1506,15 +1506,42 @@ function readIngestionCronStatus(): Record<string, unknown> {
 // ─── Per-source health diagnostics (Phase 1) ────────────────────────────────
 
 export type ErrorCategory = 'timeout' | '404' | '500' | 'redirect' | 'antibot' | 'parse' | 'other' | null;
-export type SourceHealthStatus = 'healthy' | 'irregular' | 'failed';
+
+/**
+ * Primär bucket per källa. Bucketarna är ÖMSIDIGT utslutande och prioriterar
+ * fel först — en källa som både är gammal och trasig hamnar i 'failed'.
+ *
+ *   failed     — riktigt fel: status='fail' | consecutiveFailures>0 | lastError
+ *   never_run  — har aldrig lyckats (lastSuccess saknas)
+ *   stale      — senaste lyckade körning >7 dagar sedan (gammal, inte trasig)
+ *   healthy    — körd ≤24 h sedan utan fel
+ *   irregular  — körd 1-7 dagar sedan utan fel
+ */
+export type SourceHealthStatus = 'healthy' | 'irregular' | 'failed' | 'stale' | 'never_run';
+
+/** Färskhet — NÄR kördes källan senast? Oberoende av utfall. */
+export type SourceFreshness = 'fresh' | 'recent' | 'stale' | 'never';
+
+/** Utfall — GICK det bra? Oberoende av färskhet. 'empty' = kördes men gav 0 events. */
+export type SourceOutcome = 'ok' | 'empty' | 'failed';
 
 export interface SourceHealthRow {
   id: string;
   status: SourceHealthStatus;
+  freshness: SourceFreshness;
+  outcome: SourceOutcome;
   lastSuccess: string | null;
-  lastFail: string | null;
+  /** Senaste körning (oavsett utfall). */
+  lastRun: string | null;
+  /** Ålder på lastSuccess i timmar. null = aldrig lyckats. */
+  ageHours: number | null;
+  /** Events som senaste körningen hittade. null = okänt. */
+  lastEventsFound: number | null;
   lastErrorCategory: ErrorCategory;
+  /** RIKTIGT felmeddelande från fältet `lastError` i sources_status.jsonl. */
   lastError: string | null;
+  /** Routingnotering ("C-htmlGate: 21 events") — beskriver väg, INTE ett fel. */
+  lastRoutingReason: string | null;
   successRate: number; // lifetime proxy: (attempts - consecutiveFailures) / attempts
   consecutiveFailures: number;
   attempts: number;
@@ -1527,7 +1554,20 @@ export interface SourceHealthReport {
     total: number;
     healthy: number;
     irregular: number;
+    /** Riktiga fel — inte "gammal". */
     failed: number;
+    /** Körd >7 dagar sedan utan fel. */
+    stale: number;
+    /** Aldrig lyckats. */
+    neverRun: number;
+    /** Utfall 'empty' — kördes men gav 0 events (tyst trasig). */
+    silentEmpty: number;
+    /** Färskhet 'fresh' — körd ≤24 h sedan. */
+    fresh: number;
+    /** Summa av lastEventsFound över alla källor. */
+    eventsTotal: number;
+    /** Antal källor som kördes men gav 0 events. */
+    eventsZero: number;
     lastRunAt: string | null;
   };
   sources: SourceHealthRow[];
@@ -1565,51 +1605,91 @@ export function categorizeError(reason: string | null | undefined): ErrorCategor
 /**
  * Compute a single source's health bucket.
  *
- * Thresholds (see MASTERPLAN Phase 1 dashboard):
- *   healthy   — lastSuccess within 24h AND proxy successRate >= 0.8
- *   failed    — proxy successRate < 0.1 (catastrophic), OR
- *               lastSuccess older than 7d, OR proxy rate < 0.3
- *   irregular — the middle band (lastSuccess 1–7d, rate 0.3–0.8)
+ * TRE oberoende frågor svaras på, men BUCKETEN prioriterar fel först:
  *
- * NOTE: We don't have a true sliding 7d/30d success rate (no per-attempt
- * history), so we use a lifetime proxy:
- *   proxy = max(0, attempts - consecutiveFailures) / attempts
- * This counts the trailing run as one attempt; historical successes equal
- * the difference between total attempts and the trailing consecutive-failure
- * streak. Good enough to bucket sources; not good enough to time-bound.
+ *   1. Gick det fel?  → 'failed'
+ *      (status='fail' | consecutiveFailures > 0 | fältet lastError är ifylld)
+ *   2. Har den körts? → 'never_run' (lastSuccess saknas)
+ *   3. Hur gammal?   → 'stale' (>7 d) | 'healthy' (≤24 h) | 'irregular' (1-7 d)
+ *
+ * FÖRE 2026-11-07: 'failed' betydde "lastSuccess äldre än 7 dagar". Det gjorde
+ * 121 av 163 källor till "failed" trots att 121 av dem hade successRate=1 och
+ * consecutiveFailures=0 — de hade aldrig haft ett fel. FEL och GAMMALHET är
+ * nu två olika bucketar.
+ *
+ * NOTE: Vi saknar riktig 7d/30d-success-rate (ingen per-försök-historik), så
+ * proxy = max(0, attempts - consecutiveFailures) / attempts används fortfarande
+ * som livstidsmått — men det styr INTE längre bucketarna, bara Rate-kolumnen.
  */
-function classifyHealth(
-  lastSuccessIso: string | null,
-  successRate: number,
-  attempts: number,
-  now: number,
+export function classifySourceHealth(
+  row: {
+    status?: string;
+    consecutiveFailures?: number;
+    lastError?: string | null;
+  },
+  ageHours: number | null,
 ): SourceHealthStatus {
-  const ageH = lastSuccessIso
-    ? (now - new Date(lastSuccessIso).getTime()) / 3600000
-    : Infinity;
-  if (attempts > 0 && successRate < 0.1) return 'failed';
-  if (ageH <= 24 && successRate >= 0.8) return 'healthy';
-  if (ageH > 24 * 7 || successRate < 0.3) return 'failed';
+  const hasError =
+    row.status === 'fail' ||
+    (row.consecutiveFailures ?? 0) > 0 ||
+    !!(row.lastError && row.lastError.trim().length > 0);
+  if (hasError) return 'failed';
+  if (ageHours === null) return 'never_run';
+  if (ageHours > 24 * 7) return 'stale';
+  if (ageHours <= 24) return 'healthy';
   return 'irregular';
 }
 
-export function collectSourceHealth(root: string): SourceHealthReport {
+/** Färskhet — NÄR kördes källan senast? Oberoende av om den gick bra. */
+export function classifyFreshness(ageHours: number | null): SourceFreshness {
+  if (ageHours === null) return 'never';
+  if (ageHours <= 24) return 'fresh';
+  if (ageHours <= 24 * 7) return 'recent';
+  return 'stale';
+}
+
+/**
+ * Utfall — GICK det bra? Oberoende av färskhet.
+ * 'empty' betyder "kördes men hittade 0 events" — tyst trasig, värre än
+ * att bara vara gammal, eftersom inget i kedjan flaggar det som fel.
+ */
+export function classifyOutcome(row: {
+  status?: string;
+  consecutiveFailures?: number;
+  lastError?: string | null;
+  lastEventsFound?: number | null;
+}): SourceOutcome {
+  if (
+    row.status === 'fail' ||
+    (row.consecutiveFailures ?? 0) > 0 ||
+    !!(row.lastError && row.lastError.trim().length > 0)
+  ) {
+    return 'failed';
+  }
+  if (row.lastEventsFound === 0) return 'empty';
+  return 'ok';
+}
+
+export function collectSourceHealth(root: string, nowMs: number = Date.now()): SourceHealthReport {
   const rows = readJsonl<{
     sourceId?: string;
     status?: string;
     lastSuccess?: string;
     lastRun?: string;
+    lastError?: string;
     lastRoutingReason?: string;
+    lastEventsFound?: number;
     consecutiveFailures?: number;
     attempts?: number;
     preferredPath?: string;
     lastPathUsed?: string;
   }>(join(root, 'runtime/sources_status.jsonl'));
 
-  const now = Date.now();
+  const now = nowMs;
   const sources: SourceHealthRow[] = [];
   const errorCategories: Record<string, number> = {};
-  let healthy = 0, irregular = 0, failed = 0;
+  let healthy = 0, irregular = 0, failed = 0, stale = 0, neverRun = 0;
+  let silentEmpty = 0, fresh = 0, eventsTotal = 0, eventsZero = 0;
   let lastRunAt: string | null = null;
 
   for (const r of rows) {
@@ -1622,27 +1702,65 @@ export function collectSourceHealth(root: string): SourceHealthReport {
     const cf = Math.max(0, r.consecutiveFailures ?? 0);
     // Proxy success rate: assume the trailing streak reflects current state,
     // so historical successes ≈ attempts - trailing consecutiveFailures.
-    // Clamped to [0, 1]. attempts == 0 → rate = 0 (unknown -> irregular via
-    // classifyHealth fallthrough).
+    // Clamped to [0, 1]. attempts == 0 → rate = 0 (unknown).
     const proxySuccess = attempts > 0 ? Math.max(0, attempts - cf) / attempts : 0;
-    const lastError = r.lastRoutingReason ?? null;
-    const lastErrorCategory = categorizeError(lastError);
+
+    // RIKTIGT felmeddelande: fältet `lastError`. FÖRE 2026-11-07 användes
+    // `lastRoutingReason` här — det är en routingnotering ("C-htmlGate: 21
+    // events"), alltså bar 106 av 163 rader framgångsmeddelanden som fel.
+    const lastError =
+      typeof r.lastError === 'string' && r.lastError.trim().length > 0 ? r.lastError : null;
+    const lastRoutingReason =
+      typeof r.lastRoutingReason === 'string' && r.lastRoutingReason.trim().length > 0
+        ? r.lastRoutingReason
+        : null;
+
+    const ageHours = lastSuccess
+      ? (now - new Date(lastSuccess).getTime()) / 3600000
+      : null;
+    const freshness = classifyFreshness(ageHours);
+    const outcome = classifyOutcome({
+      status: r.status,
+      consecutiveFailures: cf,
+      lastError,
+      lastEventsFound: typeof r.lastEventsFound === 'number' ? r.lastEventsFound : null,
+    });
+    const status = classifySourceHealth(
+      { status: r.status, consecutiveFailures: cf, lastError },
+      ageHours,
+    );
+
+    const lastErrorCategory = outcome === 'failed' ? categorizeError(lastError) : null;
     if (lastErrorCategory) {
       errorCategories[lastErrorCategory] = (errorCategories[lastErrorCategory] ?? 0) + 1;
     }
 
-    const status = classifyHealth(lastSuccess, proxySuccess, attempts, now);
+    const lastEventsFound = typeof r.lastEventsFound === 'number' ? r.lastEventsFound : null;
+    if (lastEventsFound !== null) {
+      eventsTotal += lastEventsFound;
+      if (lastEventsFound === 0) eventsZero++;
+    }
+
     if (status === 'healthy') healthy++;
     else if (status === 'irregular') irregular++;
+    else if (status === 'stale') stale++;
+    else if (status === 'never_run') neverRun++;
     else failed++;
+    if (outcome === 'empty') silentEmpty++;
+    if (freshness === 'fresh') fresh++;
 
     sources.push({
       id,
       status,
+      freshness,
+      outcome,
       lastSuccess,
-      lastFail: lastRun,
+      lastRun,
+      ageHours: ageHours === null ? null : Number(ageHours.toFixed(2)),
+      lastEventsFound,
       lastErrorCategory,
       lastError,
+      lastRoutingReason,
       successRate: Number(proxySuccess.toFixed(3)),
       consecutiveFailures: cf,
       attempts,
@@ -1657,11 +1775,222 @@ export function collectSourceHealth(root: string): SourceHealthReport {
       healthy,
       irregular,
       failed,
+      stale,
+      neverRun,
+      silentEmpty,
+      fresh,
+      eventsTotal,
+      eventsZero,
       lastRunAt,
     },
     sources,
     errorCategories,
+    generatedAt: new Date(now).toISOString(),
+  };
+}
+
+// ─── Ingestion flow (källflöde + kedjesteg i EN bild) ────────────────────────
+//
+// Frågan dashboarden ska svara på: "kommer det in fler evenemang, eller står
+// det still?" — det kräver två saker i samma vy:
+//
+//   ① källflödet   — hur många källor ska köras, hur många kördes, hur många
+//                    gick fel, och hur mycket de gav (från sources_status.jsonl)
+//   ② kedjan       — vad hände i nattens körning, steg för steg, med exitkod
+//                    och orsak på felstegen (från ingestion-cron.status.json +
+//                    stegens .err.log)
+//
+// Innan 2026-11-07 fanns ingen av delarna samlat: /api/source-health blandade
+// ihop FEL med GAMMALHET (122 "failed" var 121 gammal-för-alla-anna-källor), och
+// kedjans felsteg syntes bara i en tooltip på cronknappen.
+
+export interface IngestionStepRow {
+  name: string;
+  exitCode: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  durationMs: number | null;
+  eventsExtracted: number | null;
+  errorClass: string | null;
+  /** Kort orsakssammanfattning ur stegets .err.log (bara för felsteg). */
+  failure: string | null;
+}
+
+export interface IngestionFlowReport {
+  generatedAt: string;
+  chain: {
+    running: boolean;
+    startedAt: string | null;
+    finishedAt: string | null;
+    durationMs: number | null;
+    exitCode: number | null;
+    lastError: string | null;
+    totalEventsExtracted: number | null;
+    degradedSteps: Array<{ name: string; exitCode: number | null; errorClass: string | null }>;
+    steps: IngestionStepRow[];
+    failedSteps: number;
+  };
+  sources: {
+    total: number;
+    /** Körd ≤24 h sedan. */
+    fresh: number;
+    /** Ej körd ≤24 h sedan. */
+    notRanOver24h: number;
+    /** Körd >7 dagar sedan utan fel. */
+    stale: number;
+    /** Aldrig lyckats. */
+    neverRun: number;
+    /** Riktiga fel. */
+    errors: number;
+    errorSources: Array<{ id: string; error: string | null; category: ErrorCategory }>;
+    /** Kördes men gav 0 events. */
+    silentEmpty: number;
+    silentEmptySources: string[];
+    /** Summa events från senaste körningarna. */
+    eventsTotal: number;
+    eventsZero: number;
+  };
+}
+
+/**
+ * Stegloggarna heter `${stepName}-${YYYY-MM-DD}T${hh}-${mm}-${ss}-${ms}Z.err.log`.
+ * Sortering på filnamn är därför kronologisk (ISO-liknande prefix, fast
+ * kolonerna är bytta mot bindestreck).
+ */
+function listStepErrorLogs(root: string, stepName: string): string[] {
+  const dir = join(root, 'runtime/ingestion-cron/steps');
+  if (!existsSync(dir)) return [];
+  try {
+    return readdirSync(dir)
+      .filter((f) => f.startsWith(`${stepName}-`) && f.endsWith('.err.log'))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Plocka ut en kort orsakssammanfattning ur ett stegs fel-logg.
+ *
+ * Två mönster dominerar i praktiken:
+ *   - "[drain] N jobb misslyckades slutligt"  → antal som inte gick att spara
+ *   - "[drain] job failed (SLUTGILTIGT…): …"  → själva orsaken (t.ex. en
+ *     DB-constraint som avvisade en rad)
+ */
+export function summarizeStepFailure(lines: string[]): string | null {
+  const text = lines.join('\n');
+  const parts: string[] = [];
+
+  const count = text.match(/(\d+) jobb misslyckades slutligt/);
+  if (count) parts.push(`${count[1]} jobb misslyckades slutligt`);
+
+  const rootCause = text.match(/\[drain\] job failed[^\n]*/);
+  if (rootCause) {
+    parts.push(
+      rootCause[0]
+        .replace(/^\[drain\] job failed \(SLUTGILTIGT, försök \d+\/\d+\):\s*/, '')
+        .trim(),
+    );
+  }
+
+  if (parts.length > 0) return parts.join(' — ');
+
+  const generic = [...lines]
+    .reverse()
+    .find((l) => /error|fel|failed|misslyckades/i.test(l));
+  return generic ? generic.trim().slice(0, 240) : null;
+}
+
+export function collectIngestionFlow(root: string): IngestionFlowReport {
+  const status = readIngestionCronStatus(root);
+  const health = collectSourceHealth(root);
+
+  const rawSteps = Array.isArray(status.steps) ? (status.steps as Array<Record<string, unknown>>) : [];
+  const steps: IngestionStepRow[] = rawSteps.map((s) => {
+    const name = String(s.name ?? '?');
+    const exitCode = typeof s.exitCode === 'number' ? s.exitCode : null;
+    const startedAt = typeof s.startedAt === 'string' ? s.startedAt : null;
+    const finishedAt = typeof s.finishedAt === 'string' ? s.finishedAt : null;
+
+    let durationMs: number | null = null;
+    if (startedAt && finishedAt) {
+      const d = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+      if (Number.isFinite(d) && d >= 0) durationMs = d;
+    }
+
+    let failure: string | null = null;
+    if (exitCode !== null && exitCode !== 0) {
+      const logs = listStepErrorLogs(root, name);
+      const file = logs[logs.length - 1];
+      if (file) {
+        try {
+          const lines = readFileSync(
+            join(root, 'runtime/ingestion-cron/steps', file),
+            'utf-8',
+          ).split('\n');
+          failure = summarizeStepFailure(lines);
+        } catch {
+          // Loggen saknas eller är oläslig — steget har ändå en exitkod.
+        }
+      }
+    }
+
+    return {
+      name,
+      exitCode,
+      startedAt,
+      finishedAt,
+      durationMs,
+      eventsExtracted: typeof s.eventsExtracted === 'number' ? s.eventsExtracted : null,
+      errorClass: typeof s.errorClass === 'string' ? s.errorClass : null,
+      failure,
+    };
+  });
+
+  const degradedRaw = Array.isArray(status.degradedSteps)
+    ? (status.degradedSteps as Array<Record<string, unknown>>)
+    : [];
+  const degradedSteps = degradedRaw.map((s) => ({
+    name: String(s.name ?? '?'),
+    exitCode: typeof s.exitCode === 'number' ? s.exitCode : null,
+    errorClass: typeof s.errorClass === 'string' ? s.errorClass : null,
+  }));
+
+  const errorSources = health.sources
+    .filter((r) => r.outcome === 'failed')
+    .map((r) => ({ id: r.id, error: r.lastError, category: r.lastErrorCategory }));
+  const silentEmptySources = health.sources
+    .filter((r) => r.outcome === 'empty')
+    .map((r) => r.id);
+
+  return {
     generatedAt: new Date().toISOString(),
+    chain: {
+      running: status.running === true,
+      startedAt: typeof status.startedAt === 'string' ? status.startedAt : null,
+      finishedAt: typeof status.finishedAt === 'string' ? status.finishedAt : null,
+      durationMs: typeof status.durationMs === 'number' ? status.durationMs : null,
+      exitCode: typeof status.exitCode === 'number' ? status.exitCode : null,
+      lastError: typeof status.lastError === 'string' ? status.lastError : null,
+      totalEventsExtracted:
+        typeof status.totalEventsExtracted === 'number' ? status.totalEventsExtracted : null,
+      degradedSteps,
+      steps,
+      failedSteps: steps.filter((s) => s.exitCode !== null && s.exitCode !== 0).length,
+    },
+    sources: {
+      total: health.summary.total,
+      fresh: health.summary.fresh,
+      notRanOver24h: health.summary.total - health.summary.fresh,
+      stale: health.summary.stale,
+      neverRun: health.summary.neverRun,
+      errors: health.summary.failed,
+      errorSources,
+      silentEmpty: health.summary.silentEmpty,
+      silentEmptySources,
+      eventsTotal: health.summary.eventsTotal,
+      eventsZero: health.summary.eventsZero,
+    },
   };
 }
 
@@ -2221,8 +2550,23 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
   // ─── Ingestion cron endpoints ───────────────────────────────────────────────
   //
   // GET  /api/ingestion/status → runtime/ingestion-cron.status.json (sanning)
+  // GET  /api/ingestion/flow   → källflöde + kedjesteg i EN bild (operatorvyn)
   // POST /api/ingestion/start  → spawn detached ingestion-cron.ts
   // POST /api/ingestion/stop   → SIGTERM till PID i statusfilen
+  if (url === '/api/ingestion/flow') {
+    try {
+      const data = collectIngestionFlow(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
   if (url === '/api/ingestion/status') {
     try {
       const data = readIngestionCronStatus();

@@ -317,6 +317,23 @@
           </dl>
         </section>
 
+        <section class="card flow-card" id="ingestion-flow" data-info="Senaste ingestion-cykeln som ett flöde: inkommande källor → körda → utfall → leverans. Källsiffrorna kommer från runtime/sources_status.jsonl (körning, fel, events hittade). Kedjans steg kommer från runtime/ingestion-cron.status.json + varje stegs .err.log, så ett felsteg visar sin faktiska orsak. VIKTIGT: 'fel' betyder ett verkigt fel (status=fail, consecutiveFailures>0 eller lastError ifylld). 'Gammal' betyder bara att källan inte körts på >7 dagar — det är inte ett fel. 'Tyst tom' betyder att källan kördes men gav 0 events, vilket ingen i kedjan flaggar som fel.">
+          <h2>Ingestion — senaste cykeln<button type="button" class="info-btn" data-info-target="ingestion-flow" aria-label="help">i</button></h2>
+          <p class="caption">Flödet från källor till events, steg för steg. Allt läses ur riktiga runtime-filer — inga uppskattade siffror.</p>
+          <ol class="flow" id="flow-steps">
+            <li class="flow-row"><span class="flow-label">loading…</span></li>
+          </ol>
+          <div class="chain-block">
+            <div class="chain-head">
+              <span class="chain-title" id="chain-title">Kedjesteg</span>
+              <span class="chain-summary muted" id="chain-summary"></span>
+            </div>
+            <div class="chain-steps" id="chain-steps">
+              <div class="muted">loading…</div>
+            </div>
+          </div>
+        </section>
+
         <section class="card" id="sources" data-info="Aggregated counts of sources in runtime/sources_status.jsonl. 'Working' = last Tool A scrape returned a usable payload. 'Dead' = consecutive failures recorded. 'Untouched' = never attempted by Tool A. NOTE: events_public may contain rows from sources not represented here — those arrived via Tool B/C/D/push. For the full DB-side picture see 'Sources (DB-fed)'.">
           <h2>Sources (Tool A — direct network/JSON-LD)<button type="button" class="info-btn" data-info-target="sources" aria-label="help">i</button></h2>
           <p class="caption">Counts from <code>sources_status.jsonl</code>. Working = Tool A scrape success. DB may also hold events from Tool B/C/D/push paths — see Sources (DB-fed) below.</p>
@@ -418,29 +435,39 @@
           <p class="caption"><span id="chart-batch-rate-hint">From reports/batch-NNN/batch-traces.jsonl (success/attempts per batch dir mtime day)</span></p>
         </section>
 
-        <section class="card source-health-card" id="source-health" data-info="Per-source health diagnostics derived from runtime/sources_status.jsonl. Status buckets: healthy = last success within 24h AND proxy success rate >= 0.8; irregular = last success 1-7d ago OR rate 0.3-0.8; failed = last success >7d OR rate < 0.3 OR catastrophic (rate < 0.1). Error category is classified from lastRoutingReason (timeout/404/500/redirect/antibot/parse/other). The proxy success rate is lifetime (attempts - consecutiveFailures) / attempts - we don't keep per-attempt history, so true sliding 7d/30d windows aren't available yet. Use this to spot what is failing and why; click a row to see the last error message.">
+        <section class="card source-health-card" id="source-health" data-info="Per-source health derived from runtime/sources_status.jsonl. THREE independent questions: FEL (did it break?) = status 'fail' OR consecutiveFailures > 0 OR the lastError field is set. GAMMALHET (when did it last run?) = lastSuccess within 24h (fresh) / 1-7d (recent) / >7d (stale) / never. UTfall (what did it give?) = events found on the last run — 0 events means the source answered but yielded nothing, which nothing in the chain flags as an error. IMPORTANT: before 2026-11-07 'failed' meant 'not run for >7 days' and 'lastError' was filled from lastRoutingReason (a routing note like 'C-htmlGate: 21 events'), so 121 of 163 sources showed a false error. Errors are now read from the real lastError field.">
           <h2>Source Health<button type="button" class="info-btn" data-info-target="source-health" aria-label="help">i</button></h2>
-          <p class="caption">Per-source health from <code>sources_status.jsonl</code>. Filter by error category; click a row for the last error message. Pattern: RudderStack Health Dashboard + CDP Sync Health Dashboard.</p>
-          <div class="kpi-strip kpi-strip--inline">
+          <p class="caption">Per-source health from <code>sources_status.jsonl</code>. <strong>Fel</strong> = ett verkligt fel. <strong>Gammal</strong> = bara inte körd på &gt;7 dagar, inte trasig. <strong>Tyst tom</strong> = körd men 0 events. Klicka en rad för detaljer.</p>
+          <div class="kpi-strip kpi-strip--inline kpi-strip--six">
             <div class="kpi-tile">
               <div class="kpi-label">Total</div>
               <div class="kpi-value" id="sh-total">-</div>
-              <div class="kpi-caption">sources in sources_status.jsonl</div>
+              <div class="kpi-caption">källor i sources_status.jsonl</div>
             </div>
             <div class="kpi-tile">
-              <div class="kpi-label">Healthy</div>
-              <div class="kpi-value ok" id="sh-healthy">-</div>
-              <div class="kpi-caption">lastSuccess &lt;24h &middot; rate &ge;0.8</div>
-            </div>
-            <div class="kpi-tile">
-              <div class="kpi-label">Irregular</div>
-              <div class="kpi-value warn" id="sh-irregular">-</div>
-              <div class="kpi-caption">lastSuccess 1-7d OR rate 0.3-0.8</div>
-            </div>
-            <div class="kpi-tile">
-              <div class="kpi-label">Failed</div>
+              <div class="kpi-label">Fel</div>
               <div class="kpi-value bad" id="sh-failed">-</div>
-              <div class="kpi-caption">lastSuccess &gt;7d OR rate &lt;0.3</div>
+              <div class="kpi-caption">verkliga fel (inte gammal)</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Tyst tom</div>
+              <div class="kpi-value warn" id="sh-silent-empty">-</div>
+              <div class="kpi-caption">körd men 0 events</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Gammal</div>
+              <div class="kpi-value warn" id="sh-stale">-</div>
+              <div class="kpi-caption">inte körd &gt;7 dagar</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Aldrig körd</div>
+              <div class="kpi-value muted" id="sh-never-run">-</div>
+              <div class="kpi-caption">ingen lyckad körning</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Frisk</div>
+              <div class="kpi-value ok" id="sh-healthy">-</div>
+              <div class="kpi-caption">körd &le;24 h sedan</div>
             </div>
           </div>
           <div class="source-health-toolbar">
@@ -458,9 +485,17 @@
             </select>
             <select id="sh-status-filter" aria-label="filter by health status">
               <option value="all">all statuses</option>
-              <option value="failed">failed only</option>
-              <option value="irregular">irregular only</option>
-              <option value="healthy">healthy only</option>
+              <option value="failed">fel</option>
+              <option value="stale">gammal (&gt;7 d)</option>
+              <option value="never_run">aldrig körd</option>
+              <option value="healthy">frisk (&le;24 h)</option>
+              <option value="irregular">oregelbunden (1-7 d)</option>
+            </select>
+            <select id="sh-outcome-filter" aria-label="filter by outcome">
+              <option value="all">alla utfall</option>
+              <option value="failed">utfall: fel</option>
+              <option value="empty">utfall: tyst tom (0 events)</option>
+              <option value="ok">utfall: gav events</option>
             </select>
             <span class="sh-count muted" id="sh-count"></span>
           </div>
@@ -471,15 +506,13 @@
                 <tr>
                   <th data-sort="status">Status</th>
                   <th data-sort="id">Source</th>
-                  <th data-sort="lastSuccess">Last success</th>
-                  <th data-sort="successRate">Rate</th>
-                  <th data-sort="attempts">Attempts</th>
-                  <th data-sort="cf">CF</th>
-                  <th data-sort="lastErrorCategory">Error cat.</th>
-                  <th>Last error</th>
+                  <th data-sort="lastEventsFound" class="num">Events</th>
+                  <th data-sort="lastRun">Senast körd</th>
+                  <th data-sort="lastSuccess">Senast OK</th>
+                  <th data-sort="lastErrorCategory">Fel</th>
                 </tr>
               </thead>
-              <tbody id="sh-tbody"><tr><td colspan="8" class="empty">loading&hellip;</td></tr></tbody>
+              <tbody id="sh-tbody"><tr><td colspan="6" class="empty">loading&hellip;</td></tr></tbody>
             </table>
           </div>
         </section>

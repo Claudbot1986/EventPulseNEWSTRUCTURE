@@ -110,9 +110,11 @@ function applyAnalyticsServerState(as) {
   }
 
   function applyIngestionCronState(s) {
-    el.classList.remove('ingestion-cron-box--ok', 'ingestion-cron-box--bad', 'ingestion-cron-box--unknown');
+    el.classList.remove('ingestion-cron-box--ok', 'ingestion-cron-box--bad', 'ingestion-cron-box--warn', 'ingestion-cron-box--unknown');
     const titleEl = el.querySelector('.ingestion-cron-box-title');
     const subEl = el.querySelector('.ingestion-cron-box-sub');
+    const exitCode = s && typeof s.exitCode === 'number' ? s.exitCode : null;
+    const degraded = s && Array.isArray(s.degradedSteps) && s.degradedSteps.length > 0;
     if (s && s.running === true) {
       el.classList.add('ingestion-cron-box--ok');
       el.title = s.pid
@@ -122,14 +124,23 @@ function applyAnalyticsServerState(as) {
       if (subEl) subEl.textContent = s.pid
         ? `kör nu · PID ${s.pid}`
         : 'kör nu';
-    } else if (s && s.running === false) {
+    } else if (exitCode !== null && exitCode !== 0) {
+      // FÖRE 2026-11-07: running=false → alltid RÖD. Det gjorde knappen röd
+      // varje dag (cronen sover 23 av 24 timmar) och dolde den faktiska
+      // informationen — vad senaste körningen gjorde.
       el.classList.add('ingestion-cron-box--bad');
-      const last = s.finishedAt ? `klar ${s.finishedAt}` : 'har inte körts';
-      const ev = s.totalEventsExtracted != null ? ` · ${s.totalEventsExtracted} events senaste körning` : '';
-      const err = s.lastError ? ` · FEL: ${s.lastError}` : '';
-      el.title = `Nightly ingestion inaktiv (${last}${ev}${err})`;
+      const last = s.finishedAt ? `klar ${s.finishedAt}` : 'okänt när';
+      const err = s.lastError ? ` · ${s.lastError}` : '';
+      el.title = `Senaste körningen MISSLYCKADES (exit ${exitCode}, ${last})${err}`;
       if (titleEl) titleEl.textContent = 'Nightly ingestion';
-      if (subEl) subEl.textContent = 'inaktiv · klicka för att köra';
+      if (subEl) subEl.textContent = `senaste körning FEL (exit ${exitCode})`;
+    } else if (exitCode === 0) {
+      el.classList.add(degraded ? 'ingestion-cron-box--warn' : 'ingestion-cron-box--ok');
+      const last = s.finishedAt ? `klar ${s.finishedAt}` : 'har inte körts';
+      const ev = s.totalEventsExtracted != null ? ` · ${s.totalEventsExtracted} events` : '';
+      el.title = `Senaste körningen gick bra (${last}${ev})`;
+      if (titleEl) titleEl.textContent = 'Nightly ingestion';
+      if (subEl) subEl.textContent = degraded ? 'senaste körning OK (med varningar)' : 'senaste körning OK';
     } else {
       el.classList.add('ingestion-cron-box--unknown');
       el.title = 'Nightly ingestion status okänd (startfil saknas eller ej skriven ännu)';
@@ -424,9 +435,22 @@ function applyAnalyticsServerState(as) {
     initSourceHealth(shData);
   } catch (err) {
     const body = document.getElementById('sh-tbody');
-    if (body) body.innerHTML = `<tr><td colspan="8" class="empty">unavailable: ${escapeHtml(String(err))}</td></tr>`;
+    if (body) body.innerHTML = `<tr><td colspan="6" class="empty">unavailable: ${escapeHtml(String(err))}</td></tr>`;
     const ec = document.getElementById('sh-errorcats');
     if (ec) ec.innerHTML = '';
+  }
+
+  // ── Ingestion flow (källflöde + kedjesteg) ── egen fetch, så att ett fel i
+  //    den ena vyn inte tar ner den andra.
+  try {
+    const flowRes = await fetch('/api/ingestion/flow', { cache: 'no-store' });
+    if (!flowRes.ok) throw new Error(`HTTP ${flowRes.status}`);
+    initIngestionFlow(await flowRes.json());
+  } catch (err) {
+    const el = document.getElementById('flow-steps');
+    if (el) el.innerHTML = `<li class="flow-row"><div class="flow-label">unavailable: ${escapeHtml(String(err))}</div></li>`;
+    const cs = document.getElementById('chain-steps');
+    if (cs) cs.innerHTML = '';
   }
 
   // ── User activity (per test profile, 10-Analytics) — independent fetch
@@ -1459,7 +1483,8 @@ const shState = {
   search: '',
   catFilter: 'all',
   statusFilter: 'all',
-  sortKey: 'status',   // 'status'|'id'|'lastSuccess'|'successRate'|'attempts'|'cf'|'lastErrorCategory'
+  outcomeFilter: 'all',
+  sortKey: 'status',   // 'status'|'id'|'lastEventsFound'|'lastRun'|'lastSuccess'|'lastErrorCategory'
   sortDir: 'asc',
   expanded: new Set(), // sourceIds whose drill-down is open
 };
@@ -1478,9 +1503,11 @@ function renderShKpis() {
   const s = shState.summary;
   if (!s) return;
   setText('sh-total', s.total);
-  setText('sh-healthy', s.healthy);
-  setText('sh-irregular', s.irregular);
   setText('sh-failed', s.failed);
+  setText('sh-silent-empty', s.silentEmpty);
+  setText('sh-stale', s.stale);
+  setText('sh-never-run', s.neverRun);
+  setText('sh-healthy', s.healthy);
 }
 
 const CAT_LABELS = {
@@ -1505,6 +1532,28 @@ const CAT_COLORS = {
 };
 const CAT_ORDER = ['timeout', '500', '404', 'antibot', 'redirect', 'parse', 'other', 'null'];
 
+/**
+ * Buckets på svenska. "Gammal" och "aldrig körd" är INTE fel — de är
+ * "behöver köras igen". Bara 'fel' betyder att något gick sönder.
+ */
+const STATUS_LABELS = {
+  failed: 'fel',
+  never_run: 'aldrig körd',
+  stale: 'gammal',
+  irregular: 'oregelbunden',
+  healthy: 'frisk',
+};
+
+function statusTone(status) {
+  switch (status) {
+    case 'failed': return 'bad';
+    case 'never_run': return 'warn';
+    case 'stale': return 'warn';
+    case 'irregular': return 'neutral';
+    default: return 'ok';
+  }
+}
+
 function renderShErrorCats(cats) {
   const el = document.getElementById('sh-errorcats');
   if (!el) return;
@@ -1527,8 +1576,15 @@ function renderShErrorCats(cats) {
 }
 
 function statusRank(s) {
-  // failed < irregular < healthy — "asc" sort shows worst first
-  return s === 'failed' ? 0 : s === 'irregular' ? 1 : 2;
+  // Sämst först: fel → aldrig körd → gammal → oregelbunden → frisk.
+  // "Gammal" är inte ett fel — det står under "fel" men över "frisk".
+  switch (s) {
+    case 'failed': return 0;
+    case 'never_run': return 1;
+    case 'stale': return 2;
+    case 'irregular': return 3;
+    default: return 4;
+  }
 }
 
 function sortShRows(rows) {
@@ -1539,9 +1595,12 @@ function sortShRows(rows) {
     if (k === 'status') { av = statusRank(a.status); bv = statusRank(b.status); }
     else if (k === 'id') { av = a.id; bv = b.id; }
     else if (k === 'lastSuccess') { av = a.lastSuccess || ''; bv = b.lastSuccess || ''; }
-    else if (k === 'successRate') { av = a.successRate; bv = b.successRate; }
-    else if (k === 'attempts') { av = a.attempts; bv = b.attempts; }
-    else if (k === 'cf') { av = a.consecutiveFailures; bv = b.consecutiveFailures; }
+    else if (k === 'lastRun') { av = a.lastRun || ''; bv = b.lastRun || ''; }
+    else if (k === 'lastEventsFound') {
+      // 0 events (tyst tom) ska ligga högst — det är värst, inte bäst.
+      av = a.lastEventsFound === null ? -1 : a.lastEventsFound;
+      bv = b.lastEventsFound === null ? -1 : b.lastEventsFound;
+    }
     else if (k === 'lastErrorCategory') {
       av = a.lastErrorCategory || 'zzz'; // null sorts last on asc
       bv = b.lastErrorCategory || 'zzz';
@@ -1561,6 +1620,7 @@ function renderShTable() {
   const needle = shState.search.trim().toLowerCase();
   const filtered = shState.rows.filter((r) => {
     if (shState.statusFilter !== 'all' && r.status !== shState.statusFilter) return false;
+    if (shState.outcomeFilter !== 'all' && r.outcome !== shState.outcomeFilter) return false;
     if (shState.catFilter !== 'all') {
       if (shState.catFilter === 'null') {
         if (r.lastErrorCategory !== null) return false;
@@ -1571,31 +1631,42 @@ function renderShTable() {
   });
   const sorted = sortShRows(filtered);
   if (sorted.length === 0) {
-    body.innerHTML = '<tr><td colspan="8" class="empty">no sources match current filter</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="empty">no sources match current filter</td></tr>';
   } else {
     body.innerHTML = sorted.map((r) => {
-      const statusBadge = `<span class="badge ${r.status === 'healthy' ? 'ok' : r.status === 'irregular' ? 'warn' : 'bad'}">${escapeHtml(r.status)}</span>`;
-      const cat = r.lastErrorCategory === null ? '<span class="muted">none</span>' : `<span class="sh-cat sh-cat-${escapeHtml(r.lastErrorCategory || 'null')}">${escapeHtml(CAT_LABELS[r.lastErrorCategory] || r.lastErrorCategory)}</span>`;
-      const lastOk = r.lastSuccess ? new Date(r.lastSuccess).toLocaleDateString() : '<span class="muted">never</span>';
-      const rate = r.successRate === 0 ? '0%' : Math.round(r.successRate * 100) + '%';
+      const statusBadge = `<span class="badge ${statusTone(r.status)}">${escapeHtml(STATUS_LABELS[r.status] || r.status)}</span>`;
+      const cat = r.lastErrorCategory === null
+        ? '<span class="muted">—</span>'
+        : `<span class="sh-cat sh-cat-${escapeHtml(r.lastErrorCategory || 'null')}">${escapeHtml(CAT_LABELS[r.lastErrorCategory] || r.lastErrorCategory)}</span>`;
+      const events = r.lastEventsFound === null
+        ? '<span class="muted">—</span>'
+        : r.lastEventsFound === 0
+          ? '<span class="sh-zero">0</span>'
+          : String(r.lastEventsFound);
+      const lastRun = r.lastRun ? flowAgo(r.lastRun) : '<span class="muted">never</span>';
+      const lastOk = r.lastSuccess ? flowAgo(r.lastSuccess) : '<span class="muted">never</span>';
       const isExp = shState.expanded.has(r.id);
       const errShort = r.lastError
-        ? escapeHtml(r.lastError.slice(0, 80)) + (r.lastError.length > 80 ? '…' : '')
+        ? escapeHtml(r.lastError.slice(0, 90)) + (r.lastError.length > 90 ? '…' : '')
         : '<span class="muted">—</span>';
       const row = `<tr class="sh-row${isExp ? ' sh-expanded' : ''}" data-sid="${escapeHtml(r.id)}">
         <td>${statusBadge}</td>
         <td><code>${escapeHtml(r.id)}</code></td>
+        <td class="num">${events}</td>
+        <td class="muted">${lastRun}</td>
         <td class="muted">${lastOk}</td>
-        <td>${rate}</td>
-        <td class="muted">${r.attempts}</td>
-        <td class="muted">${r.consecutiveFailures}</td>
         <td>${cat}</td>
-        <td>${errShort}</td>
       </tr>`;
-      const detail = isExp ? `<tr class="sh-detail"><td colspan="8"><div class="sh-detail-body">
+      const detail = isExp ? `<tr class="sh-detail"><td colspan="6"><div class="sh-detail-body">
         <strong>Last error:</strong> <code>${escapeHtml(r.lastError || '(none)')}</code><br>
-        <strong>Last run:</strong> ${r.lastFail ? new Date(r.lastFail).toLocaleString() : '<span class="muted">never</span>'}
-        &middot; <strong>Preferred path:</strong> ${escapeHtml(r.preferredPath || '—')}
+        <strong>Routing:</strong> <code>${escapeHtml(r.lastRoutingReason || '—')}</code><br>
+        <strong>Last run:</strong> ${r.lastRun ? new Date(r.lastRun).toLocaleString() : '<span class="muted">never</span>'}
+        &middot; <strong>Last success:</strong> ${r.lastSuccess ? new Date(r.lastSuccess).toLocaleString() : '<span class="muted">never</span>'}<br>
+        <strong>Events found:</strong> ${r.lastEventsFound === null ? 'okänt' : r.lastEventsFound}
+        &middot; <strong>Rate (livstidsproxy):</strong> ${Math.round(r.successRate * 100)}%
+        &middot; <strong>Försök:</strong> ${r.attempts}
+        &middot; <strong>Consecutive failures:</strong> ${r.consecutiveFailures}<br>
+        <strong>Preferred path:</strong> ${escapeHtml(r.preferredPath || '—')}
         &middot; <strong>Last path:</strong> ${escapeHtml(r.lastPathUsed || '—')}
       </div></td></tr>` : '';
       return row + detail;
@@ -1636,6 +1707,14 @@ function wireShToolbar() {
       renderShTable();
     });
   }
+  const outcome = document.getElementById('sh-outcome-filter');
+  if (outcome && !outcome.dataset.wired) {
+    outcome.dataset.wired = '1';
+    outcome.addEventListener('change', (e) => {
+      shState.outcomeFilter = e.target.value;
+      renderShTable();
+    });
+  }
   // Row click → toggle drill-down
   const body = document.getElementById('sh-tbody');
   if (body && !body.dataset.wired) {
@@ -1668,6 +1747,126 @@ function wireShSorting() {
       renderShTable();
     });
   });
+}
+
+// ─── Ingestion flow (källflöde + kedjesteg) ─────────────────────────────────
+//
+// Flödet som en människa läser: inkommande källor → körda → utfall → leverans.
+// Allt kommer ur /api/ingestion/flow, som läser samma runtime-filer som
+// ingestion-kedjan skriver — inga egna räknare, inga gissade siffror.
+
+function flowAgo(iso) {
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '—';
+  const mins = Math.round((Date.now() - t) / 60000);
+  if (mins < 1) return 'nyss';
+  if (mins < 60) return `${mins} min sedan`;
+  const h = Math.round(mins / 60);
+  if (h < 48) return `${h} h sedan`;
+  return `${Math.round(h / 24)} d sedan`;
+}
+
+function flowDur(ms) {
+  if (ms === null || ms === undefined) return '—';
+  if (ms < 1000) return `${ms} ms`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s} s`;
+  return `${Math.floor(s / 60)} min ${s % 60} s`;
+}
+
+function flowRow(label, value, unit, noteHtml, tone) {
+  return `<li class="flow-row${tone ? ` flow-row--${tone}` : ''}">
+    <div class="flow-label">${escapeHtml(label)}</div>
+    <div class="flow-value">${escapeHtml(String(value))}<span class="flow-unit">${escapeHtml(unit)}</span></div>
+    <div class="flow-note">${noteHtml}</div>
+  </li>`;
+}
+
+function initIngestionFlow(data) {
+  const stepsEl = document.getElementById('flow-steps');
+  if (!stepsEl) return;
+  const chainEl = document.getElementById('chain-steps');
+  const chainTitle = document.getElementById('chain-title');
+  const chainSummary = document.getElementById('chain-summary');
+
+  const s = data.sources || {};
+  const c = data.chain || {};
+  const steps = Array.isArray(c.steps) ? c.steps : [];
+  const errs = Array.isArray(s.errorSources) ? s.errorSources : [];
+  const failedSteps = steps.filter((x) => x.exitCode !== null && x.exitCode !== 0);
+  const degradedNames = (Array.isArray(c.degradedSteps) ? c.degradedSteps : []).map((d) => d.name);
+
+  // ① INKOMMANDE — vad som ska köras
+  const incoming = [`${s.notRanOver24h ?? 0} av ${s.total ?? 0} kördes inte senaste 24 h`];
+  if (s.stale) incoming.push(`${s.stale} äldre än 7 dagar`);
+  if (s.neverRun) incoming.push(`${s.neverRun} aldrig körd`);
+
+  // ② KÖRDA — vad som faktiskt kördes
+  const ran = [`senast körd ${flowAgo(c.finishedAt)}`, `${steps.length} kedjesteg`];
+  if (failedSteps.length) ran.push(`${failedSteps.length} felsteg`);
+
+  // ③ UTSALL — vad som gick fel (riktiga fel, inte gammalhet)
+  const outcome = [];
+  for (const e of errs.slice(0, 3)) {
+    outcome.push(`<span class="flow-line"><strong>${escapeHtml(e.id)}</strong> — ${escapeHtml(e.error || 'okänt fel')}</span>`);
+  }
+  for (const st of failedSteps.slice(0, 3)) {
+    outcome.push(`<span class="flow-line"><strong>${escapeHtml(st.name)}</strong> — ${escapeHtml(st.failure || `exit ${st.exitCode}`)}</span>`);
+  }
+  if (s.silentEmpty) {
+    const names = (s.silentEmptySources || []).slice(0, 4).join(', ');
+    outcome.push(`<span class="flow-line flow-line--warn">${s.silentEmpty} källor kördes men gav 0 events: ${escapeHtml(names)}${s.silentEmpty > 4 ? ' …' : ''}</span>`);
+  }
+  const errorCount = errs.length + failedSteps.length;
+
+  // ④ LEVERANS — vad vi faktiskt fick
+  const importStep = steps.find((x) => x.name === 'import-to-eventpulse');
+  const delivery = [`${(s.eventsTotal ?? 0).toLocaleString('sv-SE')} events från senaste körningarna`];
+  if (importStep && importStep.eventsExtracted != null) {
+    delivery.push(`${importStep.eventsExtracted} importerade i natt`);
+  }
+  if (c.totalEventsExtracted != null) delivery.push(`${c.totalEventsExtracted} extraherade totalt`);
+
+  stepsEl.innerHTML = [
+    flowRow('Inkommande', s.total ?? 0, ' källor att köra', incoming.map(escapeHtml).join(' · ')),
+    flowRow('Körda', s.fresh ?? 0, ` av ${s.total ?? 0} senaste 24 h`, ran.map(escapeHtml).join(' · ')),
+    flowRow('Utsall', errorCount, ' fel', outcome.length ? outcome.join('') : '<span class="muted">inget fel</span>', errorCount > 0 ? 'bad' : 'ok'),
+    flowRow('Leverans', (s.eventsTotal ?? 0).toLocaleString('sv-SE'), ' events', delivery.map(escapeHtml).join(' · ')),
+  ].join('');
+
+  // Kedjesteg — varje steg med exitkod; felsteget visar sin faktiska orsak.
+  if (chainEl) {
+    if (!steps.length) {
+      chainEl.innerHTML = '<div class="muted">ingen körning registrerad</div>';
+      if (chainSummary) chainSummary.textContent = '';
+    } else {
+      const okCount = steps.filter((x) => x.exitCode === 0).length;
+      if (chainSummary) {
+        chainSummary.textContent =
+          `${steps.length} steg · ${okCount} gröna · ${failedSteps.length} röda` +
+          (degradedNames.length ? ` · ${degradedNames.length} med varningar` : '');
+      }
+      if (chainTitle) chainTitle.textContent = c.running ? 'Kedjesteg (pågår)' : 'Kedjesteg';
+      chainEl.innerHTML = steps.map((x) => {
+        const isBad = x.exitCode !== null && x.exitCode !== 0;
+        const isDegraded = !isBad && degradedNames.includes(x.name);
+        const cls = isBad ? 'chain-step--bad' : isDegraded ? 'chain-step--warn' : 'chain-step--ok';
+        const ev = x.eventsExtracted != null ? `${x.eventsExtracted} ev` : '';
+        return `<div class="chain-step ${cls}">
+          <span class="chain-step-name">${escapeHtml(x.name)}</span>
+          <span class="chain-step-dur">${escapeHtml(flowDur(x.durationMs))}</span>
+          <span class="chain-step-ev">${escapeHtml(ev)}</span>
+          <span class="badge ${isBad ? 'bad' : isDegraded ? 'warn' : 'ok'}">${escapeHtml(x.exitCode === null ? '?' : String(x.exitCode))}</span>
+          ${x.failure ? `<div class="chain-step-failure">${escapeHtml(x.failure)}</div>` : ''}
+        </div>`;
+      }).join('');
+      // Scrolla till första felsteget — annars ligger det under folden i en
+      // 30-radig lista och operatorn får leta efter det.
+      const firstBad = chainEl.querySelector('.chain-step--bad');
+      if (firstBad) chainEl.scrollTop = Math.max(0, firstBad.offsetTop - 4);
+    }
+  }
 }
 
 // ─── Review modal (D-AI adapters + discovery candidates) ────────────────────
