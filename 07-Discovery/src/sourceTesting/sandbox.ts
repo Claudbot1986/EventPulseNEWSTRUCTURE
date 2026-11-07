@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { appendDiscoveryUiQueueEntry } from './discoveryUiQueue.js';
 import { attachEventUrlToSourceFile } from '../../../02-Ingestion/tools/eventUrls.js';
@@ -173,7 +173,13 @@ export function promoteSourceCandidate(
     testRunId: promotion.testRunId,
     evidenceSummary: promotion.evidenceSummary,
   });
-  writeFileSync(sourcePath, `${JSON.stringify(record)}\n`, 'utf8');
+  // 2026-11-07 — ATOMISK skrivning. Promote:arna kan nu köras parallellt, och
+  // `hasCanonicalSourceUrl` läser samma katalog. En halvskriven fil (writeFile
+  // avbryts mitt i) gjorde att JSON.parse kastade i läsaren. Skriv till en
+  // tempfil i samma katalog och rename — rename är atomiskt på POSIX.
+  const tmpPath = `${sourcePath}.tmp-${process.pid}-${Date.now()}`;
+  writeFileSync(tmpPath, `${JSON.stringify(record)}\n`, 'utf8');
+  renameSync(tmpPath, sourcePath);
   appendDiscoveryUiQueueEntry(root, {
       sourceId,
       sourceCandidateId: candidate.id,

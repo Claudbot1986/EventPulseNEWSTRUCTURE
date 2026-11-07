@@ -109,8 +109,20 @@ def write_ingestion_run_summary(
             "reportPath": report_path,
             "dryRun": dry_run,
         }
-        with INGESTION_RUNS_LOG.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        # 2026-11-07 — ATOMISK append. P3D kör nu flera kandidater parallellt,
+        # och varje körning skriver en rad hit. Text-läget ("a") ger O_APPEND,
+        # men en explicit os.write() med O_APPEND garanterar EN syscall per rad —
+        # två parallella körningar kan inte blanda ihop raderna.
+        line = (json.dumps(entry, ensure_ascii=False) + "\n").encode("utf-8")
+        fd = os.open(
+            INGESTION_RUNS_LOG,
+            os.O_WRONLY | os.O_CREAT | os.O_APPEND,
+            0o644,
+        )
+        try:
+            os.write(fd, line)
+        finally:
+            os.close(fd)
     except Exception as e:
         # Loggning får aldrig krascha en körning — stderr är OK.
         print(f"[E2E] WARNING: ingestion_runs-log misslyckades: {e}", file=sys.stderr)

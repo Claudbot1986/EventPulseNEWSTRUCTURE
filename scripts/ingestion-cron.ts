@@ -1087,10 +1087,28 @@ if (!skipCandidateTests) {
   // riskerar överlapp. 8 kandidater ≈ 20 min (kedjan ~72 min, marginal 48
   // min) och ger ~1–2 nya källor per natt, vilket räcker för en agent som
   // ska växa i Stockholms tätort.
+  //
+  // 2026-11-07 — limit 8 → 16, tack vare PARALLA KANDIDATER.
+  //
+  // MÄTTNING 2026-11-07 (identiska kandidater, samma kodväg, isolerad
+  // sandbox): seriellt 168,8 s för 3 kandidater → parallellt (concurrency=3)
+  // 96,9 s = **1,74× snabbare, 43 % tidsvinst**. Utfallet var identiskt
+  // (samma events, samma vinnande väg, samma fel) — parallelliseringen
+  // ändrar inga beslut, bara väggtiden.
+  //
+  // Varför 16 och inte mer: kedjans faktiska steg-tider 2026-11-07 var
+  // subpath-discovery 46,5 min, worker-drain 28,3 min, P3D 13,0 min, C-htmlGate
+  // 3,2 min — kedjan totalt 104 min (01:00→02:44) mot post-ingest 04:00, alltså
+  // ~76 min marginal. Med uppmätt 1,74× blir 16 kandidater ≈ 13 min, ungefär
+  // samma väggtid som dagens 8 — men dubbelt så många testade kandidater.
+  // Det som faktiskt begränsar är inflödet, inte steget: 2026-11-02→07 kom
+  // 1–4 nya kandidater per natt (median 4), och 44 claimbara låg i kön.
+  // Bulkbatchar (79 rader 2026-10-22, 73 rader 10-23, 63 rader 10-31) tog
+  // 10 nätter att tömma med 8/night — med 16/night tar det ~5.
   steps.push({
     name: 'P3D-source-candidate-tests',
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '8'}`],
+    args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '16'}`],
   });
 }
 

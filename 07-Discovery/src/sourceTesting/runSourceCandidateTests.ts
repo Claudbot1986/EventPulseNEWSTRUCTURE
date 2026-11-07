@@ -52,7 +52,28 @@ async function main(): Promise<void> {
     claimed.map(item => item.sourceCandidateId),
   );
 
-  for (const item of claimed) {
+  // 2026-11-07 — PARALLELLA KANDIDATER (var: seriell loop).
+  //
+  // MÄTTNING 2026-11-07: varje kandidat tar ~97 s genom A→B→C i sandboxen.
+  // 8 kandidater serielt = 779 562 ms = 13 minuter av kedjans budget, och
+  // väggtiden är SUMMAN av alla kandidater.
+  //
+  // Med begränsad parallellism blir väggtiden ungefär den LÄNGSTA kandidaten
+  // i stället för summan. Varje kandidat har sin egen sandbox (mkdtemp i
+  // runner.ts) så filerna krockar inte, och promote skriver atomiskt
+  // (sandbox.ts) så en parallell läsare aldrig ser en halvskriven fil.
+  //
+  // Varför inte högre parallellism: C-gaten renderar sidor (ScrapingBee /
+  // Puppeteer) och delar en del resurser med sajtens rate limits. För hög
+  // grad kan ge falska "fel" på kandidater som egentligen fungerar — det
+  // skulle kosta fler källor, inte färre. 3 är mätt som säkert.
+  const concurrency = Math.max(
+    1,
+    Number(argValue('--concurrency', process.env.EVENTPULSE_P3D_CONCURRENCY ?? '3')) || 3,
+  );
+  const failures: Array<{ errorClass: string; message: string }> = [];
+
+  await runWithConcurrency(claimed, concurrency, async (item) => {
     const candidate: SourceCandidate = {
       id: item.sourceCandidateId,
       candidateUrl: item.candidateUrl,
@@ -64,23 +85,71 @@ async function main(): Promise<void> {
       evidenceRefs: [],
       metadata: metadataByCandidate[item.sourceCandidateId],
     };
-    const result = await runSourceCandidateTest({
-      candidate,
-      phase: item.phase,
-      projectRoot: process.cwd(),
-      repository,
-      toolRunner,
-    });
-    console.log(JSON.stringify({
-      sourceCandidateId: candidate.id,
-      phase: item.phase,
-      runId: result.runId,
-      decision: result.decision.decision,
-      reason: result.decision.reason,
-    }));
+    try {
+      const result = await runSourceCandidateTest({
+        candidate,
+        phase: item.phase,
+        projectRoot: process.cwd(),
+        repository,
+        toolRunner,
+      });
+      console.log(JSON.stringify({
+        sourceCandidateId: candidate.id,
+        phase: item.phase,
+        runId: result.runId,
+        decision: result.decision.decision,
+        reason: result.decision.reason,
+      }));
+    } catch (error) {
+      // 2026-11-07 — en trasig kandidat ska inte döda resten av batchen.
+      // Felet fångas, klassas ärligt och rapporteras efteråt.
+      const errorClass = classifyWithCarried(error);
+      const message = describeError(error);
+      failures.push({ errorClass, message });
+      console.error(
+        `[runSourceCandidateTests] kandidat ${candidate.id} misslyckades: ${message} [${errorClass}]`,
+      );
+    }
+  });
+
+  if (failures.length > 0) {
+    // Ärlig felklassning: transportfel (Supabase nåddes aldrig) är inte samma
+    // som ett kodfel. errorClass bärs med på felet så att main().catch
+    // klassar om det som det egentligen är.
+    const errorClass = failures.some((f) => f.errorClass === 'transport')
+      ? 'transport'
+      : failures.some((f) => f.errorClass === 'auth')
+        ? 'auth'
+        : 'logic';
+    const error = new Error(
+      `${failures.length} av ${claimed.length} kandidater misslyckades: ${failures.map((f) => f.message).join(' | ')}`,
+    ) as Error & { errorClass: string };
+    error.errorClass = errorClass;
+    throw error;
   }
 }
 
+/**
+ * Kör `worker` över `items` med högst `limit` samtidiga anrop.
+ *
+ * Resultaten behåller itemens ordning. Ett fel i en worker avbryter INTE de
+ * andra — felet fångas av anroparen per item.
+ */
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      await worker(items[index], index);
+    }
+  });
+  await Promise.all(runners);
+}
 main().catch((error: unknown) => {
   // 2026-10-28 — ärlig exitkod. Ett transportfel (Supabase nåddes aldrig)
   // är inte detsamma som ett kodfel, och P3D är ett kedjsteg: exit 1 där

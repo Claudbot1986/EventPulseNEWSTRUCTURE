@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-import { spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import type {
   SourceCandidatePageSignal,
   SourceCandidateToolEvidence,
@@ -13,6 +13,37 @@ import type {
 // konsumenter — inte två kopior. Samma mönster som sandbox.ts →
 // 02-Ingestion/tools/eventUrls.js.
 import { probeRowPages } from './pageProbe.js';
+
+interface AsyncCommandResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  error?: Error;
+}
+
+/**
+ * 2026-11-07 — asynkron motsvarighet till spawnSync.
+ *
+ * spawnSync blockerar event-loopen, vilket låser P3D till seriella
+ * kandidatgenomgångar (~97 s per kandidat, mätt 2026-11-07). Med async spawn
+ * kan fler kandidater testas parallellt, och till skillnad från spawnSync
+ * finns ingen 1 MB-gräns på utdata.
+ */
+function runCommandAsync(
+  command: string,
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv },
+): Promise<AsyncCommandResult> {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { cwd: options.cwd, env: options.env });
+    let stdout = '';
+    let stderr = '';
+    child.stdout?.on('data', (chunk: Buffer | string) => { stdout += String(chunk); });
+    child.stderr?.on('data', (chunk: Buffer | string) => { stderr += String(chunk); });
+    child.on('error', (error: Error) => resolve({ status: null, stdout, stderr, error }));
+    child.on('close', (status: number | null) => resolve({ status, stdout, stderr }));
+  });
+}
 
 const OUTPUT_QUEUES = [
   // 2026-10-21 — postA lades till. A-gates träff väg (direkt JSON-LD/API) hamnar
@@ -72,9 +103,19 @@ export class RealAbcdSourceCandidateRunner implements SourceCandidateToolRunner 
       '1',
       '--apply',
     ];
-    const result = spawnSync(command[0], command.slice(1), {
+    // 2026-11-07 — spawnSync → asynkron spawn.
+    //
+    // P3D testade kandidaterna i en SERIELL loop: `for (...) await
+    // runSourceCandidateTest(...)`. Varje kandidat tar ~97 s (mätt 2026-11-07:
+    // 8 kandidater = 779 562 ms), så 8 kandidater tog 13 minuter i väg —
+    // och det är bara en del av kedjans budget.
+    //
+    // spawnSync blockerar event-loopen, så kandidaterna kan inte köras
+    // parallellt. Med asynkron spawn kan fler kandidater testas samtidigt.
+    // (Fördel: ingen 1 MB maxBuffer som spawnSync har — en stor e2e-utdata
+    // skulle annars kasta ENOBUFS.)
+    const result = await runCommandAsync(command[0], command.slice(1), {
       cwd: input.projectRoot,
-      encoding: 'utf8',
       env: {
         ...process.env,
         EVENTPULSE_SANDBOX_ROOT: input.sandboxRoot,
