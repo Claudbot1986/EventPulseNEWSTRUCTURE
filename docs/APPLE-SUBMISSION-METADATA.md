@@ -1,12 +1,13 @@
 # App Store Connect-underlag — EventPulse 1.0 (iOS)
 
 > Allt du behöver skriva in i App Store Connect, med svaren och underbyggnaden.
-> Byggen som ska lämnas in: **iOS, version 1.0.0, build 5**, SDK 58, IPA:
-> `https://expo.dev/artifacts/eas/KULJDnxx729e2SLufFOLscuysVoKpbdJnttv3f14cIk.ipa`
-> (EAS build `9a01e7a5-126a-4ce7-abbd-901d3b0254b4`, byggd från commit
-> `2b3e166d` som innehåller rättningen av de råa i18n-nycklarna i policyn
-> **och** rättningen av kartleverantören).
-> IPA-gate `check-ipa.mjs`: **42/42 kontroller gröna**.
+> Byggen som ska lämnas in: **iOS, version 1.0.0, build 6**, SDK 58, IPA:
+> `https://expo.dev/artifacts/eas/TD2hhnROFKrV5B_wTgNeWjq4UtkZ40zRL3dUHGp_YcE.ipa`
+> (EAS build `e31dc67b-5c15-4479-ab50-ded9f110a541`, byggd från commit
+> `aa845431` som innehåller rättningen av de råa i18n-nycklarna, rättningen
+> av kartleverantören **och** att Perfectday AB är personuppgiftsansvarig).
+> IPA-gate `check-ipa.mjs`: **47/47 kontroller gröna** (inkl. kontroll av
+> personuppgiftsansvarig i bunten).
 >
 > **Lösenordet till demokontot ligger i `06-UI/.env` (gitignored) under
 > `EXPO_PUBLIC_DEMO_PASSWORD` — kopiera det till "Notes for Review", inte hit.**
@@ -223,7 +224,7 @@ utan alfakanal. 1–10 bilder.
 
 > **Måste göras på en riktig iPhone (eller simulator med Xcode).** Det finns
 > ingen Xcode-installation på maskinen här, så skärmbilderna kunde inte tas
-> automatiskt. Ta dem från **TestFlight-builden** (build 5), inte från Expo Go.
+> automatiskt. Ta dem från **TestFlight-builden** (build 6), inte från Expo Go.
 
 ---
 
@@ -237,7 +238,7 @@ utan alfakanal. 1–10 bilder.
 - [ ] Review Notes ifyllda med demokontot (lösenord från `06-UI/.env`)
 - [ ] Review-kontakt: namn, email, telefon
 - [ ] Skärmbilder 1–9 i rätt format (1320×2868 eller 1290×2796)
-- [ ] iOS-build 5 uppladdad och vald i version 1.0.0
+- [ ] iOS-build 6 uppladdad och vald i version 1.0.0
 - [ ] **Integritetspolicyn live på eventpulse.nu** (se avsnitt 8)
 - [ ] Skicka in
 
