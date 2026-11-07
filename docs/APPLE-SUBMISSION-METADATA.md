@@ -11,6 +11,32 @@
 >
 > **Lösenordet till demokontot ligger i `06-UI/.env` (gitignored) under
 > `EXPO_PUBLIC_DEMO_PASSWORD` — kopiera det till "Notes for Review", inte hit.**
+>
+> ### ⚠️ Rättat 2026-11-07 — underlaget beskriver nu appen som den faktiskt är
+>
+> Den tidigare versionen av det här underlaget lovade en **agent-chatt**
+> ("fråga agenten"), en **"Rekommenderat"-flik** och en **sparad lista**. **Inget
+> av det finns i appen som den lämnas in** (build 6). Det som är sant:
+>
+> - **Ingen chatt.** Agentchatten är inte monterad — `06-UI/index.js` registrerar
+>   `AppShell`, inte `App-agent.js` (`App-agent.js` ligger kvar på disk "för
+>   senare"). Hem-sökningen går mot `GET /agent/feed?q=` och matchar text mot
+>   evenemangstitlar och beskrivningar — **ingen AI**.
+> - **MiniMax används inte av appen.** Enda vägen till MiniMax är
+>   `POST /agent/chat` → `llmRouter.composeReply`, och appen anropar den
+>   aldrig. Den enda AI-tjänsten i kedjan är alltså MiniMax, och den används
+>   bara av serverns agent-API.
+> - **Appen är opersonaliserad.** Hem läser `events_public` direkt. Det finns
+>   ingen "Rekommenderat"-flik och ingen lista över sparade evenemang
+>   (`getSavedEvents` har ingen anropare). Det som *finns* är att du kan spara
+>   ett evenemang med hjärtat på kortet → då får du en påminnelse i Notiser
+>   2 timmar innan start.
+> - **Sökningen kräver minst 3 tecken** och uppdateras medan du skriver.
+>
+> Beskrivning, promotional text, engelska stödtext, privacy-label, åldersbetyg,
+> Review Notes och shot-list är alltså omskrivna efter detta. **Om agentchatten
+> aktiveras senare måste privacy-label, policy och beskrivning uppdateras
+> samtidigt** — annars står det fel i App Store Connect.
 
 ---
 
@@ -31,30 +57,29 @@
 ### Beskrivning (svenska, max 4000 tecken)
 
 ```
-EventPulse är en personlig event-agent som hittar evenemang i Stockholm
-utifrån din egen smak — inte en länklista.
+EventPulse är en personlig evenemangstipsare för Stockholm — en app som
+hittar riktiga evenemang åt dig, med skrivna beskrivningar, bilder och
+biljettlänkar.
 
-Skriv vad du vill göra ("konsert ikväll", "något för barn i helgen", "mat och
-vin") så föreslår agenten evenemang som faktiskt finns, med bild, tid, plats och
-biljettlänk.
+Börja på Hem, där du hittar nio urval: ikväll, imorgon, helgen, gratis,
+foodies och mer. Varje evenemang har en egen skriven beskrivning, bild, tid,
+plats och biljettlänk — aldrig en rå källtext.
+
+Vill du söka rakt på? Skriv "konsert ikväll" eller "något för barn i helgen"
+i sökfältet under Utforska, så får du träffar bland riktiga evenemang. Du kan
+också bläddra bland 18 kategorier.
 
 Det som gör EventPulse annorlunda:
-
-• EN AGENT, INTE ETT FLÖDE — du ställer en fråga i stället för att scrolla
-  bland kategorier. Agenten väljer bland riktiga evenemang i databasen och
-  hittar aldrig på sådant.
-• SMÅK UT DIN SMAK — de evenemang du sparar, gillar på och markerar som
-  ointressanta förändrar nästa förslag. Allt du gör i appen är valfritt.
-• BESKRIVNINGAR SOM LÄSES — varje evenemang har en egen skriven beskrivning,
-  inte en rå källtext.
+• RIKTIGA EVENEMANG — allt kommer från arrangörernas egna publika sidor, med
+  källhänvisning på varje evenemang. Vi hittar aldrig på sådant.
+• BESKRIVNINGAR SOM LÄSES — varje evenemang har en egen skriven beskrivning.
 • BILJETTER INGÅR INTE — vi säljer inga biljetter. Vi visar var du kan köpa
   och låter arrangören ta hand om betalningen.
-• FUNGERAR UTAN KONTO — browse, spara och prata med agenten direkt. Logga in
-  bara om du vill ha samma smak på flera enheter.
+• FUNGERAR UTAN KONTO — bläddra och söka direkt, ingen inloggning behövs.
+  Logga in bara om du vill få "Din helg"-notis om helgens evenemang.
 
-Evenemangen kommer från arrangörernas egna publika sidor, med källhänvisning
-på varje evenemang. Vi visar Stockholmsregionen — och ibland saknas evenemang,
-vilket står varifrån informationen kommer.
+Vi visar Stockholmsregionen — och ibland saknas evenemang, vilket står
+varifrån informationen kommer.
 
 Frågor? hej@eventpulse.nu
 ```
@@ -62,24 +87,39 @@ Frågor? hej@eventpulse.nu
 ### Promotional text (max 170 tecken)
 
 ```
-Skriv "konsert ikväll" — så hittar agenten evenemanget. Utan konto, utan att
-scrolla, med bild och beskrivning på varje förslag.
+Riktiga evenemang i Stockholm med skrivna beskrivningar, bild och
+biljettlänk. Sök "konsert ikväll" eller bläddra bland 18 kategorier. Inget
+konto behövs.
 ```
 
 ### Keywords (max 100 tecken)
 
 ```
-evenemang,stockholm,konsert,teater,festival,utställning,kultur,mat,helg,agent,biljetter
+evenemang,stockholm,konsert,teater,festival,utställning,kultur,mat,helg,upplevelse,biljetter
 ```
-(87 tecken)
+(92 tecken. "agent" togs bort 2026-11-07 — appen har ingen agentchatt, så
+nyckelordet skulle föra användare till en funktion som inte finns.)
 
 ### Stödtext engelska (om du vill)
 
 ```
-EventPulse is a personal event agent for Stockholm — ask it what to do
-instead of scrolling through lists. It only suggests real events, with
-photos, written descriptions, times, venues and ticket links. Works without
-an account.
+EventPulse is a personal event guide for Stockholm. Real events from the
+organisers' own public pages, each with a written description, a photo, a
+time, a venue and a ticket link — never raw source text.
+
+Start on Hem, where you find nine collections: tonight, tomorrow, the
+weekend, free things, foodies and more. Want to search straight away? Type
+"concert tonight" in the search field under Explore and you get real matching
+events. You can also browse 18 categories.
+
+What makes EventPulse different:
+• REAL EVENTS — everything comes from the organisers' own public pages, with a
+  source link on every event. We never make things up.
+• DESCRIPTIONS WRITTEN TO READ — every event has its own written description.
+• NO TICKETS SOLD — we don't sell tickets. We show you where to buy them and
+  let the organiser handle payment.
+• NO ACCOUNT NEEDED — browse and search straight away. Sign in only if you
+  want a weekly "Din helg" notification about the weekend's events.
 ```
 
 ---
@@ -101,7 +141,8 @@ Svaren följer exakt det som står i appens privacy manifest och i policyn.
 |---|---|
 | Tracking | **Nej** — ingen ATT-prompt behövs |
 | Third-party analytics | **Nej** — analysen är egen (första parts), inga annons- eller analys-SDK:er |
-| Data Shared with third parties | **Ja** — MiniMax (agentchatten: text du skriver + evenemangssammanfattning). Beskriv under "Third-Party SDKs": MiniMax, och de övriga leverantörerna (Supabase, Fly.io, Expo/APNs) om Apple frågar efter "data used to track" vs "data collected" |
+| Third-Party SDKs | **Supabase** (`@supabase/supabase-js` — User ID), **expo-notifications** (Device ID / push-token), **expo-apple-authentication** (User ID), **AsyncStorage** (User ID). **MiniMax, Fly.io och APNs ska INTE listas här** — de är inte SDK:er i appens binär. Verifierat mot build 6:s IPA: alla SDK-manifest deklarerar `NSPrivacyCollectedDataTypes: []` och `NSPrivacyTracking: false`; de 6 datatyperna deklareras i appens eget manifest |
+| Data Shared with third parties | **Nej i den build som lämnas in.** Agentchatten — som är den enda vägen till MiniMax (`POST /agent/chat` → `llmRouter.composeReply`) — är **inte monterad** i appen (`index.js` registrerar `AppShell`, inte `App-agent.js`). Sökningen går mot vår egen server och matchar mot evenemangstitlar och beskrivningar, utan AI. **Om agentchatten aktiveras måste den här raden uppdateras** (då tillkommer MiniMax som tredjepart) — samma ändring måste göras i policyn |
 | Purposes | App Functionality, Analytics, Product Personalization |
 
 > Underbyggnad: `06-UI/app.json` → `ios.privacyManifests` (6 datatyper, tracking
@@ -123,7 +164,7 @@ Svaren följer exakt det som står i appens privacy manifest och i policyn.
 | Medicinsk information | Nej | |
 | Vuxeninnehåll | Nej | |
 | Råa svordomar | Nej | |
-| Användargenererat innehåll | Nej | Chattar pratas med en AI-agent, inte användare. Share-länkar samlar evenemangsval, inte text, och är inte en publik feed |
+| Användargenererat innehåll | Nej | Det finns ingen chatt och ingen publik feed. Söktexten du skriver skickas till vår egen server för matchning mot evenemangstitlar och beskrivningar, men publiceras aldrig och delas aldrig med andra användare. Share-länkar samlar evenemangsval, inte text |
 | Spelande | Nej | |
 | Made for Kids | Nej | |
 | Advertising ID | Nej | |
@@ -147,22 +188,25 @@ Klistra in detta i App Store Connect → "Notes for Review" (eller "App Review
 Information"):
 
 ```
-EventPulse is a personal event agent for Stockholm. It shows real events
+EventPulse is a personal event guide for Stockholm. It shows real events
 with photos, written descriptions, times, venues and ticket links.
 
 HOW TO REVIEW:
 1. The app works fully WITHOUT an account — no sign-up is required to browse
-   the feed, ask the agent for suggestions, save events or read the privacy
-   policy. The "Lägg till e-post" button on the Profil tab is optional.
-2. To test the signed-in experience (Sparade / Rekommenderat / Din helg), use
+   the feed, search for events, save an event or read the privacy policy. The
+   "Lägg till e-post" button on the Profil tab is optional.
+2. To test the signed-in experience (Konto / Notifieringar / Din helg), use
    the demo account below. It is a separate, empty account with no personal
    data.
    - Login screen (Profil → "Lägg till e-post" → scroll down to
      "Demologin för App Review")
    - Email: demo@eventpulse.nu
    - Password: <KOPIERA FRÅN 06-UI/.env — EXPO_PUBLIC_DEMO_PASSWORD>
-3. The agent chat is on the Hem tab: type a request such as "konsert ikväll"
-   and it proposes real events from our database. It never invents events.
+3. There is no chat interface in this build — the app works by browsing and
+   by searching. To search: open the Utforska tab, type at least 3 characters
+   such as "konsert ikväll" in the search field, and matching real events
+   appear with photo, written description, time, venue and ticket link. You
+   do not need to press Enter; results update as you type.
 4. Privacy policy: Profil → Integritetspolicy, and online at
    https://eventpulse.nu/privacy/
    Terms: https://eventpulse.nu/villkor/
@@ -174,6 +218,9 @@ NOTES:
 - The app is iPhone-only (iPad is not supported).
 - Our API backend is live at https://eventpulse-agent.fly.dev and the app
   talks to it in production.
+- The data controller is Perfectday AB (company registration number
+  556990-9830), Sweden. The App Store seller name is the individual developer
+  account of the publisher. The privacy policy states this explicitly.
 ```
 
 ---
@@ -212,15 +259,15 @@ utan alfakanal. 1–10 bilder.
 
 | # | Skärm | Vad som ska synas | Särskilt |
 |---|---|---|---|
-| 1 | Hem | Feed med "Förslag från din agent" + evenemang med bild | Agentens förslag, inte tom lista |
-| 2 | Agent-chatt | Frågan "konsert ikväll" + svaret med konkreta evenemang | Bevisar att agenten svarar |
-| 3 | Förslag-kort | Ett evenemang med bild, skriven beskrivning, tid, plats, pris | Välj ett event **med** editorial-beskrivning (372 events saknar text) |
-| 4 | Utforska | Kategorirutor med bilder | Visa en bildkatt med riktiga evenemang |
-| 5 | Sökm resultat | Sökning som ger träffar | |
-| 6 | Karta | Karta med EventPulse-markörer (Apple Maps) | Verifiera att kartan faktiskt renderar på enheten |
-| 7 | Din helg | Agentens veckoförslag (topp 3–5) | Kräver inloggning → logga in med demokontot |
-| 8 | Sparade | Sparade evenemang | Kräver inloggning → demokontot |
-| 9 | Profil | Profilen med Integritetspolicy + Användarvillkor synliga | Visar att policy finns i appen |
+| 1 | Hem | Karusellerna "För dig" / "Senaste" / "Ikväll" med evenemang och bilder | Riktiga evenemang, inte tom lista |
+| 2 | Utforska | De 18 kategorirutorna | Visa en bildkatt med riktiga evenemang |
+| 3 | Utforska + sökning | Sökrutan med "konsert ikväll" och träfflistan under den | Minst 3 tecken, uppdateras medan du skriver |
+| 4 | Event-detalj | Ett evenemang med bild, skriven beskrivning, tid, plats och biljettlänk | Välj ett event **med** editorial-beskrivning (372 events saknar text) |
+| 5 | Event-detalj | Action-rad: Spara / Visa karta / Lägg till i kalender / Dela / ⋯ | Alla fem knappar ska gå att trycka |
+| 6 | Karta | Apple Maps med EventPulse-markörer | Verifiera att kartan faktiskt renderar på enheten |
+| 7 | Notiser | Notiser-fliken | Tomt läge är ett giltigt läge: "Inga notiser än. Spara ett evenemang så får du en påminnelse 2 timmar innan det börjar." |
+| 8 | Profil (gäst) | Gästvyn med **Integritetspolicy** och **Användarvillkor** synliga | Visar att policyn finns i appen utan konto — Apple §5.1.1(i) |
+| 9 | Profil (inloggad) | Konto + Notifieringar + "Din helg-notiser" | Kräver inloggning → logga in med demokontot |
 
 > **Måste göras på en riktig iPhone (eller simulator med Xcode).** Det finns
 > ingen Xcode-installation på maskinen här, så skärmbilderna kunde inte tas
@@ -248,9 +295,61 @@ utan alfakanal. 1–10 bilder.
 
 | Punkt | Status | Vad som krävs |
 |---|---|---|
-| Integritetspolicyn live på `eventpulse.nu/privacy/` | **LÖST 2026-11-04** — Cloudflare Pages-projektet `eventpulse-nu` deployades via `wrangler pages deploy site --branch main`. Live-gate `check-live-site.mjs`: **18/18 kontroller gröna** (sv + en). Live-sidan svarar nu med den fulla policyn (9 413 B sv / 9 255 B en) | — |
+| Integritetspolicyn live på `eventpulse.nu/privacy/` | **LÖST 2026-11-04/06** — Cloudflare Pages-projektet `eventpulse-nu` deployades via `wrangler pages deploy site --branch main` och deployades om 2026-11-06 (`84c60d5a`) med operatören **Perfectday AB, org.nr 556990-9830**. Live-gate `check-live-site.mjs`: **24/24 kontroller gröna** (sv + en), körd igen 2026-11-07. Live-sidan svarar nu med "Perfectday AB (organisationsnummer 556990-9830)" och **0 träffar** på "Tomor Gashi" | — |
 | TestFlight-uppladdning | **Blockerat** — `eas submit` kräver inloggning mot App Store Connect (API-nyckel eller interaktiv OAuth). Bygget finns redo | `cd 06-UI && eas submit --platform ios --latest` (logga in först) eller ladda upp IPA:n i App Store Connect manuellt |
 | Skärmbilder | **Blockerat på maskinen** — ingen Xcode/simulator | Ta på riktig iPhone från TestFlight-builden |
 | Juridiskt bolagsnamn | **LÖST 2026-11-06** — personuppgiftsansvarig är **Perfectday AB, org.nr 556990-9830** (bekräftat mot Bolagsverket: aktiebolag, bildat 2014-11-20, F-skatt). Policyn uppdaterad i appen (sv/en/it), i villkoren (äganderätt) och på webben (sv/en). Gate-kontroller tillagda: appen 60/60, IPA-gaten kräver `Perfectday AB` + `556990-9830` och förbjuder `Tomor Gashi` som operatör, live-gaten kräver samma | — |
-| **App Store Connect-kontotyp** | **Öppet beslut — kan orsaka avslag** | Apple-utvecklarkontot är registrerat som **"TOMOR GASHI (Individual)"**, så säljaren i butiken blir *Tomor Gashi* medan policyn anger *Perfectday AB*. Apple kräver att säljarens juridiska entitet är den som äger appen. **Två vägar:** (a) konvertera kontot till **Organization** med Perfectday AB (kräver D-U-N-S + bolagshandlingar, tar dagar — gör detta **innan** du skickar in), eller (b) behåll Individual-kontot och låt policyn ange privatpersonen. Alternativ (a) är det korrekta om bolaget äger appen |
+| **App Store Connect-kontotyp** | **Öppet beslut — kan orsaka avslag** | Apple-utvecklarkontot är registrerat som **"TOMOR GASHI (Individual)"**, så säljaren i butiken blir *Tomor Gashi* medan policyn anger *Perfectday AB*. Apple kräver att säljarens entitet är den som äger appen. **Det här är ett antingen-eller-beslut, inte två saker samtidigt** — se `docs/APPLE-LAUNCH-PLAN.md` och avsnitt 9 nedan för konsekens- och kostnadstabell. **(a) Konvertera kontot till Organization med Perfectday AB** (kräver D-U-N-S-nummer + bolagshandlingar, tar dagar — gör detta **innan** du skickar in). **(b) Behåll Individual-kontot** och låt policyn ange privatpersonen igen (går att göra i samma dag, men innebär att Perfectday AB inte är personuppgiftsansvarig — och då måste appens juridiska texter rullas **tillbaka**, vilket är ett nytt bygge och en ny build-nummer) |
 | Avstängning av demologin efter godkännande | Val | Radera demokontot i Supabase (stänger av direkt, utan ny build) eller bygg om utan `EXPO_PUBLIC_ENABLE_DEMO_LOGIN` |
+
+---
+
+## 9. Beslut: Apple-kontotyp — det är **antingen eller**
+
+Det här beslutet är **inte** "konvertera kontot **och** byta mail". Det är två
+alternativ som utesluter varandra. Välj ett.
+
+| | **(a) Konvertera till bolagskonto** | **(b) Behålla Individual-kontot** |
+|---|---|---|
+| Vad du gör | Konverterar Apple-kontot till **Organization** med Perfectday AB | Låter kontot vara "TOMOR GASHI (Individual)" |
+| Vem säljaren i butiken blir | **Perfectday AB** | **Tomor Gashi** |
+| Matchar policyn som den är nu? | **Ja** | **Nej** — policyn måste skrivas om tillbaka till privatpersonen |
+| Vad det kostar i tid | D-U-N-S-nummer (gratis, D&B) + bolagshandlingar + Apple granskar konverteringen ⇒ **dagar** | **Samma dag** |
+| Vad det kostar i pengar | **0 kr** i Apple-avgifter. (Att *ha* ett medlemskap förknippat med en organisation ingår; ett nytt separat medlemskap för en ny enhet kostar 99 USD/år) | 0 kr |
+| Vad som händer med build 6 | **Ingenting** — bundle ID `com.tomorgashi.eventpulse` och build 6 kan användas som de är (Apple dokumenterar inte om Team ID/apps följer med vid konvertering ⇒ detta är det enda alternativet som garanterar att inga byggen går till spillo) | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
+| Konsekvens för personuppgifter | Perfectday AB är personuppgiftsansvarig, det du redan beställt och verifierat (60/60, 47/47, 24/24) | Tomor Gashi blir personuppgiftsansvarig ⇒ GDPR-krav på privatperson som personuppgiftsansvarig (i praktiken: samma bolagstext går att använda, men bolaget måste inte längre stå som ansvarig) |
+| Risk | Apple kan neka konverteringen om dokumenten inte håller ⇒ då hamnar du i (b) med fördröjning | **Avslagsrisk på granskningen**: säljare och personuppgiftsansvarig pekar på olika entiteter. Apple §5.1.1(i) kräver att appens information finns i appen, men säljarens entitet måste vara den som står i appen/policyn |
+
+### Min rekommendation
+
+**Välj (a)**, och gör den **innan** du skickar in appen — av tre skäl:
+
+1. Det är den enda vägen där säljare och personuppgiftsansvarig är samma
+   entitet. Det är den vanligaste avslagsorsaken i granskningen.
+2. (a) är billigare: 0 kr och en tidsåtgång, jämfört med (b) som kräver ett nytt
+   bygge och en tillbaka-rullning av all juridisk text.
+3. (a) slår **build 6** som du redan har. (b) slår den inte.
+
+**Vad du behöver göra för (a):**
+
+1. Hämta D-U-N-S-nummer för Perfectday AB (gratis, via D&B med org.nr
+   556990-9830). Det tar några dagar.
+2. Samla bolagshandlingar (registerprotokoll / utdrag ur bolagsregistret) och
+   en bild av ett ID med foto.
+3. I App Store Connect: Account Holder → Membership → **Convert to
+   Organization**, fyll i bolagets rättsliga namn, D-U-N-S och adress.
+4. **Ingen ny build behövs.** Ladda upp samma IPA och skicka in.
+
+### Om du väljer (b) i stället
+
+Då måste den juridiska texten rullas tillbaka i **fyra** ställen (appens i18n sv/en/it
+för policy + villkor, `site/privacy/index.html`, `site/en/privacy/index.html`)
+och gate-skripten (`check-app-config.mjs`, `check-ipa.mjs`,
+`check-live-site.mjs`) måste skrivas om, eftersom de i dag **kräver**
+`Perfectday AB` + `556990-9830` och **förbjuder** "Tomor Gashi" som operatör.
+Det är ett par timmars arbete plus ett nytt bygge.
+
+> **Obs:** köp och sälj är två skilda lager hos Apple. Att kontot är ett
+> bolagskonto påverkar **inte** ditt eget köp av appar i App Store — det är
+> Media & Purchases-kontot som gäller där, och det kan vara ett helt annat
+> konto.
