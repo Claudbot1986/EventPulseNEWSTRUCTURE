@@ -29,6 +29,7 @@ import {
   collectAnalyticsEvents,
   collectUserInteractions,
   collectLinkHealth,
+  collectDiscoveryFunnel,
   summarizeUserInteractions,
   summarizeTileTaps,
   type Kpis,
@@ -2459,6 +2460,24 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
   // GET /api/lifecycle/auto-quarantined → från runtime/sources_audit.jsonl (event='auto_quarantined')
   // POST /api/review/resolve       → resolvePending(entryId, decision, by, note)
   // POST /api/review/submit        → submitForReview(sourceId, reasonCode, note, by)
+
+  // GET /api/discovery/funnel → discovery-tratten: utbud → beslut → väntan.
+  // Läser source_candidates i live-DB + P3A/P3D-loggarna.
+  if (url === '/api/discovery/funnel') {
+    try {
+      const data = await collectDiscoveryFunnel(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+
   if (url === '/api/lifecycle/quarantined') {
     try {
       const idx = loadQuarantineIndex();

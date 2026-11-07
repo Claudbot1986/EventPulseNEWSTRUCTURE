@@ -2142,3 +2142,54 @@ body:not(.sidebar-open) .sidebar {
   background: var(--warn);
   box-shadow: 0 0 0 4px rgba(240, 136, 62, 0.18);
 }
+
+/* ── Discovery-trattens täppor ───────────────────────────────────────────
+   De tre saker som förklarar varför grafen inte växer: Exa-dedup,
+   pending utan city, och testhastigheten. */
+.df-leaks {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.df-leaks-title {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.df-leak {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  padding: 10px 12px;
+}
+.df-leak--bad { border-left-color: var(--bad); }
+.df-leak--warn { border-left-color: var(--warn); }
+.df-leak-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.df-leak-value {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.df-leak--bad .df-leak-value { color: var(--bad); }
+.df-leak--warn .df-leak-value { color: var(--warn); }
+.df-leak-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+@media (max-width: 900px) {
+  .df-leaks { grid-template-columns: 1fr; }
+}

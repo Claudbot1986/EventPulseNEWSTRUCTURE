@@ -915,3 +915,220 @@ export async function collectLinkHealth(): Promise<LinkHealthReport> {
     nullCount: nullTally.nullCount,
   };
 }
+
+// ─── Discovery funnel ───────────────────────────────────────────────────────
+//
+// Frågan dashboarden ska svara på för discovery: "kommer det in fler källor,
+// eller står det still?" — det är tre TÄPPAR i kedjan, inte ett antal:
+//
+//   ① UTBUD    — hur många nya kandidater kommer in? (Exa-dedup gör att 95 av
+//                 97 URL:er var redan kända)
+//   ② BESLUT   — hur många kandidater blir källor (verified) respektive
+//                 avvisade (rejected)?
+//   ③ VÄNTAN   — hur många pending-kandidater finns, och hur många av dem
+//                 kan över huvud taget testas? claim_source_candidate_test_queue
+//                 filtrerar på city='Stockholm', så en kandidat utan city kan
+//                 aldrig hämtas ur kön.
+//
+// Allt läses ur live-DB + kedjans loggar. Errors-as-data: ok=false + error.
+
+export interface DiscoveryFunnelReport {
+  ok: boolean;
+  error: string | null;
+  generatedAt: string;
+  supply: {
+    new24h: number;
+    new7d: number;
+    new30d: number;
+    /** Snitt per natt över 30 dagar. */
+    perNight: number;
+  };
+  decisions: {
+    verified: number;
+    rejected: number;
+    manualReview: number;
+    verified7d: number;
+    rejected7d: number;
+  };
+  waiting: {
+    pending: number;
+    /** city = 'Stockholm' — de som faktiskt kan hämtas ur testkön. */
+    claimable: number;
+    /** Saknar city → kan aldrig claimas. */
+    stuckNoCity: number;
+    otherCity: number;
+  };
+  families: Array<{ name: string; pending: number; total: number }>;
+  p3a: {
+    /** URL:er Exa hittade i senaste körningen (ur steg-loggen). */
+    exaFound: number | null;
+    /** Vad loggen påstår att den skrev — räknar ALLA rader, även dubbletter. */
+    claimedWritten: number | null;
+    /** Hur många som faktiskt var NYA (räknat ur DB sedan körningen). */
+    realNew: number | null;
+  };
+  throughput: {
+    p3dExitCode: number | null;
+    p3dDurationMs: number | null;
+    p3dAt: string | null;
+  };
+}
+
+function emptyDiscoveryFunnel(error: string | null): DiscoveryFunnelReport {
+  return {
+    ok: false,
+    error,
+    generatedAt: new Date().toISOString(),
+    supply: { new24h: 0, new7d: 0, new30d: 0, perNight: 0 },
+    decisions: { verified: 0, rejected: 0, manualReview: 0, verified7d: 0, rejected7d: 0 },
+    waiting: { pending: 0, claimable: 0, stuckNoCity: 0, otherCity: 0 },
+    families: [],
+    p3a: { exaFound: null, claimedWritten: null, realNew: null },
+    throughput: { p3dExitCode: null, p3dDurationMs: null, p3dAt: null },
+  };
+}
+
+/**
+ * Klassificera en kandidat efter vilken sökväg den kom ifrån. Källan ligger i
+ * `source_query` (joined-form för Exa, 'rss:<k>' för RSS, 'events near …' för
+ * venue_graph_geo).
+ */
+function candidateFamily(sourceQuery: string | null | undefined): string {
+  const q = (sourceQuery ?? '').trim();
+  if (!q) return 'okänd';
+  if (q.startsWith('rss:')) return 'rss';
+  if (/^events near /i.test(q)) return 'venue_graph_geo';
+  return 'exa';
+}
+
+export async function collectDiscoveryFunnel(
+  projectRoot: string,
+): Promise<DiscoveryFunnelReport> {
+  const sb = db();
+  if (!sb) return emptyDiscoveryFunnel('Supabase är inte konfigurerad');
+
+  const now = Date.now();
+  const iso = (ms: number) => new Date(ms).toISOString();
+  const day = 86400000;
+
+  // Senaste P3A-körningen — startar vi härifrån räknar vi "nya" kandidater.
+  const stepsDir = join(projectRoot, 'runtime/ingestion-cron/steps');
+  let p3aAt: number | null = null;
+  let exaFound: number | null = null;
+  let claimedWritten: number | null = null;
+  try {
+    const files = readdirSync(stepsDir)
+      .filter((f) => f.startsWith('P3A-discovery-') && f.endsWith('.log'))
+      .sort();
+    const last = files[files.length - 1];
+    if (last) {
+      const m = /^P3A-discovery-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z/.exec(last);
+      if (m) {
+        p3aAt = Date.parse(
+          `${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z`,
+        );
+      }
+      const text = readFileSync(join(stepsDir, last), 'utf8');
+      const found = /"exaFound":\s*(\d+)/.exec(text);
+      const written = /"candidatesWritten":\s*(\d+)/.exec(text);
+      exaFound = found ? Number(found[1]) : null;
+      claimedWritten = written ? Number(written[1]) : null;
+    }
+  } catch {
+    // Loggen saknas — fälten lämnas null (okänd, inte noll).
+  }
+
+  try {
+    const [allRes, new24, new7, new30, verified7, rejected7] = await Promise.all([
+      sb.from('source_candidates').select('status, city, source_query, created_at'),
+      sb.from('source_candidates').select('*', { count: 'exact', head: true }).gte('created_at', iso(now - day)),
+      sb.from('source_candidates').select('*', { count: 'exact', head: true }).gte('created_at', iso(now - 7 * day)),
+      sb.from('source_candidates').select('*', { count: 'exact', head: true }).gte('created_at', iso(now - 30 * day)),
+      sb.from('source_candidates').select('*', { count: 'exact', head: true })
+        .eq('status', 'verified').gte('updated_at', iso(now - 7 * day)),
+      sb.from('source_candidates').select('*', { count: 'exact', head: true })
+        .eq('status', 'rejected').gte('updated_at', iso(now - 7 * day)),
+    ]);
+
+    if (allRes.error) return emptyDiscoveryFunnel(allRes.error.message);
+
+    const rows = allRes.data ?? [];
+    const status = (s: string) => rows.filter((r) => r.status === s);
+    const pending = rows.filter((r) => r.status === 'pending');
+
+    const famMap = new Map<string, { pending: number; total: number }>();
+    for (const r of rows) {
+      const f = candidateFamily(r.source_query as string | null);
+      const e = famMap.get(f) ?? { pending: 0, total: 0 };
+      e.total++;
+      if (r.status === 'pending') e.pending++;
+      famMap.set(f, e);
+    }
+
+    // "Nya" sedan senaste P3A-körningen — det antal som faktiskt lades till.
+    let realNew: number | null = null;
+    if (p3aAt !== null) {
+      const { count } = await sb
+        .from('source_candidates')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', iso(p3aAt));
+      realNew = count;
+    }
+
+    // Senaste P3D-steget ur kedje-loggen (steg-nivå, inte bara filen).
+    let p3dExitCode: number | null = null;
+    let p3dDurationMs: number | null = null;
+    let p3dAt: string | null = null;
+    try {
+      const overview = join(projectRoot, 'runtime/ingestion-cron/chain-overview.log');
+      const lines = readFileSync(overview, 'utf8').split('\n');
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        if (!line.startsWith('{')) continue;
+        let o: Record<string, unknown>;
+        try { o = JSON.parse(line); } catch { continue; }
+        if (o.event === 'step-end' && o.step === 'P3D-source-candidate-tests') {
+          p3dExitCode = typeof o.exitCode === 'number' ? o.exitCode : null;
+          p3dDurationMs = typeof o.durationMs === 'number' ? o.durationMs : null;
+          p3dAt = typeof o.ts === 'string' ? o.ts : null;
+          break;
+        }
+      }
+    } catch {
+      // Kedje-loggen saknas — okänd, inte noll.
+    }
+
+    const new30Count = new30.count ?? 0;
+    return {
+      ok: true,
+      error: null,
+      generatedAt: new Date().toISOString(),
+      supply: {
+        new24h: new24.count ?? 0,
+        new7d: new7.count ?? 0,
+        new30d: new30Count,
+        perNight: Math.round((new30Count / 30) * 10) / 10,
+      },
+      decisions: {
+        verified: status('verified').length,
+        rejected: status('rejected').length,
+        manualReview: status('manual_review').length,
+        verified7d: verified7.count ?? 0,
+        rejected7d: rejected7.count ?? 0,
+      },
+      waiting: {
+        pending: pending.length,
+        claimable: pending.filter((r) => r.city === 'Stockholm').length,
+        stuckNoCity: pending.filter((r) => !r.city).length,
+        otherCity: pending.filter((r) => !!r.city && r.city !== 'Stockholm').length,
+      },
+      families: Array.from(famMap.entries())
+        .map(([name, v]) => ({ name, ...v }))
+        .sort((a, b) => b.total - a.total),
+      p3a: { exaFound, claimedWritten, realNew },
+      throughput: { p3dExitCode, p3dDurationMs, p3dAt },
+    };
+  } catch (err) {
+    return emptyDiscoveryFunnel(String((err as Error)?.message ?? err));
+  }
+}

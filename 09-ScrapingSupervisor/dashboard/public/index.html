@@ -334,6 +334,15 @@
           </div>
         </section>
 
+        <section class="card flow-card" id="discovery-funnel" data-info="Discovery-tratten: utbud → beslut → väntan. Utbud = nya kandidater (från Exa, RSS, venue_graph_geo). Beslut = verified (bevordrade källor) och rejected. Väntan = pending-kandidater, uppdelat i claimbara (city='Stockholm' — de som testkön faktiskt kan hämta), utan city (kan ALDRIG claimas, eftersom claim_source_candidate_test_queue filtrerar på city='Stockholm') och annan stad. Läser source_candidates i live-DB plus P3A/P3D-loggarna. Tre TÄPPOR visas separat: hur många URL:er Exa hittade vs hur många som faktiskt var nya, hur många pending som väntar, och hur lång tid testningen tar.">
+          <h2>Discovery — tratten<button type="button" class="info-btn" data-info-target="discovery-funnel" aria-label="help">i</button></h2>
+          <p class="caption">Var discovery tappar sitt vatten. Allt läses ur live-DB och kedjans loggar.</p>
+          <ol class="flow" id="df-steps">
+            <li class="flow-row"><span class="flow-label">loading&hellip;</span></li>
+          </ol>
+          <div class="df-leaks" id="df-leaks"></div>
+        </section>
+
         <section class="card" id="sources" data-info="Aggregated counts of sources in runtime/sources_status.jsonl. 'Working' = last Tool A scrape returned a usable payload. 'Dead' = consecutive failures recorded. 'Untouched' = never attempted by Tool A. NOTE: events_public may contain rows from sources not represented here — those arrived via Tool B/C/D/push. For the full DB-side picture see 'Sources (DB-fed)'.">
           <h2>Sources (Tool A — direct network/JSON-LD)<button type="button" class="info-btn" data-info-target="sources" aria-label="help">i</button></h2>
           <p class="caption">Counts from <code>sources_status.jsonl</code>. Working = Tool A scrape success. DB may also hold events from Tool B/C/D/push paths — see Sources (DB-fed) below.</p>

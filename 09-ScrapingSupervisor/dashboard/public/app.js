@@ -453,6 +453,18 @@ function applyAnalyticsServerState(as) {
     if (cs) cs.innerHTML = '';
   }
 
+  // ── Discovery funnel (utbud → beslut → väntan) ── egen fetch, samma skäl.
+  try {
+    const dfRes = await fetch('/api/discovery/funnel', { cache: 'no-store' });
+    if (!dfRes.ok) throw new Error(`HTTP ${dfRes.status}`);
+    initDiscoveryFunnel(await dfRes.json());
+  } catch (err) {
+    const el = document.getElementById('df-steps');
+    if (el) el.innerHTML = `<li class="flow-row"><div class="flow-label">unavailable: ${escapeHtml(String(err))}</div></li>`;
+    const lk = document.getElementById('df-leaks');
+    if (lk) lk.innerHTML = '';
+  }
+
   // ── User activity (per test profile, 10-Analytics) — independent fetch
   //    so /api/status failure doesn't take this card down. Depths switch
   //    client-side against already-fetched data (fetch-once convention).
@@ -1867,6 +1879,99 @@ function initIngestionFlow(data) {
       const firstBad = chainEl.querySelector('.chain-step--bad');
       if (firstBad) chainEl.scrollTop = Math.max(0, firstBad.offsetTop - 4);
     }
+  }
+}
+
+// ─── Discovery funnel (utbud → beslut → väntan) ─────────────────────────────
+//
+// Tre TÄPPOR i discovery-kedjan, inte ett antal:
+//   ① UTBUD  — hur många nya kandidater kommer in?
+//   ② BESLUT — hur många blir källor (verified) vs avvisade (rejected)?
+//   ③ VÄNTAN — hur många pending, och hur många kan över huvud taget testas?
+
+function initDiscoveryFunnel(data) {
+  const stepsEl = document.getElementById('df-steps');
+  const leaksEl = document.getElementById('df-leaks');
+  if (!stepsEl) return;
+  if (!data || data.ok === false) {
+    stepsEl.innerHTML = `<li class="flow-row"><div class="flow-label">unavailable: ${escapeHtml(String((data && data.error) || 'okänt'))}</div></li>`;
+    if (leaksEl) leaksEl.innerHTML = '';
+    return;
+  }
+
+  const s = data.supply || {};
+  const d = data.decisions || {};
+  const w = data.waiting || {};
+  const p3a = data.p3a || {};
+  const th = data.throughput || {};
+
+  // ① UTBUD
+  const supplyNotes = [
+    `${s.new7d ?? 0} nya senaste 7 dagarna`,
+    `≈ ${s.perNight ?? 0} per natt (30 dagar)`,
+  ];
+  if (p3a.exaFound != null) {
+    supplyNotes.push(`Exa hittade ${p3a.exaFound} URL:er i senaste körningen`);
+  }
+
+  // ② BESLUT
+  const decisionNotes = [
+    `${d.verified7d ?? 0} verifierade senaste 7 dagarna`,
+    `${d.rejected7d ?? 0} avvisade senaste 7 dagarna`,
+  ];
+  if (d.manualReview) decisionNotes.push(`${d.manualReview} i manuell granskning`);
+
+  // ③ VÄNTAN
+  const waitingNotes = [
+    `${w.claimable ?? 0} claimbara (city = Stockholm)`,
+    `${w.otherCity ?? 0} i annan stad`,
+  ];
+  const stuck = w.stuckNoCity ?? 0;
+  if (stuck) waitingNotes.push(`${stuck} saknar city → kan aldrig testas`);
+
+  stepsEl.innerHTML = [
+    flowRow('Utbud', s.new30d ?? 0, ' nya kandidater / 30 dagar', supplyNotes.map(escapeHtml).join(' · ')),
+    flowRow('Beslut', d.verified ?? 0, ' källor befordrade', decisionNotes.map(escapeHtml).join(' · ')),
+    flowRow('Väntan', w.pending ?? 0, ' kandidater i kön', waitingNotes.map(escapeHtml).join(' · '), stuck > 0 ? 'bad' : 'ok'),
+  ].join('');
+
+  // TÄPPOR — de tre saker som förklarar varför grafen inte växer.
+  if (leaksEl) {
+    const leaks = [];
+    if (p3a.exaFound != null && p3a.realNew != null) {
+      const pct = p3a.exaFound > 0 ? Math.round((p3a.realNew / p3a.exaFound) * 100) : 0;
+      leaks.push({
+        label: 'Exa-dedup',
+        value: `${p3a.realNew} av ${p3a.exaFound} nya`,
+        note: `Endast ${pct} % av URL:erna var nya — loggen säger "skrev ${p3a.claimedWritten ?? '?'}" men räknar med dubbletter.`,
+        tone: pct < 20 ? 'bad' : 'warn',
+      });
+    }
+    if (stuck > 0) {
+      leaks.push({
+        label: 'Stuck utan city',
+        value: `${stuck}`,
+        note: 'claim-kön filtrerar på city=\'Stockholm\' — dessa kan aldrig hämtas, hur länge de än väntar.',
+        tone: 'bad',
+      });
+    }
+    if (th.p3dDurationMs != null) {
+      const mins = Math.round(th.p3dDurationMs / 60000);
+      leaks.push({
+        label: 'Testhastighet',
+        value: `${mins} min`,
+        note: `P3D:s senaste körning${th.p3dExitCode !== 0 ? ` (exit ${th.p3dExitCode})` : ''} — antalet kandidater som hinner testas bestämmer hur snabbt kön töms.`,
+        tone: th.p3dExitCode !== 0 ? 'bad' : 'warn',
+      });
+    }
+    leaksEl.innerHTML = leaks.length
+      ? '<div class="df-leaks-title">Täppor</div>' + leaks.map((l) => `
+        <div class="df-leak df-leak--${l.tone}">
+          <div class="df-leak-label">${escapeHtml(l.label)}</div>
+          <div class="df-leak-value">${escapeHtml(l.value)}</div>
+          <div class="df-leak-note">${escapeHtml(l.note)}</div>
+        </div>`).join('')
+      : '<span class="muted">inga täckor hittade</span>';
   }
 }
 
