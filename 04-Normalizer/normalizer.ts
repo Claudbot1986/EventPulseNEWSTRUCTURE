@@ -18,6 +18,7 @@ import { buildEventpulseFacts, buildEventpulseSummary, type EventpulseFacts } fr
 import { shouldCaptureRawDescription, countFilledFacts } from './rawDescriptionRetention';
 import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
+import { choosePersistableCategorySlug } from './categorySlugGuard';
 import { extractHeadliner, resolveArtist } from './artistResolver';
 // 2026-10-24 — Dedup via ticket_url: URL + kalenderdag = samma event.
 import {
@@ -444,6 +445,22 @@ async function resolveCategoryIds(slugs: string[] | undefined): Promise<string[]
   return (data ?? []).map((c) => c.id);
 }
 
+/**
+ * Resolve categories (id + slug) from slugs — samma fråga som
+ * resolveCategoryIds men vi behöver ALSO veta vilka slugs som faktiskt
+ * existerade, för att kunna välja en persistabel category_slug.
+ */
+async function resolveExistingCategories(
+  slugs: string[] | undefined,
+): Promise<Array<{ id: string; slug: string }>> {
+  if (!slugs || slugs.length === 0) return [];
+  const { data } = await supabase
+    .from('categories')
+    .select('id, slug')
+    .in('slug', slugs);
+  return (data ?? []) as Array<{ id: string; slug: string }>;
+}
+
 export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const raw = job.data;
 
@@ -702,7 +719,9 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const categories = canonicalizeFirst
     ? [canonicalizeFirst.slug]
     : rawCategories;
-  let category_ids = await resolveCategoryIds(categories);
+  const resolvedCategories = await resolveExistingCategories(categories);
+  let category_ids = resolvedCategories.map((c) => c.id);
+  const validCategorySlugs = resolvedCategories.map((c) => c.slug);
 
   // Get primary category slug (first category from the normalized list).
   // Prioritet (2026-09-30, MB+Last.fm = auktoritativ källa för musik):
@@ -712,12 +731,28 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   //   3. Source-default (2026-09-29) — kända single-purpose sources
   //      (Berwaldhallen, Debaser, biljettshop.se-Chicago-adapters, etc.)
   //   4. 'community' (fallback)
+  //
+  // 2026-11-07 — VARJE steg utom det sista valideras mot `categories`:
+  // DB-constrainten `events_category_slug_valid` avvisar en rad vars
+  // category_slug inte finns i categories-tabellen. En adapter som skickar en
+  // visningsetikett ("Christmas & New Year's" → "christmas & new year's")
+  // gjorde att Postgres avvisade raden — `worker-drain` föll med exit 70 i 5
+  // nätter i rad (2026-11-03 → 11-07), 2 events per natt. Se
+  // categorySlugGuard.ts för hela resonemanget.
   const sourceDefaultSlug = getDefaultCategorySlugForSource(raw.source);
-  const category_slug =
-    categories?.[0]
-    ?? mbResolvedCategory
-    ?? sourceDefaultSlug
-    ?? 'community';
+  const chosen = choosePersistableCategorySlug({
+    adapterSlug: categories?.[0] ?? null,
+    validSlugs: validCategorySlugs,
+    musicbrainzSlug: mbResolvedCategory,
+    sourceDefaultSlug,
+  });
+  const category_slug = chosen.slug;
+  if (chosen.rejected.length > 0) {
+    console.log(
+      `[normalizer] ogiltig kategori-slug "${chosen.rejected[0]}" (source=${raw.source}) ` +
+      `— faller tillbaka till "${chosen.slug}" (reason=${chosen.reason})`,
+    );
+  }
 
   // Om source-default användes och INTE redan finns i category_ids: lägg
   // till motsvarande UUID i M:M-joinet så eventet exponeras korrekt i
@@ -738,6 +773,18 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   }
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
+
+  // 2026-11-07: se till att den VALDA sluggen också finns i M:M-joinet när den
+  // kom från fallback (t.ex. 'community' efter en ogiltig adapter-etikett).
+  // Annars sparas eventet med rätt slug men utan kategori-länk, och syns då
+  // inte i de filter som läser event_categories.
+  if (!validCategorySlugs.includes(category_slug)) {
+    const chosenIds = await resolveCategoryIds([category_slug]);
+    const missing = chosenIds.filter((id) => !category_ids.includes(id));
+    if (missing.length > 0) {
+      category_ids = [...category_ids, ...missing];
+    }
+  }
 
   // Geo prioritering (2026-10-02, geo-bug fix): om raw.lat/lng är null/fallback
   // men venue har riktig geo, använd venues koordinater. Se chooseGeoCoords().
