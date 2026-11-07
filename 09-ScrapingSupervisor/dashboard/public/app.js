@@ -1597,7 +1597,8 @@ function sortShRows(rows) {
     else if (k === 'lastSuccess') { av = a.lastSuccess || ''; bv = b.lastSuccess || ''; }
     else if (k === 'lastRun') { av = a.lastRun || ''; bv = b.lastRun || ''; }
     else if (k === 'lastEventsFound') {
-      // 0 events (tyst tom) ska ligga högst — det är värst, inte bäst.
+      // Noll events hamnar sist i "desc"-ordning (minst värde först bort).
+      // De markeras röda i kolumnen och finns via filtret "utfall: tyst tom".
       av = a.lastEventsFound === null ? -1 : a.lastEventsFound;
       bv = b.lastEventsFound === null ? -1 : b.lastEventsFound;
     }
