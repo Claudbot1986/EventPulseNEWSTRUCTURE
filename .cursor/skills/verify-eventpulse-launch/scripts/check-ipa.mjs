@@ -121,6 +121,17 @@ for (const s of ['legal.privacy.p1.bullets', 'legal.privacy.p2a.body', 'legal.pr
   check(`bundle: rå nyckel "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
 }
 
+// 4c. Personuppgiftsansvarig i den publicerade policyn.
+// Perfectday AB, org.nr 556990-9830 (fastställt av ägaren 2026-11-06).
+// "Tomor Gashi" som operatör var ett underbyggt antagande och får inte
+// finnas kvar i den publicerade policyn.
+for (const s of ['Perfectday AB', '556990-9830']) {
+  check(`bundle: "${s}" finns`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
+}
+for (const s of ['drivs av Tomor Gashi', 'operated by Tomor Gashi', 'gestito da Tomor Gashi']) {
+  check(`bundle: gammal operatör "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
+}
+
 // 5. Version/build
 const shortVersion = execFileSync('plutil', ['-extract', 'CFBundleShortVersionString', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();
 const build = execFileSync('plutil', ['-extract', 'CFBundleVersion', 'raw', '-o', '-', path.join(appRoot, 'Info.plist')]).toString().trim();

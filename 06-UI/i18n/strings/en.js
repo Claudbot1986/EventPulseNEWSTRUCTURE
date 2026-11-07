@@ -641,7 +641,7 @@ export default {
 
   'legal.privacy.p1.title': '1. Who we are',
   'legal.privacy.p1.body':
-    'EventPulse is a personal event agent delivered as an iOS and Android app, operated by Tomor Gashi in Stockholm, Sweden. The app helps users in the Stockholm region find concerts, exhibitions and other events based on their own taste. Privacy contact: hej@eventpulse.nu.',
+    'EventPulse is a personal event agent delivered as an iOS and Android app, operated by Perfectday AB (company registration number 556990-9830), Sweden. The app helps users in the Stockholm region find concerts, exhibitions and other events based on their own taste. Privacy contact: hej@eventpulse.nu.',
 
   'legal.privacy.p2a.title': '2.1 Account data (when you create an account)',
   'legal.privacy.p2a.bullets':
@@ -733,7 +733,7 @@ export default {
 
   'legal.terms.t9.title': '9. Intellectual property',
   'legal.terms.t9.body':
-    'The EventPulse app, brand, logo and underlying code belong to us and our licensors. Event images belong to the respective rights holder.',
+    'The EventPulse app, brand, logo and underlying code belong to Perfectday AB and our licensors. Event images belong to the respective rights holder.',
 
   'legal.terms.t10.title': '10. Limitation of liability',
   'legal.terms.t10.body':

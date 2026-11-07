@@ -24,7 +24,7 @@
 | Pris | Gratis |
 | Bundle ID | `com.tomorgashi.eventpulse` (redan skapat) |
 | SKU | `EVENTPULSE-IOS-001` |
-| Copyright | `2026 Tomor Gashi` |
+| Copyright | `2026 Perfectday AB` |
 | Åldersgräns | 18+ |
 
 ### Beskrivning (svenska, max 4000 tecken)
@@ -188,7 +188,7 @@ NOTES:
 | Contact email (granskare) | `hej@eventpulse.nu` |
 | Phone | ditt nummer (krävs av Apple) |
 | Encryption export compliance | `ITSAppUsesNonExemptEncryption: false` — appen använder bara standard-HTTPS, inget eget krypto. Inget dokument behövs |
-| App Review contact | Tomor Gashi, `hej@eventpulse.nu`, ditt telefonnummer |
+| App Review contact | Tomor Gashi, `hej@eventpulse.nu`, ditt telefonnummer (kontaktperson — behöver inte vara samma som säljaren/operatören) |
 
 ### Signerade avtal (kolla först)
 
@@ -250,5 +250,6 @@ utan alfakanal. 1–10 bilder.
 | Integritetspolicyn live på `eventpulse.nu/privacy/` | **LÖST 2026-11-04** — Cloudflare Pages-projektet `eventpulse-nu` deployades via `wrangler pages deploy site --branch main`. Live-gate `check-live-site.mjs`: **18/18 kontroller gröna** (sv + en). Live-sidan svarar nu med den fulla policyn (9 413 B sv / 9 255 B en) | — |
 | TestFlight-uppladdning | **Blockerat** — `eas submit` kräver inloggning mot App Store Connect (API-nyckel eller interaktiv OAuth). Bygget finns redo | `cd 06-UI && eas submit --platform ios --latest` (logga in först) eller ladda upp IPA:n i App Store Connect manuellt |
 | Skärmbilder | **Blockerat på maskinen** — ingen Xcode/simulator | Ta på riktig iPhone från TestFlight-builden |
-| Juridiskt bolagsnamn | Antagande | Policyn anger "Tomor Gashi" (från git/EAS-kontot). Bekräfta att det är ditt juridiska namn, eller ändra i `06-UI/i18n/strings/{sv,en,it}.js` + `site/privacy/index.html` + `site/en/privacy/index.html` |
+| Juridiskt bolagsnamn | **LÖST 2026-11-06** — personuppgiftsansvarig är **Perfectday AB, org.nr 556990-9830** (bekräftat mot Bolagsverket: aktiebolag, bildat 2014-11-20, F-skatt). Policyn uppdaterad i appen (sv/en/it), i villkoren (äganderätt) och på webben (sv/en). Gate-kontroller tillagda: appen 60/60, IPA-gaten kräver `Perfectday AB` + `556990-9830` och förbjuder `Tomor Gashi` som operatör, live-gaten kräver samma | — |
+| **App Store Connect-kontotyp** | **Öppet beslut — kan orsaka avslag** | Apple-utvecklarkontot är registrerat som **"TOMOR GASHI (Individual)"**, så säljaren i butiken blir *Tomor Gashi* medan policyn anger *Perfectday AB*. Apple kräver att säljarens juridiska entitet är den som äger appen. **Två vägar:** (a) konvertera kontot till **Organization** med Perfectday AB (kräver D-U-N-S + bolagshandlingar, tar dagar — gör detta **innan** du skickar in), eller (b) behåll Individual-kontot och låt policyn ange privatpersonen. Alternativ (a) är det korrekta om bolaget äger appen |
 | Avstängning av demologin efter godkännande | Val | Radera demokontot i Supabase (stänger av direkt, utan ny build) eller bygg om utan `EXPO_PUBLIC_ENABLE_DEMO_LOGIN` |

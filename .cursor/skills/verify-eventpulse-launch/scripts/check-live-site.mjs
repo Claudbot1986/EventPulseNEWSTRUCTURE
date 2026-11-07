@@ -47,11 +47,12 @@ function decodeCfEmails(html) {
 }
 
 // Åldersgränsen formuleras per språk — "18 år" finns inte på den engelska sidan.
+// Personuppgiftsansvarig: Perfectday AB, org.nr 556990-9830 (2026-11-06).
 const rules = {
-  sv: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 år'] },
-  en: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 years'] },
+  sv: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 år', 'Perfectday AB', '556990-9830'] },
+  en: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 years', 'Perfectday AB', '556990-9830'] },
 };
-const mustNotContain = ['[TODO', 'utkast', 'OpenAI / Anthropic'];
+const mustNotContain = ['[TODO', 'utkast', 'OpenAI / Anthropic', 'Tomor Gashi'];
 const results = [];
 
 for (const { url, lang } of urls) {

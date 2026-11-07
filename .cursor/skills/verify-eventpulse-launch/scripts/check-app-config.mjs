@@ -72,6 +72,14 @@ for (const file of stringFiles) {
   check(`${file}: gammal leverantörslista borta`, !content.includes('OpenAI / Anthropic'));
   check(`${file}: salt-nyckel-formulering borta`, !content.includes('salt-nyckel'));
   check(`${file}: 18 års gräns`, /minst 18 år|at least 18 years|almeno 18 anni/.test(content));
+  // Personuppgiftsansvarig (2026-11-06): Perfectday AB, org.nr 556990-9830.
+  // Fastställd av användaren och bekräftad mot Bolagsverket (aktiebolag,
+  // bildat 2014-11-20, F-skatt). Tidigare stod "drivs av Tomor Gashi" — det
+  // var ett underbyggt antagande och är nu FEL: bolaget är personuppgifts-
+  // ansvarig, inte privatpersonen.
+  check(`${file}: personuppgiftsansvarig är Perfectday AB`, content.includes('Perfectday AB'));
+  check(`${file}: organisationsnummer 556990-9830`, content.includes('556990-9830'));
+  check(`${file}: privatperson inte angiven som operatör`, !content.includes('Tomor Gashi'));
 }
 
 // ── Kartprovider ──────────────────────────────────────────────────────────────
