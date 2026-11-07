@@ -299,7 +299,7 @@ utan alfakanal. 1–10 bilder.
 | TestFlight-uppladdning | **Blockerat** — `eas submit` kräver inloggning mot App Store Connect (API-nyckel eller interaktiv OAuth). Bygget finns redo | `cd 06-UI && eas submit --platform ios --latest` (logga in först) eller ladda upp IPA:n i App Store Connect manuellt |
 | Skärmbilder | **Blockerat på maskinen** — ingen Xcode/simulator | Ta på riktig iPhone från TestFlight-builden |
 | Juridiskt bolagsnamn | **LÖST 2026-11-06** — personuppgiftsansvarig är **Perfectday AB, org.nr 556990-9830** (bekräftat mot Bolagsverket: aktiebolag, bildat 2014-11-20, F-skatt). Policyn uppdaterad i appen (sv/en/it), i villkoren (äganderätt) och på webben (sv/en). Gate-kontroller tillagda: appen 60/60, IPA-gaten kräver `Perfectday AB` + `556990-9830` och förbjuder `Tomor Gashi` som operatör, live-gaten kräver samma | — |
-| **App Store Connect-kontotyp** | **Öppet beslut — kan orsaka avslag** | Apple-utvecklarkontot är registrerat som **"TOMOR GASHI (Individual)"**, så säljaren i butiken blir *Tomor Gashi* medan policyn anger *Perfectday AB*. Apple kräver att säljarens entitet är den som äger appen. **Det här är ett antingen-eller-beslut, inte två saker samtidigt** — se `docs/APPLE-LAUNCH-PLAN.md` och avsnitt 9 nedan för konsekens- och kostnadstabell. **(a) Konvertera kontot till Organization med Perfectday AB** (kräver D-U-N-S-nummer + bolagshandlingar, tar dagar — gör detta **innan** du skickar in). **(b) Behåll Individual-kontot** och låt policyn ange privatpersonen igen (går att göra i samma dag, men innebär att Perfectday AB inte är personuppgiftsansvarig — och då måste appens juridiska texter rullas **tillbaka**, vilket är ett nytt bygge och en ny build-nummer) |
+| **App Store Connect-kontotyp** | **Öppet beslut — kan orsaka avslag** | Apple-utvecklarkontot är registrerat som **"TOMOR GASHI (Individual)"**, så säljaren i butiken blir *Tomor Gashi* medan policyn anger *Perfectday AB*. Apple kräver att säljarens entitet är den som äger appen. **Det här är ett antingen-eller-beslut, inte två saker samtidigt** — se avsnitt 9 nedan för konsekvens- och kostnadstabell och för Apples egna verifierade länkar. **(a) Konvertera kontot till Organization med Perfectday AB** (kräver D-U-N-S-nummer + bolagshandlingar, ~1–2 veckor — gör detta **innan** du skickar in). **(b) Behåll Individual-kontot** och låt policyn ange privatpersonen igen (går att göra i samma dag, men innebär att Perfectday AB inte är personuppgiftsansvarig — och då måste appens juridiska texter rullas **tillbaka**, vilket är ett nytt bygge och en ny build-nummer). **Att byta e-postadress på kontot löser inget** — Apple: *"updating your name in your Apple Account will not change the name used for your membership or seller name on the App Store"* |
 | Avstängning av demologin efter godkännande | Val | Radera demokontot i Supabase (stänger av direkt, utan ny build) eller bygg om utan `EXPO_PUBLIC_ENABLE_DEMO_LOGIN` |
 
 ---
@@ -314,7 +314,7 @@ alternativ som utesluter varandra. Välj ett.
 | Vad du gör | Konverterar Apple-kontot till **Organization** med Perfectday AB | Låter kontot vara "TOMOR GASHI (Individual)" |
 | Vem säljaren i butiken blir | **Perfectday AB** | **Tomor Gashi** |
 | Matchar policyn som den är nu? | **Ja** | **Nej** — policyn måste skrivas om tillbaka till privatpersonen |
-| Vad det kostar i tid | D-U-N-S-nummer (gratis, D&B) + bolagshandlingar + Apple granskar konverteringen ⇒ **dagar** | **Samma dag** |
+| Vad det kostar i tid | D-U-N-S-nummer (gratis, upp till **5 arbetsdagar** hos D&B + upp till **2 arbetsdagar** för Apple att få informationen ⇒ **~1–2 veckor**) + bolagshandlingar + Apples granskning av konverteringen | **Samma dag** |
 | Vad det kostar i pengar | **0 kr** i Apple-avgifter. (Att *ha* ett medlemskap förknippat med en organisation ingår; ett nytt separat medlemskap för en ny enhet kostar 99 USD/år) | 0 kr |
 | Vad som händer med build 6 | **Troligen ingenting** — bundle ID `com.tomorgashi.eventpulse` kan användas som det är. **Men:** Apple dokumenterar inte offentligt om Team ID och befintliga appar följer med vid en konvertering. I värsta fallet får bolaget ett nytt Team ID ⇒ nytt bundle ID ⇒ **nytt bygge** (samma commit, nytt build-nummer, ~20 min) + nytt app-record. Koden i appen ändras inte. | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
 | Konsekvens för personuppgifter | Perfectday AB är personuppgiftsansvarig, det du redan beställt och verifierat (60/60, 47/47, 24/24) | Tomor Gashi blir personuppgiftsansvarig ⇒ GDPR-krav på privatperson som personuppgiftsansvarig (i praktiken: samma bolagstext går att använda, men bolaget måste inte längre stå som ansvarig) |
@@ -333,15 +333,61 @@ alternativ som utesluter varandra. Välj ett.
    ställen och att gate-skripten skrivs om, plus ett nytt bygge. Koden i appen
    ändras inte i något av alternativen.
 
-**Vad du behöver göra för (a):**
+**Vad du behöver göra för (a) — steg för steg, med Apples egna länkar:**
 
-1. Hämta D-U-N-S-nummer för Perfectday AB (gratis, via D&B med org.nr
-   556990-9830). Det tar några dagar.
-2. Samla bolagshandlingar (registerprotokoll / utdrag ur bolagsregistret) och
-   en bild av ett ID med foto.
-3. I App Store Connect: Account Holder → Membership → **Convert to
-   Organization**, fyll i bolagets rättsliga namn, D-U-N-S och adress.
-4. **Ingen ny build behövs.** Ladda upp samma IPA och skicka in.
+Steg 1 — **Hämta D-U-N-S-nummer** (gratis, men tar tid):
+
+- Apples egen väg (kräver inloggning med Apple ID):
+  <https://developer.apple.com/enroll/duns-lookup/>
+- Direkt till D&B:s svenska sökverktyg (inget inloggningskrav):
+  <https://dunsnumberlookup.dnb.com/sv-se> — **sök på organisationsnummer
+  556990-9830** (D&B:s egen text: "För en mer träffsäker sökning, sök på
+  företagets organisationsnummer").
+- Apples information om D-U-N-S, inklusive tider:
+  <https://developer.apple.com/support/D-U-N-S/>
+
+Apples egna ord: *"D&B may have already assigned your organization a **free**
+D‑U‑N‑S Number… If your company is not listed, you'll have the option to submit
+your information to Dun & Bradstreet for a free D‑U‑N‑S Number."* D&B frågar
+efter: juridiskt namn, huvudkontoradress, postadress och din arbetsadress.
+**Bearbetningstid: upp till 5 arbetsdagar hos D&B** ("Expediting your D‑U‑N‑S
+Number creation process will not shorten this waiting period") **+ upp till 2
+arbetsdagar för att Apple ska få informationen.** ⇒ **planera in ~1–2 veckor.**
+Om D&B behöver kontakta dig: ha bolagshandlingarna redo.
+
+Steg 2 — **Samla underlag** (Apple: "You also may be asked to submit business
+documents to verify your organization's identity"): registerprotokoll eller
+utdrag ur bolagsregistret för Perfectday AB, plus ID med foto för den som är
+founder/cofounder (Apple kräver att du är det).
+
+Steg 3 — **Skicka konverteringsförfrågan** (Apple: *"If you'd like to update
+your membership from an individual to an organization, please submit a
+request"*):
+
+- Apples hjälpsida (läs först):
+  <https://developer.apple.com/help/account/membership/updating-your-account-information/>
+- Direkt förfrågan:
+  <https://developer.apple.com/contact/request/migrate-individual-account>
+- Eller via kontosidan: <https://developer.apple.com/account> →
+  **Membership details** → "submit a request".
+
+Behöver rollen **Account Holder** (det har du). Fyll i bolagets rättsliga namn
+("Perfectday AB"), D-U-N-S-numret och adress.
+
+Steg 4 — **Ladda upp samma IPA och skicka in.** (Om Apple ger bolaget ett nytt
+Team ID behövs ett nytt bundle ID och därmed ett nytt bygge — se tabellen
+ovan.)
+
+**Två saker Apples hjälpsida bekräftar uttryckligen:**
+
+- Att byta namn eller mail på ditt Apple-konto **ändrar inte** säljarens namn
+  för ett Individual-medlemskap: *"if you're enrolled in the Apple Developer
+  Program as an individual, updating your name in your Apple Account will not
+  change the name used for your membership or seller name on the App Store."*
+  ⇒ **Att byta mailadress löser ingenting.** Bara konverteringen löser det.
+- Namnbytet påverkar alla appar: *"Changing your organization name will update
+  your vendor name across all your apps"* (och nollställer IDFV för befintliga
+  användare vid nästa uppdatering — relevant om du mäter installationer).
 
 ### Om du väljer (b) i stället
 
