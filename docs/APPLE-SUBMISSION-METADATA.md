@@ -316,7 +316,7 @@ alternativ som utesluter varandra. Välj ett.
 | Matchar policyn som den är nu? | **Ja** | **Nej** — policyn måste skrivas om tillbaka till privatpersonen |
 | Vad det kostar i tid | D-U-N-S-nummer (gratis, D&B) + bolagshandlingar + Apple granskar konverteringen ⇒ **dagar** | **Samma dag** |
 | Vad det kostar i pengar | **0 kr** i Apple-avgifter. (Att *ha* ett medlemskap förknippat med en organisation ingår; ett nytt separat medlemskap för en ny enhet kostar 99 USD/år) | 0 kr |
-| Vad som händer med build 6 | **Ingenting** — bundle ID `com.tomorgashi.eventpulse` och build 6 kan användas som de är (Apple dokumenterar inte om Team ID/apps följer med vid konvertering ⇒ detta är det enda alternativet som garanterar att inga byggen går till spillo) | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
+| Vad som händer med build 6 | **Troligen ingenting** — bundle ID `com.tomorgashi.eventpulse` kan användas som det är. **Men:** Apple dokumenterar inte offentligt om Team ID och befintliga appar följer med vid en konvertering. I värsta fallet får bolaget ett nytt Team ID ⇒ nytt bundle ID ⇒ **nytt bygge** (samma commit, nytt build-nummer, ~20 min) + nytt app-record. Koden i appen ändras inte. | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
 | Konsekvens för personuppgifter | Perfectday AB är personuppgiftsansvarig, det du redan beställt och verifierat (60/60, 47/47, 24/24) | Tomor Gashi blir personuppgiftsansvarig ⇒ GDPR-krav på privatperson som personuppgiftsansvarig (i praktiken: samma bolagstext går att använda, men bolaget måste inte längre stå som ansvarig) |
 | Risk | Apple kan neka konverteringen om dokumenten inte håller ⇒ då hamnar du i (b) med fördröjning | **Avslagsrisk på granskningen**: säljare och personuppgiftsansvarig pekar på olika entiteter. Apple §5.1.1(i) kräver att appens information finns i appen, men säljarens entitet måste vara den som står i appen/policyn |
 
@@ -328,7 +328,10 @@ alternativ som utesluter varandra. Välj ett.
    entitet. Det är den vanligaste avslagsorsaken i granskningen.
 2. (a) är billigare: 0 kr och en tidsåtgång, jämfört med (b) som kräver ett nytt
    bygge och en tillbaka-rullning av all juridisk text.
-3. (a) slår **build 6** som du redan har. (b) slår den inte.
+3. (a) kräver högst **ett nytt bygge** (20 min, samma kod) om Apple ger bolaget
+   ett nytt Team ID. (b) kräver att **all juridisk text rullas tillbaka** i fyra
+   ställen och att gate-skripten skrivs om, plus ett nytt bygge. Koden i appen
+   ändras inte i något av alternativen.
 
 **Vad du behöver göra för (a):**
 
