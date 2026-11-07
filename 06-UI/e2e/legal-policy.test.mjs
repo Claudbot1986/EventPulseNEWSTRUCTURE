@@ -45,6 +45,11 @@ test.describe('Juridisk text i appen', () => {
     expect(text, 'den gamla kontaktadressen syns fortfarande').not.toMatch(/privacy@eventpulse\.nu/);
     expect(text, 'den felaktiga salt-nyckel-formuleringen syns').not.toMatch(/salt-nyckel|salt key|chiave di salt/i);
     expect(text, 'platsdata påstås fortfarande samlas in').not.toMatch(/Plats \(endast om|Location \(only if/i);
+    // Personuppgiftsansvarig (2026-11-07): Perfectday AB, org.nr 556990-9830.
+    // Tidigare stod "drivs av Tomor Gashi" — det var ett underbyggt antagande.
+    expect(text, 'personuppgiftsansvarig Perfectday AB saknas').toMatch(/Perfectday AB/);
+    expect(text, 'organisationsnumret 556990-9830 saknas').toMatch(/556990-9830/);
+    expect(text, 'privatpersonen syns fortfarande som operatör').not.toMatch(/Tomor Gashi/);
 
     const realErrors = errors.filter((e) => !/429/.test(e.text));
     expect(realErrors, `Konsolfel: ${JSON.stringify(realErrors, null, 2)}`).toEqual([]);
@@ -63,5 +68,7 @@ test.describe('Juridisk text i appen', () => {
     expect(text, 'åldersgränsen är fortfarande 16 år').not.toMatch(/minst 16 år|at least 16 years|almeno 16 anni/i);
     expect(text, 'åldersgränsen 18 år saknas').toMatch(/minst 18 år|at least 18 years|almeno 18 anni/i);
     expect(text, 'den gamla kontaktadressen syns fortfarande').not.toMatch(/privacy@eventpulse\.nu/);
+    expect(text, 'äganderätten pekar inte på Perfectday AB').toMatch(/Perfectday AB/);
+    expect(text, 'privatpersonen syns fortfarande som ägare').not.toMatch(/Tomor Gashi/);
   });
 });

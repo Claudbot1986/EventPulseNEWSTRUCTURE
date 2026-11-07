@@ -139,15 +139,38 @@ export async function tapTab(page, label) {
  * Samlar konsolfel och page errors under en drive.
  * CORS/agent-health-brus filtreras bort (test-miljöens CORS-quirk), men
  * ALLA andra konsolfel räknas — de är det vi letar efter.
+ *
+ * 2026-11-07 — filtret för "Failed to load resource: net::ERR_FAILED" var
+ * dödt: det testade SAMMA sträng mot både "innehåller agent/health" och
+ * regexen /agent\/(health|feed)/, men konsolmeddelandet bär ingen URL —
+ * så det kunde aldrig matcha. Appen probe:ar agent-health i webbläsaren,
+ * webbläsaren blockerar svaret (CORS) ⇒ varje körning lade till ett falskt
+ * konsolfel och legal-policy.spec föll.
+ *
+ * Nu fångas de misslyckade REQUESTS (som bär URL) och konsolmeddelandet
+ * filtreras bort ENDAST om alla faktiska request-fel går mot kända
+ * CORS-brussändpunkter. Ett verkligt trasigt resurs (bild, bundle) ger
+ * en request-fel mot en annan URL ⇒ meddelandet behålls.
  */
+const CORS_NOISE_URL = /\/agent\/(health|feed)\b/;
+
 export function collectErrors(page) {
   const errors = [];
+  const failedUrls = [];
+  page.on('requestfailed', (req) => {
+    failedUrls.push(req.url());
+  });
   page.on('pageerror', (err) => errors.push({ type: 'pageerror', text: err.message }));
   page.on('console', (msg) => {
     if (msg.type() !== 'error') return;
     const txt = msg.text();
     if (txt.includes('agent/health') && txt.includes('CORS')) return;
-    if (txt === 'Failed to load resource: net::ERR_FAILED' && /agent\/(health|feed)/.test(txt)) return;
+    if (txt === 'Failed to load resource: net::ERR_FAILED') {
+      // Behåll felet om det finns request-fel mot NÅGON annan URL än
+      // agent-health/feed. Saknas request-fel helt ⇒ behåll (okänt orsak).
+      const onlyNoise = failedUrls.length > 0 && failedUrls.every((u) => CORS_NOISE_URL.test(u));
+      if (onlyNoise) return;
+    }
     errors.push({ type: 'console', text: txt });
   });
   return errors;
