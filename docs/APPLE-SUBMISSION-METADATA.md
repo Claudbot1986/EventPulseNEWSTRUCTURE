@@ -1,13 +1,16 @@
 # App Store Connect-underlag — EventPulse 1.0 (iOS)
 
 > Allt du behöver skriva in i App Store Connect, med svaren och underbyggnaden.
-> Byggen som ska lämnas in: **iOS, version 1.0.0, build 6**, SDK 58, IPA:
-> `https://expo.dev/artifacts/eas/TD2hhnROFKrV5B_wTgNeWjq4UtkZ40zRL3dUHGp_YcE.ipa`
-> (EAS build `e31dc67b-5c15-4479-ab50-ded9f110a541`, byggd från commit
-> `aa845431` som innehåller rättningen av de råa i18n-nycklarna, rättningen
-> av kartleverantören **och** att Perfectday AB är personuppgiftsansvarig).
-> IPA-gate `check-ipa.mjs`: **47/47 kontroller gröna** (inkl. kontroll av
-> personuppgiftsansvarig i bunten).
+> Byggen som ska lämnas in: **iOS, version 1.0.0, build 7**, SDK 58, IPA:
+> `https://expo.dev/artifacts/eas/mogCU226DibbGe6SsHL1ZauIRwUF2MGuPYsTAxxZJgw.ipa`
+> (EAS build `244cc0ba-7657-4f5f-bef3-2f16065f68c0`, byggd 2026-11-14 från
+> commit `bffee777` — **byggd från en ren git-worktree på exakt den committen**,
+> så bunten kan inte innehålla någon annan agents ocommittade ändringar).
+> **Bygg 7 är den första builden vars integritetspolicy stämmer med appen**
+> (se rättningen 2026-11-14 nedan). Build 6 är **föråldrad** — dess policy
+> påstod en agentchatt och MiniMax-overföring som inte finns.
+> IPA-gate `check-ipa.mjs`: **56/56 kontroller gröna** (inkl. kontroll av
+> personuppgiftsansvarig i bunten **och** att agentpåståenden är borta).
 >
 > **Lösenordet till demokontot ligger i `06-UI/.env` (gitignored) under
 > `EXPO_PUBLIC_DEMO_PASSWORD` — kopiera det till "Notes for Review", inte hit.**
@@ -16,7 +19,7 @@
 >
 > Den tidigare versionen av det här underlaget lovade en **agent-chatt**
 > ("fråga agenten"), en **"Rekommenderat"-flik** och en **sparad lista**. **Inget
-> av det finns i appen som den lämnas in** (build 6). Det som är sant:
+> av det finns i appen som den lämnas in** (build 7). Det som är sant:
 >
 > - **Ingen chatt.** Agentchatten är inte monterad — `06-UI/index.js` registrerar
 >   `AppShell`, inte `App-agent.js` (`App-agent.js` ligger kvar på disk "för
@@ -37,6 +40,24 @@
 > Review Notes och shot-list är alltså omskrivna efter detta. **Om agentchatten
 > aktiveras senare måste privacy-label, policy och beskrivning uppdateras
 > samtidigt** — annars står det fel i App Store Connect.
+>
+> ### ⚠️ Rättat 2026-11-14 — appens egen policy stämde INTE med etiketten
+>
+> While underlaget ovan skrevs om visade det sig att **appens integritetspolicy
+> och villkor (sv/en/it) och webbens policy/villkor (sv/en) fortfarande påstod
+> att appen är en "event-agent" som skickar text till MiniMax i USA**. Det
+> stämde inte: build 6 (och 7) har ingen agentchatt och skickar ingen text
+> till MiniMax. Det gjorde att **privacy-etiketten ("Data Shared with third
+> parties: Nej") och den publicerade policyn motsade varandra** — en direkt
+> avslagsrisk (Apple §5.1.1(i)).
+>
+> **Rättat i build 7.** Policyn säger nu det som är sant: söktexten skickas
+> till vår egen server och matchas mot evenemangstitlar och beskrivningar,
+> **utan AI-modell**, och appen är en iOS-app (Android är inte lanserad).
+> Verifierat i bunten: IPA-gaten **56/56**, där "MiniMax", "agentchat",
+> "event-agent" och "smakprofil" nu ger **0 träffar**.
+> **Om agentchatten aktiveras senare måste policy, privacy-label och
+> beskrivning uppdateras i samma bygge.**
 
 ---
 
@@ -271,7 +292,7 @@ utan alfakanal. 1–10 bilder.
 
 > **Måste göras på en riktig iPhone (eller simulator med Xcode).** Det finns
 > ingen Xcode-installation på maskinen här, så skärmbilderna kunde inte tas
-> automatiskt. Ta dem från **TestFlight-builden** (build 6), inte från Expo Go.
+> automatiskt. Ta dem från **TestFlight-builden** (build 7), inte från Expo Go.
 
 ---
 
@@ -285,7 +306,7 @@ utan alfakanal. 1–10 bilder.
 - [ ] Review Notes ifyllda med demokontot (lösenord från `06-UI/.env`)
 - [ ] Review-kontakt: namn, email, telefon
 - [ ] Skärmbilder 1–9 i rätt format (1320×2868 eller 1290×2796)
-- [ ] iOS-build 6 uppladdad och vald i version 1.0.0
+- [ ] iOS-build 7 uppladdad och vald i version 1.0.0
 - [ ] **Integritetspolicyn live på eventpulse.nu** (se avsnitt 8)
 - [ ] Skicka in
 
@@ -316,8 +337,8 @@ alternativ som utesluter varandra. Välj ett.
 | Matchar policyn som den är nu? | **Ja** | **Nej** — policyn måste skrivas om tillbaka till privatpersonen |
 | Vad det kostar i tid | **D-U-N-S-numret finns redan hos D&B** (kontrollerat 2026-11-07) ⇒ bara **1–2 minuter** att hämta det (det skickas till din e-post) + upp till **2 arbetsdagar** för att Apple ska få informationen + bolagshandlingar + Apples granskning av konverteringen. Om du ändå måste beställa nytt: +5 arbetsdagar hos D&B ⇒ ~1–2 veckor | **Samma dag** |
 | Vad det kostar i pengar | **0 kr** i Apple-avgifter. (Att *ha* ett medlemskap förknippat med en organisation ingår; ett nytt separat medlemskap för en ny enhet kostar 99 USD/år) | 0 kr |
-| Vad som händer med build 6 | **Troligen ingenting** — bundle ID `com.tomorgashi.eventpulse` kan användas som det är. **Men:** Apple dokumenterar inte offentligt om Team ID och befintliga appar följer med vid en konvertering. I värsta fallet får bolaget ett nytt Team ID ⇒ nytt bundle ID ⇒ **nytt bygge** (samma commit, nytt build-nummer, ~20 min) + nytt app-record. Koden i appen ändras inte. | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
-| Konsekvens för personuppgifter | Perfectday AB är personuppgiftsansvarig, det du redan beställt och verifierat (60/60, 47/47, 24/24) | Tomor Gashi blir personuppgiftsansvarig ⇒ GDPR-krav på privatperson som personuppgiftsansvarig (i praktiken: samma bolagstext går att använda, men bolaget måste inte längre stå som ansvarig) |
+| Vad som händer med build 7 | **Troligen ingenting** — bundle ID `com.tomorgashi.eventpulse` kan användas som det är. **Men:** Apple dokumenterar inte offentligt om Team ID och befintliga appar följer med vid en konvertering. I värsta fallet får bolaget ett nytt Team ID ⇒ nytt bundle ID ⇒ **nytt bygge** (samma commit, nytt build-nummer, ~20 min) + nytt app-record. Koden i appen ändras inte. | Bygget går att lämna in, **men** policyn, villkoren, webbsidan och appens eget privacy-manifest måste rullas tillbaka till privatpersonen ⇒ **nytt bygge (build 7) + ny IPA-gate-körning** |
+| Konsekvens för personuppgifter | Perfectday AB är personuppgiftsansvarig, det du redan beställt och verifierat (60/60, 56/56, 30/30) | Tomor Gashi blir personuppgiftsansvarig ⇒ GDPR-krav på privatperson som personuppgiftsansvarig (i praktiken: samma bolagstext går att använda, men bolaget måste inte längre stå som ansvarig) |
 | Risk | Apple kan neka konverteringen om dokumenten inte håller ⇒ då hamnar du i (b) med fördröjning | **Avslagsrisk på granskningen**: säljare och personuppgiftsansvarig pekar på olika entiteter. Apple §5.1.1(i) kräver att appens information finns i appen, men säljarens entitet måste vara den som står i appen/policyn |
 
 ### Min rekommendation

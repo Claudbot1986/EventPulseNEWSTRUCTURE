@@ -47,6 +47,20 @@ export const REQUIRED_POLICY_PATTERNS = [
   { re: /utan AI|n[åa]gon AI-modell|without AI|any AI model|senza IA|alcun modello di IA/i, label: 'söktext skickas inte till en AI-modell' },
 ];
 
+/**
+ * Bevismarkörer per språk för byte-sök i den KOMPIILERADE bunten.
+ *
+ * Bunten lagras i Hermes och sökningen är case-känslig på bytes — medan
+ * regex-gates ovan är case-okänsliga. "Söktext" (stora S, svenska substantiv)
+ * och "någon AI-modell" finns alltså i bunten medan "söktext"/"utan AI" inte
+ * gör det. IPA-gaten söker därför efter de faktiska formuleringarna.
+ */
+export const POLICY_EVIDENCE_MARKERS = {
+  sv: ['Söktext', 'AI-modell'],
+  en: ['search text', 'AI model'],
+  it: ['Testo di ricerca', 'modello di IA'],
+};
+
 /** Kör mönstren mot en text. Returnerar {forbidden:[], missing:[]}. */
 export function inspectPolicyText(text) {
   return {

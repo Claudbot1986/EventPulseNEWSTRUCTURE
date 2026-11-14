@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { POLICY_EVIDENCE_MARKERS } from './lib/policy-truth.mjs';
 
 const target = process.argv[2];
 if (!target) {
@@ -102,7 +103,7 @@ for (const s of ['OpenAI / Anthropic', 'salt-nyckel', '[TODO:', 'privacy@eventpu
 for (const s of ['MiniMax', 'EU–US Data Privacy Framework', 'agentchat', 'event-agent', 'smakprofil']) {
   check(`bundle: agentpåstående "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
 }
-for (const s of ['söktext', 'Search text', 'utan AI', 'without AI']) {
+for (const s of Object.values(POLICY_EVIDENCE_MARKERS).flat()) {
   check(`bundle: policyn förklarar "${s}"`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
 }
 
