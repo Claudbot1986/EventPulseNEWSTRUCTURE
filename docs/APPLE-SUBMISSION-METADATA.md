@@ -404,16 +404,40 @@ Formulär: <https://developer.apple.com/contact/request/migrate-individual-accou
 |---|---|
 | Legal entity name | **Perfectday AB** |
 | D-U-N-S Number | **352708209** |
-| Address | Bolagets **registrerade säte** — se varningen nedan (D&B har Kalmar) |
+| Address | **Larmtorget 4, Lgh 1202, 392 32 Kalmar** (D&B:s registrerade adress — **bekräftad av ägaren 2026-11-14**) |
 | Website | **https://eventpulse.nu** |
 | Work email | **hej@eventpulse.nu** |
-| Din roll | Förgrundare/medgrundare — Apple kräver det. Om du inte är det, säg till innan du skickar in. |
+| Din roll | Förgrundare/medgrundare — **bekräftat av ägaren 2026-11-14** |
 | Bifogat | Registerprotokoll/utdrag ur bolagsregistret + ID med foto |
 
-> ⚠️ **Adressen är den sista öppna frågan.** D&B:s register anger
-> **Larmtorget 4, Lgh 1202, 392 32 Kalmar**; Bolagsverket/hitta.se angav en
-> besöksadress i **Borgholm**. Det är D&B-adressen Apple matchar mot. Fyll i
-> bolagets **registrerade säte** (samma som i registret), inte en besöksadress.
+> ✅ **Adressfrågan är löst (2026-11-14):** bolagets säte är **Kalmar**.
+> D&B:s register (Larmtorget 4, Lgh 1202, 392 32 Kalmar) och ägarens besked
+> stämmer. Det äldre beskedet om en besöksadress i Borgholm gäller inte som
+> säte. (Skriv gatuadressen exakt som den står i Bolagsverket om du vid
+> inlämningen ser en avvikande formulering — Apple jämför mot registret.)
+
+### Meddelande att klistra in i Apples formulär
+
+> Subject: Request to convert individual membership to organization — Perfectday AB (D-U-N-S 352708209)
+>
+> I am the founder of Perfectday AB (organization number 556990-9830) and the
+> legal entity that owns and operates the EventPulse app. I would like to
+> convert my Apple Developer Program membership from an individual membership
+> to an organization membership for Perfectday AB.
+>
+> - Legal entity name: Perfectday AB
+> - Organization number (Sweden): 556990-9830
+> - D-U-N-S Number: 352708209
+> - Registered address: Larmtorget 4, Lgh 1202, 392 32 Kalmar, Sweden
+> - Company website: https://eventpulse.nu
+> - Company contact email: hej@eventpulse.nu
+> - My role: Founder
+> - App Store Connect account: TOMOR GASHI (Individual) — the app
+>   "EventPulse" (bundle ID com.tomorgashi.eventpulse) is registered under
+>   this account.
+>
+> I have attached the company's registration documents and a photo ID.
+> Please let me know if you need anything else to process this conversion.
 
 Steg 2 — **Samla underlag** (Apple: "You also may be asked to submit business
 documents to verify your organization's identity"): registerprotokoll eller
