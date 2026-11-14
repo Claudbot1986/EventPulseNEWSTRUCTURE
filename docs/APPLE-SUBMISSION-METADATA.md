@@ -382,6 +382,39 @@ not shorten this waiting period") **+ upp till 2 arbetsdagar för att Apple ska
 få informationen.** ⇒ **~1–2 veckor.**
 Om D&B behöver kontakta dig: ha bolagshandlingarna redo.
 
+> ✅ **HÄMTAT 2026-11-14: D-U-N-S-numret är `352708209`** (format `35-270-8209`).
+> Det kom från D&B:s eget utskick till ägarens e-post ⇒ **provenance: D&B**.
+> Formatkontroll: 9 siffror ⇒ uppfyller D-U-N-S-strukturen (ISO 6523-schemat
+> DUNS/0060, valideringsregel `RegEx: [0-9]{9}`).
+> **Observera:** den gamla mod-11-kontrollsiffran är **inte längre i bruk** —
+> Peppols officiella kodlista anger uttryckligen *"Check digits were removed to
+> get a bigger number area"*, och valideringsregeln är bara längd + siffror.
+> En misslyckad mod-11-prove är därför **inte** ett tecken på ett felaktigt
+> nummer. (Ingen oberoende bekräftelse från oss att numret pekar ut
+> Perfectday AB gick att få: D&B:s EU-API har ingen D-U-N-S-lookup, och
+> dnb.com ligger bakom Cloudflare-bot-skydd. Apple verifierar numret när
+> förfrågan skickas.)
+
+### Vad du fyller i i Apples konverteringsformulär
+
+Formulär: <https://developer.apple.com/contact/request/migrate-individual-account>
+(inloggning med ditt Apple ID krävs).
+
+| Fält | Vad du skriver |
+|---|---|
+| Legal entity name | **Perfectday AB** |
+| D-U-N-S Number | **352708209** |
+| Address | Bolagets **registrerade säte** — se varningen nedan (D&B har Kalmar) |
+| Website | **https://eventpulse.nu** |
+| Work email | **hej@eventpulse.nu** |
+| Din roll | Förgrundare/medgrundare — Apple kräver det. Om du inte är det, säg till innan du skickar in. |
+| Bifogat | Registerprotokoll/utdrag ur bolagsregistret + ID med foto |
+
+> ⚠️ **Adressen är den sista öppna frågan.** D&B:s register anger
+> **Larmtorget 4, Lgh 1202, 392 32 Kalmar**; Bolagsverket/hitta.se angav en
+> besöksadress i **Borgholm**. Det är D&B-adressen Apple matchar mot. Fyll i
+> bolagets **registrerade säte** (samma som i registret), inte en besöksadress.
+
 Steg 2 — **Samla underlag** (Apple: "You also may be asked to submit business
 documents to verify your organization's identity"): registerprotokoll eller
 utdrag ur bolagsregistret för Perfectday AB, plus ID med foto för den som är
