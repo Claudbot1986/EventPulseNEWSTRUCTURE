@@ -463,11 +463,11 @@ export default {
 
   // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
   'legal.privacy.title': 'Informativa sulla privacy',
-  'legal.privacy.lastUpdated': '2026-11-04 (versione 1.0)',
+  'legal.privacy.lastUpdated': '2026-11-14 (versione 1.1)',
 
   'legal.privacy.p1.title': '1. Chi siamo',
   'legal.privacy.p1.body':
-    'EventPulse è un agente personale per eventi distribuito come app iOS e Android, gestito da Perfectday AB (numero di registrazione 556990-9830), Svezia. L\'app aiuta gli utenti nella regione di Stoccolma a trovare concerti, mostre e altri eventi in base ai propri gusti. Contatto per la privacy: hej@eventpulse.nu.',
+    'EventPulse è una guida personale agli eventi, distribuita come app iOS, gestita da Perfectday AB (numero di registrazione 556990-9830), Svezia. L\'app aiuta gli utenti nella regione di Stoccolma a trovare concerti, mostre e altri eventi. Contatto per la privacy: hej@eventpulse.nu.',
 
   'legal.privacy.p2a.title': '2.1 Dati dell\'account (quando crei un account)',
   'legal.privacy.p2a.bullets':
@@ -475,11 +475,11 @@ export default {
 
   'legal.privacy.p2b.title': '2.2 Dati generati dall\'utente',
   'legal.privacy.p2b.bullets':
-    'Eventi che salvi, tocchi o segni come non interessanti.\nLocali e artisti che segui.\nIscrizioni push (se vuoi notifiche per locali specifici).\nEventuali conversazioni con l\'agente eventi integrato nell\'app.',
+    'Eventi che salvi, tocchi o segni come non interessanti.\nLocali e artisti che segui.\nIscrizioni push (se vuoi notifiche per locali specifici).',
 
   'legal.privacy.p2c.title': '2.3 Dati del dispositivo e di utilizzo',
   'legal.privacy.p2c.bullets':
-    'ID dispositivo hashato con djb2 in un codice esadecimale di 64 caratteri. L\'hash deriva dal tuo id utente (o da un id anonimo se non sei collegato) ed è usato solo per contare utenti e sessioni — non può servire a contattarti.\nPreferenza lingua.\nL\'app non richiede l\'accesso alla posizione e non raccoglie dati di posizione. Le sedi degli eventi provengono dagli elenchi degli organizzatori.',
+    'ID dispositivo hashato con djb2 in un codice esadecimale di 64 caratteri. L\'hash deriva dal tuo id utente (o da un id anonimo se non sei collegato) ed è usato solo per contare utenti e sessioni — non può servire a contattarti.\nPreferenza lingua.\nL\'app non richiede l\'accesso alla posizione e non raccoglie dati di posizione. Le sedi degli eventi provengono dagli elenchi degli organizzatori.\nTesto di ricerca: il testo che scrivi nel campo di ricerca viene inviato al nostro server, dove viene confrontato con titoli e descrizioni degli eventi. Il testo di ricerca non viene inviato ad alcun modello di IA, non viene mai pubblicato e non viene mai condiviso con altri utenti.',
 
   'legal.privacy.p2d.title': '2.4 Statistiche anonime (solo se acconsenti)',
   'legal.privacy.p2d.body':
@@ -495,11 +495,11 @@ export default {
 
   'legal.privacy.p5.title': '5. Con chi condividiamo i dati',
   'legal.privacy.p5.body':
-    'Non vendiamo nulla e non condividiamo i tuoi dati personali con terze parti per marketing. Responsabili del trattamento: Supabase (autenticazione, database, archiviazione file — regione server eu-north-1 a Stoccolma, dentro UE/SEE); Fly.io (hosting dell\'API); Expo e Apple Push Notification Service (consegna push); MiniMax (Nanonoble Pte. Ltd., Singapore — fornitore del modello linguistico dietro la chat dell\'agente).\nCosa viene inviato a MiniMax: solo il testo che scrivi, la richiesta interpretata (data, budget, compagnia, categoria) e un breve elenco di titoli, orari, categorie e prezzi degli eventi. Non inviamo il tuo id utente, il tuo indirizzo email, il tuo id dispositivo né il tuo profilo di gusti salvato.',
+    'Non vendiamo nulla e non condividiamo i tuoi dati personali con terze parti per marketing. Responsabili del trattamento: Supabase (autenticazione, database, archiviazione file — regione server eu-north-1 a Stoccolma, dentro UE/SEE); Fly.io (hosting dell\'API dell\'app, regione arn a Stoccolma, dentro UE/SEE); Expo e Apple Push Notification Service (consegna push).\nIl testo che scrivi nel campo di ricerca viene inviato al nostro server, dove viene confrontato con titoli e descrizioni degli eventi. Il testo di ricerca non viene inviato ad alcun modello di IA, non viene usato per costruire un profilo su di te e non viene mai condiviso con altri utenti.',
 
   'legal.privacy.p6.title': '6. Trasferimenti internazionali',
   'legal.privacy.p6.body':
-    'MiniMax conserva i dati personali, incluso il testo inviato, in un datacenter negli Stati Uniti. MiniMax dichiara che i trasferimenti dall\'UE/SEE si basano sulla certificazione EU–US Data Privacy Framework e, ove applicabile, sulle clausole contrattuali standard della Commissione UE (SCC). Secondo i termini API di MiniMax il fornitore può usare il testo inviato per fornire, mantenere e migliorare il servizio, e la loro stessa informativa dichiara che i dati personali sono conservati per il tempo necessario allo scopo indicato. Gli altri responsabili (Supabase, Fly.io, Expo e APNs) trattano i dati dentro UE/SEE.',
+    'Non trasferiamo dati personali in paesi al di fuori dell\'UE/SEE. I nostri responsabili del trattamento elaborano i dati dentro UE/SEE: Supabase (regione server eu-north-1, Stoccolma) e Fly.io (regione arn, Stoccolma). La consegna push avviene tramite Expo e Apple Push Notification Service, che applicano le proprie informative sulla privacy. Scrivi a hej@eventpulse.nu se vuoi saperne di più sul trattamento da parte di un responsabile.',
 
   'legal.privacy.p7.title': '7. I tuoi diritti (GDPR Art. 15–22)',
   'legal.privacy.p7.bullets':
@@ -523,11 +523,11 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Termini di servizio',
-  'legal.terms.lastUpdated': '2026-11-04 (versione 1.0)',
+  'legal.terms.lastUpdated': '2026-11-14 (versione 1.1)',
 
   'legal.terms.t1.title': '1. Cos\'è il servizio',
   'legal.terms.t1.body':
-    'EventPulse è un agente personale per eventi che mostra eventi nella regione di Stoccolma in base ai tuoi gusti. Il servizio è un\'app per iOS e Android. Gli eventi vengono recuperati da fonti pubbliche e presentati con descrizioni, orari, luoghi e link ai biglietti dove disponibili. EventPulse non vende biglietti.',
+    'EventPulse è una guida personale agli eventi che mostra eventi nella regione di Stoccolma. Il servizio è un\'app per iOS. Gli eventi vengono recuperati da fonti pubbliche e presentati con descrizioni, orari, luoghi e link ai biglietti dove disponibili. EventPulse non vende biglietti.',
 
   'legal.terms.t2.title': '2. Chi può usare il servizio',
   'legal.terms.t2.body':

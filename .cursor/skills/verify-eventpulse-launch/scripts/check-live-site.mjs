@@ -8,6 +8,7 @@
  * sidan är gammal) — används när du vet att en deploy är på väg.
  */
 import https from 'node:https';
+import { inspectPolicyText } from './lib/policy-truth.mjs';
 
 const allowStale = process.argv.includes('--allow-stale');
 const urls = [
@@ -48,11 +49,14 @@ function decodeCfEmails(html) {
 
 // Åldersgränsen formuleras per språk — "18 år" finns inte på den engelska sidan.
 // Personuppgiftsansvarig: Perfectday AB, org.nr 556990-9830 (2026-11-06).
+// MiniMax togs BORT från mustContain 2026-11-14: den live-policyn påstod
+// att text skickas till MiniMax via en agentchatt som inte finns i build 6.
+// Samma sanningar som i appens policy och i privacy-etiketten.
 const rules = {
-  sv: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 år', 'Perfectday AB', '556990-9830'] },
-  en: { mustContain: ['MiniMax', 'eu-north-1', 'hej@eventpulse.nu', '18 years', 'Perfectday AB', '556990-9830'] },
+  sv: { mustContain: ['eu-north-1', 'hej@eventpulse.nu', '18 år', 'Perfectday AB', '556990-9830'] },
+  en: { mustContain: ['eu-north-1', 'hej@eventpulse.nu', '18 years', 'Perfectday AB', '556990-9830'] },
 };
-const mustNotContain = ['[TODO', 'utkast', 'OpenAI / Anthropic', 'Tomor Gashi'];
+const mustNotContain = ['[TODO', 'utkast', 'OpenAI / Anthropic', 'Tomor Gashi', 'MiniMax', 'event-agent', 'agentchat'];
 const results = [];
 
 for (const { url, lang } of urls) {
@@ -78,6 +82,19 @@ for (const { url, lang } of urls) {
   for (const needle of mustNotContain) {
     results.push({ label: `${lang}: saknar "${needle}"`, ok: !text.includes(needle) });
   }
+  // POLICY ≈ APP: samma mönster som app-gaten och IPA-gaten använder.
+  const policy = inspectPolicyText(text);
+  for (const label of policy.forbidden) {
+    results.push({ label: `${lang}: policyn innehåller inte "${label}"`, ok: false });
+  }
+  for (const label of policy.missing) {
+    results.push({ label: `${lang}: policyn saknar "${label}"`, ok: false });
+  }
+  results.push({
+    label: `${lang}: policyn stämmer med appen`,
+    ok: policy.forbidden.length === 0 && policy.missing.length === 0,
+    detail: [...policy.forbidden, ...policy.missing].join('; ') || 'ok',
+  });
 }
 
 let failed = 0;

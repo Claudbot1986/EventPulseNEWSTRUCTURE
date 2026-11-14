@@ -9,6 +9,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { extractLegalStrings, inspectPolicyText } from './lib/policy-truth.mjs';
 
 const ROOT = path.resolve(process.argv[2] || process.cwd());
 const results = [];
@@ -65,7 +66,6 @@ for (const file of stringFiles) {
   check(`${file}: inga [TODO: ...]-platshållare`, !content.includes('[TODO:'));
   check(`${file}: _legalDraftOnly = '0' (ingen AI-utkastsbanner)`,
     /'_legalDraftOnly':\s*'0'/.test(content));
-  check(`${file}: MiniMax angiven som AI-leverantör`, content.includes('MiniMax'));
   check(`${file}: Supabase-region eu-north-1`, content.includes('eu-north-1'));
   check(`${file}: kontaktadress hej@eventpulse.nu`, content.includes('hej@eventpulse.nu'));
   check(`${file}: gammal kontaktadress borta`, !content.includes('privacy@eventpulse.nu'));
@@ -80,6 +80,23 @@ for (const file of stringFiles) {
   check(`${file}: personuppgiftsansvarig är Perfectday AB`, content.includes('Perfectday AB'));
   check(`${file}: organisationsnummer 556990-9830`, content.includes('556990-9830'));
   check(`${file}: privatperson inte angiven som operatör`, !content.includes('Tomor Gashi'));
+
+  // POLICY ≈ APP (2026-11-14). Policyn får inte påstå att det finns en
+  // agentchatt eller att text skickas till MiniMax — build 6 har ingen av
+  // delarna (index.js registrerar AppShell; composeReply nås bara via
+  // POST /agent/chat som appen aldrig anropar). Samma sanningar som i
+  // privacy-etiketten i docs/APPLE-SUBMISSION-METADATA.md.
+  const legalText = extractLegalStrings(content);
+  const policy = inspectPolicyText(legalText);
+  for (const label of policy.forbidden) {
+    check(`${file}: policyn innehåller inte "${label}"`, false);
+  }
+  for (const label of policy.missing) {
+    check(`${file}: policyn saknar "${label}"`, false);
+  }
+  check(`${file}: policyn stämmer med appen (inga agentpåståenden, söktext mot egen server)`,
+    policy.forbidden.length === 0 && policy.missing.length === 0,
+    [...policy.forbidden, ...policy.missing].join('; ') || 'ok');
 }
 
 // ── Kartprovider ──────────────────────────────────────────────────────────────

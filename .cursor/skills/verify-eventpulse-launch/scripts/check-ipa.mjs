@@ -88,11 +88,22 @@ const countUtf16 = (s) => {
 };
 const either = (s) => countAscii(s) + countUtf16(s);
 
-for (const s of ['MiniMax', 'eu-north-1', 'Användarvillkor', 'minst 18 år', 'härleds från ditt användar-id', 'EU–US Data Privacy Framework', 'djb2', 'hej@eventpulse.nu', 'demo@eventpulse.nu']) {
+for (const s of ['eu-north-1', 'Användarvillkor', 'minst 18 år', 'härleds från ditt användar-id', 'djb2', 'hej@eventpulse.nu', 'demo@eventpulse.nu']) {
   check(`bundle: "${s}" finns`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
 }
 for (const s of ['OpenAI / Anthropic', 'salt-nyckel', '[TODO:', 'privacy@eventpulse.nu']) {
   check(`bundle: gammal text "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
+}
+
+// 4a-bis. POLICY ≈ APP (2026-11-14). Tills i dag krävde den här gaten att
+// "MiniMax" och "EU–US Data Privacy Framework" FANNS i bunten — den låste
+// fast den falska agentchatten i den publicerade policyn. Build 6 har ingen
+// agentchatt och skickar ingen text till MiniMax, så båda ska bort.
+for (const s of ['MiniMax', 'EU–US Data Privacy Framework', 'agentchat', 'event-agent', 'smakprofil']) {
+  check(`bundle: agentpåstående "${s}" borta`, either(s) === 0, `${either(s)} träffar`);
+}
+for (const s of ['söktext', 'Search text', 'utan AI', 'without AI']) {
+  check(`bundle: policyn förklarar "${s}"`, either(s) >= 1, `${countAscii(s)} ascii / ${countUtf16(s)} utf16`);
 }
 
 // 4b. Legalavsnitten som tidigare läckte råa i18n-nycklar (p1, p2a, p2b, p2c).

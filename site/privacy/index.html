@@ -41,10 +41,10 @@
 
     <h2>1. Vem vi är</h2>
     <p>
-      EventPulse är en personlig event-agent i form av en iOS- och Android-app,
-      drivs av Perfectday AB (organisationsnummer 556990-9830), Sverige. Appen hjälper användare i
-      Stockholmsregionen att hitta konserter, utställningar och andra evenemang
-      utifrån deras egen smak. Kontakt för integritetsfrågor:
+      EventPulse är en personlig evenemangstipsare i form av en iOS-app, drivs
+      av Perfectday AB (organisationsnummer 556990-9830), Sverige. Appen hjälper
+      användare i Stockholmsregionen att hitta konserter, utställningar och
+      andra evenemang. Kontakt för integritetsfrågor:
       <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.
     </p>
 
@@ -70,7 +70,6 @@
       <li>Evenemang du sparar, klickar på eller markerar som ointressanta.</li>
       <li>Venues och artister du följer.</li>
       <li>Push-prenumerationer (om du vill ha notiser för specifika venues).</li>
-      <li>Konversationer du har med appens inbyggda event-agent.</li>
     </ul>
     <p>
       Appen samlar också ett hashat enhets-id (djb2, 64 tecken) som härleds från
@@ -106,27 +105,24 @@
     </p>
     <ul>
       <li><strong>Supabase</strong> — autentisering, databas och fillagring. Serverregion eu-north-1 (Stockholm), inom EU/EES.</li>
-      <li><strong>Fly.io</strong> — drift av appens API.</li>
+      <li><strong>Fly.io</strong> — drift av appens API, region arn (Stockholm), inom EU/EES.</li>
       <li><strong>Expo och Apple Push Notification Service</strong> — push-leverans.</li>
-      <li><strong>MiniMax</strong> (Nanonoble Pte. Ltd., Singapore) — leverantören av språkmodellen bakom agentchatten.</li>
     </ul>
     <p>
-      Till MiniMax skickas endast texten du skriver, den tolkade frågan (datum,
-      budget, sällskap, kategori) och en kort lista med evenemangens titel, tid,
-      kategori och pris. Vi skickar inte ditt användar-id, din e-postadress, ditt
-      enhets-id eller din sparade smakprofil.
+      Den text du skriver i sökfältet skickas till vår egen server för att
+      matchas mot evenemangstitlar och beskrivningar. Söktexten skickas inte till
+      någon AI-modell, används inte för att bygga en profil över dig och delas
+      aldrig med andra användare.
     </p>
 
     <h2>6. Överföring till tredje land</h2>
     <p>
-      MiniMax lagrar personuppgifter, inklusive inskickad text, i ett datacenter i
-      USA. MiniMax anger att överföringar från EU/EES sker med EU–US Data Privacy
-      Framework-certifiering och, där det är tillämpligt, EU-kommissionens
-      standardavtalsklausuler (SCC). Enligt MiniMaxs API-villkor får leverantören
-      använda inskickad text för att tillhandahålla, underhålla och utveckla
-      tjänsten, och deras egen policy anger att personuppgifter sparas så länge de
-      behövs för det angivna ändamålet. Övriga underleverantörer (Supabase,
-      Fly.io, Expo och APNs) behandlar uppgifterna inom EU/EES.
+      Vi överför inte personuppgifter till länder utanför EU/EES. Våra
+      underleverantörer behandlar uppgifterna inom EU/EES: Supabase (serverregion
+      eu-north-1, Stockholm) och Fly.io (region arn, Stockholm). Push-leverans
+      sker via Expo och Apple Push Notification Service, som tillämpar sina egna
+      integritetspolicies. Skriv till hej@eventpulse.nu om du vill veta mer om hur
+      en leverantör hanterar uppgifterna.
     </p>
 
     <h2>7. Dina rättigheter</h2>
@@ -153,12 +149,11 @@
 
     <h2>9. Artificiell intelligens</h2>
     <p>
-      Appen innehåller en AI-agent som föreslår evenemang utifrån din fråga, och
-      AI-genererade bilder för evenemangskort. Bilderna är märkta
-      ”AI-genererad”. Agenten hittar inte på evenemang: den väljer bland de
-      evenemang som faktiskt finns i vår databas, med tid, plats och
-      biljettlänkar från arrangörerna. Chattar skickas till MiniMax enligt
-      avsnitt 5.
+      Appen har ingen chattfunktion i den här versionen — du bläddrar och
+      söker, och sökningen sker mot vår egen server. Vissa evenemangskort har
+      AI-genererade bilder, och dessa bilder bär en AI-stämpel. Vi genererar dem
+      själva som illustration — de är inte arrangörens bilder och de beskriver
+      inte evenemanget.
     </p>
 
     <h2>10. Villkor och ålder</h2>

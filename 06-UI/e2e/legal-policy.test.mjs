@@ -2,7 +2,8 @@
  * Juridisk text i appen (Apple §2.1 + §5.1.1(i)):
  *   - ingen platshållartext ("[TODO: ...]") får synas
  *   - ingen "AI-utkast"-banner (flaggan _legalDraftOnly = '0')
- *   - rätt leverantör (MiniMax), rätt region (eu-north-1), rätt kontakt
+ *   - rätt region (eu-north-1), rätt kontakt
+ *   - policyn får INTE påstå agentchatt/MiniMax (build 6 har ingen av dem)
  *   - villkoren ska inte innehålla en åldersgräns som understiger 18 år
  *
  *   cd 06-UI && BASE_URL=http://localhost:9090 npx playwright test e2e/legal-policy.test.mjs
@@ -39,7 +40,17 @@ test.describe('Juridisk text i appen', () => {
     // Råa i18n-nycklar i den publicerade texten = trasig sektionskoppling.
     expect(text, 'råa i18n-nycklar renderas i policyn').not.toMatch(/legal\.(privacy|terms)\./i);
     expect(text, 'AI-utkastsbanneren syns fortfarande').not.toMatch(/AI-utkast|AI draft|bozza AI/i);
-    expect(text, 'MiniMax saknas som AI-leverantör').toMatch(/MiniMax/);
+    // POLICY ≈ APP (2026-11-14): build 6 har ingen agentchatt och skickar
+    // ingen text till MiniMax (index.js registrerar AppShell, inte
+    // App-agent.js; composeReply nås bara via POST /agent/chat som appen
+    // aldrig anropar). Policyn får därför inte påstå det, och privacy-
+    // etiketten säger "Data Shared with third parties: Nej".
+    expect(text, 'policyn påstår fortfarande att MiniMax är leverantör').not.toMatch(/MiniMax/);
+    expect(text, 'policyn påstår fortfarande en agentchatt').not.toMatch(/event-agent|agentchat/i);
+    expect(text, 'policyn påstår fortfarande en sparad smakprofil').not.toMatch(/smakprofil/i);
+    expect(text, 'policyn saknar förklaringen av söktexten').toMatch(/söktext/i);
+    expect(text, 'policyn saknar förklaringen att söktexten inte går till en AI-modell')
+      .toMatch(/utan AI|någon AI-modell/i);
     expect(text, 'Supabase-regionen eu-north-1 saknas').toMatch(/eu-north-1/);
     expect(text, 'kontaktadressen hej@eventpulse.nu saknas').toMatch(/hej@eventpulse\.nu/);
     expect(text, 'den gamla kontaktadressen syns fortfarande').not.toMatch(/privacy@eventpulse\.nu/);

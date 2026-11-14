@@ -648,11 +648,11 @@ export default {
 
   // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
   'legal.privacy.title': 'Integritetspolicy',
-  'legal.privacy.lastUpdated': '2026-11-04 (version 1.0)',
+  'legal.privacy.lastUpdated': '2026-11-14 (version 1.1)',
 
   'legal.privacy.p1.title': '1. Vem vi är',
   'legal.privacy.p1.body':
-    'EventPulse är en personlig event-agent i form av en iOS- och Android-app, drivs av Perfectday AB (organisationsnummer 556990-9830), Sverige. Appen hjälper användare i Stockholmsregionen att hitta konserter, utställningar och andra evenemang baserat på deras egen smak. Kontakt för integritetsfrågor: hej@eventpulse.nu.',
+    'EventPulse är en personlig evenemangstipsare i form av en iOS-app, drivs av Perfectday AB (organisationsnummer 556990-9830), Sverige. Appen hjälper användare i Stockholmsregionen att hitta konserter, utställningar och andra evenemang. Kontakt för integritetsfrågor: hej@eventpulse.nu.',
 
   'legal.privacy.p2a.title': '2.1 Kontouppgifter (när du skapar konto)',
   'legal.privacy.p2a.bullets':
@@ -660,11 +660,11 @@ export default {
 
   'legal.privacy.p2b.title': '2.2 Användargenererad data',
   'legal.privacy.p2b.bullets':
-    'Evenemang du sparar, klickar på eller markerar som ointressanta.\nVenues och artister du följer.\nPush-prenumerationer (om du vill ha notiser för specifika venues).\nEventuella konversationer du har med appens inbyggda event-agent.',
+    'Evenemang du sparar, klickar på eller markerar som ointressanta.\nVenues och artister du fölger.\nPush-prenumerationer (om du vill ha notiser för specifika venues).',
 
   'legal.privacy.p2c.title': '2.3 Enhets- och användningsdata',
   'legal.privacy.p2c.bullets':
-    'Enhets-id hashat med djb2 till en 64-tecken hex-kod. Hashen härleds från ditt användar-id (eller från ett anonymt id om du inte loggar in) och används bara för att räkna användare och sessioner — den kan inte användas för att kontakta dig.\nSpråkinställning.\nAppen begär inte åtkomst till din plats och samlar inte in någon platsdata. Evenemangens platser kommer från arrangörernas egna uppgifter.',
+    'Enhets-id hashat med djb2 till en 64-tecken hex-kod. Hashen härleds från ditt användar-id (eller från ett anonymt id om du inte loggar in) och används bara för att räkna användare och sessioner — den kan inte användas för att kontakta dig.\nSpråkinställning.\nAppen begär inte åtkomst till din plats och samlar inte in någon platsdata. Evenemangens platser kommer från arrangörernas egna uppgifter.\nSöktext: texten du skriver i sökfältet skickas till vår egen server för att matchas mot evenemangstitlar och beskrivningar. Söktexten skickas inte till någon AI-modell, publiceras aldrig och delas aldrig med andra användare.',
 
   'legal.privacy.p2d.title': '2.4 Anonym statistik (endast om du godkänner)',
   'legal.privacy.p2d.body':
@@ -680,11 +680,11 @@ export default {
 
   'legal.privacy.p5.title': '5. Vem vi delar uppgifterna med',
   'legal.privacy.p5.body':
-    'Vi säljer ingenting och delar inte dina personuppgifter med tredje part för marknadsföring. Underleverantörer: Supabase (autentisering, databas, fillagring — serverregion eu-north-1 i Stockholm, inom EU/EES); Fly.io (drift av API:et); Expo och Apple Push Notification Service (push-leverans); MiniMax (Nanonoble Pte. Ltd., Singapore — leverantören av språkmodellen bakom agentchatten).\nVad som skickas till MiniMax: endast texten du skriver, den tolkade frågan (datum, budget, sällskap, kategori) och en kort lista med evenemangens titel, tid, kategori och pris. Vi skickar inte ditt användar-id, din e-postadress, ditt enhets-id eller din sparade smakprofil.',
+    'Vi säljer ingenting och delar inte dina personuppgifter med tredje part för marknadsföring. Underleverantörer: Supabase (autentisering, databas, fillagring — serverregion eu-north-1 i Stockholm, inom EU/EES); Fly.io (drift av appens API, region arn i Stockholm, inom EU/EES); Expo och Apple Push Notification Service (push-leverans).\nDen text du skriver i sökfältet skickas till vår egen server för att matchas mot evenemangstitlar och beskrivningar. Söktexten skickas inte till någon AI-modell, används inte för att bygga en profil över dig och delas aldrig med andra användare.',
 
   'legal.privacy.p6.title': '6. Överföring till tredje land',
   'legal.privacy.p6.body':
-    'MiniMax lagrar personuppgifter, inklusive inskickad text, i ett datacenter i USA. MiniMax anger att överföringar från EU/EES sker med EU–US Data Privacy Framework-certifiering och, där det är tillämpligt, EU-kommissionens standardavtalsklausuler (SCC). Enligt MiniMaxs API-villkor får leverantören använda inskickad text för att tillhandahålla, underhålla och utveckla tjänsten, och deras egen policy anger att personuppgifter sparas så länge de behövs för det angivna ändamålet. Övriga underleverantörer (Supabase, Fly.io, Expo och APNs) behandlar uppgifterna inom EU/EES.',
+    'Vi överför inte personuppgifter till länder utanför EU/EES. Våra underleverantörer behandlar uppgifterna inom EU/EES: Supabase (serverregion eu-north-1, Stockholm) och Fly.io (region arn, Stockholm). Push-leverans sker via Expo och Apple Push Notification Service, som tillämpar sina egna integritetspolicies. Skriv till hej@eventpulse.nu om du vill veta mer om hur en leverantör hanterar uppgifterna.',
 
   'legal.privacy.p7.title': '7. Dina rättigheter (GDPR Art. 15–22)',
   'legal.privacy.p7.bullets':
@@ -708,11 +708,11 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Användarvillkor',
-  'legal.terms.lastUpdated': '2026-11-04 (version 1.0)',
+  'legal.terms.lastUpdated': '2026-11-14 (version 1.1)',
 
   'legal.terms.t1.title': '1. Vad tjänsten är',
   'legal.terms.t1.body':
-    'EventPulse är en personlig event-agent som visar evenemang i Stockholmsregionen baserat på din egen smak. Tjänsten är en app för iOS och Android. Evenemang hämtas från publika källor och presenteras med beskrivningar, tider, platser och eventuella biljettlänkar. EventPulse säljer inga biljetter.',
+    'EventPulse är en personlig evenemangstipsare som visar evenemang i Stockholmsregionen. Tjänsten är en app för iOS. Evenemang hämtas från publika källor och presenteras med beskrivningar, tider, platser och eventuella biljettlänkar. EventPulse säljer inga biljetter.',
 
   'legal.terms.t2.title': '2. Vem som kan använda tjänsten',
   'legal.terms.t2.body':
